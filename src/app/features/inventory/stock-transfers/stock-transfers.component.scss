@@ -1,0 +1,354 @@
+.stock-transfers-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// Header Section
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+
+  .title-section {
+    h1 {
+      margin: 0;
+      color: #1f2937;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      margin: 4px 0 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+
+    button {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Filters Card
+.filters-card {
+  margin-bottom: 24px;
+  padding: 20px;
+
+  .filters-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: start;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .clear-button {
+      height: 56px;
+      min-width: 120px;
+
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Bulk Actions Bar
+.bulk-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .selection-count {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .bulk-action-buttons {
+    display: flex;
+    gap: 12px;
+
+    button {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Table Card
+.table-card {
+  overflow: hidden;
+
+  .table-container {
+    position: relative;
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+
+      th.mat-header-cell {
+        background-color: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 16px 12px;
+      }
+
+      td.mat-cell {
+        padding: 16px 12px;
+        color: #1f2937;
+      }
+
+      tr.mat-row {
+        &:hover {
+          background-color: #f9fafb;
+        }
+      }
+
+      // Transfer Number Badge
+      .transfer-number {
+        display: inline-block;
+        padding: 4px 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: "Courier New", monospace;
+      }
+
+      // Product Info
+      .product-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .product-name {
+          font-weight: 500;
+          color: #1f2937;
+          font-size: 14px;
+        }
+
+        .product-sku {
+          font-size: 12px;
+          color: #6b7280;
+          font-family: "Courier New", monospace;
+        }
+      }
+
+      // Quantity Badge
+      .quantity-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background-color: #eff6ff;
+        color: #1e40af;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      // Location Info
+      .location-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .location-icon {
+          color: #6b7280;
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
+        span {
+          font-size: 14px;
+          color: #374151;
+        }
+      }
+
+      // Status Badges
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: capitalize;
+
+        &.status-draft {
+          background-color: #f3f4f6;
+          color: #6b7280;
+        }
+
+        &.status-pending {
+          background-color: #fef3c7;
+          color: #92400e;
+        }
+
+        &.status-approved {
+          background-color: #dbeafe;
+          color: #1e40af;
+        }
+
+        &.status-in_transit {
+          background-color: #ede9fe;
+          color: #6b21a8;
+        }
+
+        &.status-completed {
+          background-color: #d1fae5;
+          color: #065f46;
+        }
+
+        &.status-cancelled {
+          background-color: #f3f4f6;
+          color: #6b7280;
+        }
+      }
+
+      // No Data Row
+      .no-data-row {
+        height: 400px;
+
+        .mat-cell {
+          border: none;
+        }
+
+        .no-data {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          color: #9ca3af;
+
+          mat-icon {
+            font-size: 64px;
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+          }
+
+          p {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            color: #6b7280;
+          }
+        }
+      }
+    }
+
+    // Loading Spinner
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  // Paginator
+  ::ng-deep .mat-mdc-paginator {
+    border-top: 1px solid #e5e7eb;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .stock-transfers-container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .action-buttons {
+      width: 100%;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .filters-card {
+    .filters-form {
+      grid-template-columns: 1fr;
+
+      .clear-button {
+        width: 100%;
+      }
+    }
+  }
+
+  .bulk-actions-bar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+
+    .bulk-action-buttons {
+      width: 100%;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .table-card {
+    .table-container {
+      table {
+        th.mat-header-cell,
+        td.mat-cell {
+          padding: 12px 8px;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+// Animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table-card {
+  animation: fadeIn 0.3s ease-in-out;
+}

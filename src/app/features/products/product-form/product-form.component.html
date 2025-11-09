@@ -1,0 +1,325 @@
+<div class="product-form">
+  <div class="header">
+    <div class="header-left">
+      <button mat-icon-button routerLink="/products" matTooltip="Back to Products">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
+    </div>
+  </div>
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+    <div class="form-content">
+      <!-- Left Column - Main Information -->
+      <div class="left-column">
+        <!-- Basic Information Card -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>Basic Information</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-grid">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Product Name</mat-label>
+                <input matInput formControlName="name" placeholder="Enter product name">
+                <mat-error *ngIf="hasError('name', 'required')">Product name is required</mat-error>
+                <mat-error *ngIf="hasError('name', 'minlength')">Minimum 3 characters</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="3"
+                  placeholder="Enter product description"></textarea>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>SKU</mat-label>
+                <input matInput formControlName="sku" placeholder="AUTO-GENERATED">
+                <button mat-icon-button matSuffix (click)="generateSKU()" type="button" matTooltip="Generate SKU">
+                  <mat-icon>refresh</mat-icon>
+                </button>
+                <mat-error>{{ getErrorMessage('sku') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Barcode</mat-label>
+                <input matInput formControlName="barcode" placeholder="Optional">
+                <button mat-icon-button matSuffix (click)="generateBarcode()" type="button"
+                  matTooltip="Generate Barcode">
+                  <mat-icon>qr_code</mat-icon>
+                </button>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="category">
+                  <mat-option *ngFor="let category of categories" [value]="category.id">
+                    {{ category.name }}
+                  </mat-option>
+                </mat-select>
+                <mat-error>Category is required</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Brand</mat-label>
+                <input matInput formControlName="brand" placeholder="Optional">
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Pricing Card -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>Pricing & Tax</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Sale Price</mat-label>
+                <input matInput type="number" formControlName="price" placeholder="0.00" step="0.01">
+                <span matPrefix>LKR&nbsp;</span>
+                <mat-error>{{ getErrorMessage('price') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Cost Price</mat-label>
+                <input matInput type="number" formControlName="costPrice" placeholder="0.00" step="0.01">
+                <span matPrefix>LKR&nbsp;</span>
+                <mat-hint>Your purchase cost</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tax Class</mat-label>
+                <mat-select formControlName="taxClass">
+                  <mat-option *ngFor="let tax of taxClasses" [value]="tax.id">
+                    {{ tax.name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="price-summary full-width" *ngIf="productForm.get('price')?.value > 0">
+                <div class="summary-row">
+                  <span>Base Price:</span>
+                  <span>LKR {{ productForm.get('price')?.value | number:'1.2-2' }}</span>
+                </div>
+                <div class="summary-row">
+                  <span>Profit Margin:</span>
+                  <span class="profit">
+                    LKR {{ (productForm.get('price')?.value - productForm.get('costPrice')?.value) | number:'1.2-2' }}
+                    ({{ ((productForm.get('price')?.value - productForm.get('costPrice')?.value) /
+                    productForm.get('costPrice')?.value * 100) | number:'1.0-0' }}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Inventory Card -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>Inventory Management</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="track-inventory-toggle">
+              <mat-slide-toggle formControlName="trackInventory">
+                Track Inventory
+              </mat-slide-toggle>
+              <span class="toggle-hint">Enable stock tracking for this product</span>
+            </div>
+
+            <div class="form-grid" *ngIf="productForm.get('trackInventory')?.value">
+              <mat-form-field appearance="outline">
+                <mat-label>Current Stock</mat-label>
+                <input matInput type="number" formControlName="stockQuantity" placeholder="0">
+                <mat-icon matSuffix>inventory</mat-icon>
+                <mat-error>{{ getErrorMessage('stockQuantity') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Reorder Level</mat-label>
+                <input matInput type="number" formControlName="reorderLevel" placeholder="10">
+                <mat-icon matSuffix>warning</mat-icon>
+                <mat-hint>Alert when stock falls below this level</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Maximum Stock Level</mat-label>
+                <input matInput type="number" formControlName="maxStockLevel" placeholder="1000">
+                <mat-icon matSuffix>inventory_2</mat-icon>
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Additional Information Card -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>Additional Information</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Weight (kg)</mat-label>
+                <input matInput type="number" formControlName="weight" placeholder="0.00" step="0.01">
+                <span matSuffix>kg</span>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tags</mat-label>
+                <mat-chip-grid #chipGrid>
+                  <mat-chip-row *ngFor="let tag of productForm.get('tags')?.value" (removed)="removeTag(tag)">
+                    {{tag}}
+                    <button matChipRemove>
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </mat-chip-row>
+                </mat-chip-grid>
+                <input placeholder="Add tags..." [matChipInputFor]="chipGrid" (matChipInputTokenEnd)="addTag($event)">
+                <mat-hint>Press Enter to add tags</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Dynamic Attributes -->
+            <div class="attributes-section">
+              <div class="section-header">
+                <h3>Custom Attributes</h3>
+                <button mat-stroked-button type="button" (click)="addAttribute()">
+                  <mat-icon>add</mat-icon>
+                  Add Attribute
+                </button>
+              </div>
+
+              <div formArrayName="attributes" class="attributes-list">
+                <div *ngFor="let attr of attributes.controls; let i = index" [formGroupName]="i" class="attribute-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" placeholder="e.g., Color">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Value</mat-label>
+                    <input matInput formControlName="value" placeholder="e.g., Blue">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Type</mat-label>
+                    <mat-select formControlName="type">
+                      <mat-option *ngFor="let type of attributeTypes" [value]="type">
+                        {{ type | titlecase }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <button mat-icon-button type="button" (click)="removeAttribute(i)" color="warn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Right Column - Images & Status -->
+      <div class="right-column">
+        <!-- Product Images Card -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>Product Images</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="image-upload-section">
+              <input #fileInput type="file" accept="image/*" multiple (change)="onImageSelect($event)"
+                style="display: none">
+
+              <button mat-raised-button type="button" (click)="fileInput.click()" class="upload-btn">
+                <mat-icon>cloud_upload</mat-icon>
+                Upload Images
+              </button>
+
+              <div class="image-grid" *ngIf="selectedImages.length > 0">
+                <div *ngFor="let image of selectedImages; let i = index" class="image-item">
+                  <img [src]="image" alt="Product image">
+                  <button mat-icon-button class="remove-btn" type="button" (click)="removeImage(i)">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                  <span class="primary-badge" *ngIf="i === 0">Primary</span>
+                </div>
+              </div>
+
+              <div class="no-images" *ngIf="selectedImages.length === 0">
+                <mat-icon>image</mat-icon>
+                <p>No images uploaded</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Product Status Card -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>Product Status</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="status-toggle">
+              <mat-slide-toggle formControlName="isActive" color="primary">
+                <span class="toggle-label">
+                  {{ productForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
+                </span>
+              </mat-slide-toggle>
+              <p class="status-hint">
+                {{ productForm.get('isActive')?.value
+                ? 'Product is visible and available for sale'
+                : 'Product is hidden and not available for sale' }}
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Quick Stats Card (Edit Mode) -->
+        <mat-card class="form-card" *ngIf="isEditMode">
+          <mat-card-header>
+            <mat-card-title>Quick Stats</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <mat-icon>shopping_cart</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-label">Total Sales</span>
+                  <span class="stat-value">0</span>
+                </div>
+              </div>
+              <div class="stat-item">
+                <mat-icon>trending_up</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-label">Revenue</span>
+                  <span class="stat-value">LKR 0.00</span>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button mat-button type="button" (click)="cancel()" [disabled]="isSaving">
+        Cancel
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="isSaving || productForm.invalid">
+        <mat-spinner diameter="20" *ngIf="isSaving"></mat-spinner>
+        <span *ngIf="!isSaving">{{ isEditMode ? 'Update Product' : 'Create Product' }}</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading product...</p>
+  </div>
+</div>

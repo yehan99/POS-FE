@@ -1,0 +1,164 @@
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.welcome-screen {
+  max-width: 1200px;
+  width: 100%;
+  text-align: center;
+  color: white;
+
+  .brand-container {
+    margin-bottom: 4rem;
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .logo-icon {
+        font-size: 3rem;
+        height: 3rem;
+        width: 3rem;
+        color: #fff;
+      }
+
+      .brand-name {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #fff 0%, #f0f9ff 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+
+    .tagline {
+      font-size: 1.25rem;
+      opacity: 0.9;
+      margin: 0;
+    }
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 2rem;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-4px);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      mat-icon {
+        font-size: 2.5rem;
+        height: 2.5rem;
+        width: 2.5rem;
+        margin-bottom: 1rem;
+        color: #fff;
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+        color: #fff;
+      }
+
+      p {
+        font-size: 0.95rem;
+        opacity: 0.85;
+        margin: 0;
+        line-height: 1.5;
+      }
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    button {
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 8px;
+      min-width: 140px;
+    }
+
+    .mat-raised-button {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    .mat-button {
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .welcome-screen {
+    .brand-container .logo {
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .brand-name {
+        font-size: 2rem;
+      }
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+
+      .feature-card {
+        padding: 1.5rem;
+      }
+    }
+
+    .actions {
+      flex-direction: column;
+      align-items: center;
+
+      button {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  }
+}

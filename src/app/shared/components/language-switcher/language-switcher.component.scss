@@ -1,0 +1,92 @@
+.language-switcher {
+  display: inline-block;
+
+  .language-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .flag {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .language-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+    }
+  }
+}
+
+::ng-deep .language-menu {
+  .mat-mdc-menu-content {
+    padding: 8px 0;
+  }
+
+  .mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    height: 48px;
+    position: relative;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    &.active {
+      background-color: rgba(63, 81, 181, 0.08);
+
+      .language-name {
+        font-weight: 600;
+        color: #3f51b5;
+      }
+    }
+
+    .flag {
+      font-size: 24px;
+      line-height: 1;
+      min-width: 24px;
+    }
+
+    .language-name {
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .check-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #3f51b5;
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .language-switcher {
+    .language-button {
+      padding: 6px 12px;
+
+      .language-name {
+        display: none;
+      }
+    }
+  }
+}

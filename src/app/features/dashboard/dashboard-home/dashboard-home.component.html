@@ -1,0 +1,364 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-title">
+      <h1>Dashboard</h1>
+      <p class="subtitle">Welcome back! Here's what's happening with your store today.</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="refreshDashboard()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && dashboardData" class="dashboard-content">
+    <!-- Quick Actions -->
+    <section class="quick-actions-section">
+      <div class="quick-actions-grid">
+        <button mat-raised-button *ngFor="let action of quickActions" class="quick-action-card" [color]="action.color"
+          (click)="navigateTo(action.route)">
+          <mat-icon>{{ action.icon }}</mat-icon>
+          <span>{{ action.label }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="kpi-section">
+      <h2 class="section-title">Key Metrics</h2>
+      <div class="kpi-grid">
+        <!-- Today's Sales -->
+        <mat-card class="kpi-card sales">
+          <mat-card-content>
+            <div class="kpi-icon">
+              <mat-icon>paid</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <p class="kpi-label">Today's Sales</p>
+              <p class="kpi-value">{{ formatCurrency(dashboardData.kpis.todaySales) }}</p>
+              <p class="kpi-change" [class.positive]="dashboardData.kpis.todaySalesChange >= 0"
+                [class.negative]="dashboardData.kpis.todaySalesChange < 0">
+                <mat-icon>{{ dashboardData.kpis.todaySalesChange >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                {{ formatPercentage(dashboardData.kpis.todaySalesChange) }}
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Today's Transactions -->
+        <mat-card class="kpi-card transactions">
+          <mat-card-content>
+            <div class="kpi-icon">
+              <mat-icon>receipt</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <p class="kpi-label">Transactions</p>
+              <p class="kpi-value">{{ formatNumber(dashboardData.kpis.todayTransactions) }}</p>
+              <p class="kpi-change" [class.positive]="dashboardData.kpis.todayTransactionsChange >= 0"
+                [class.negative]="dashboardData.kpis.todayTransactionsChange < 0">
+                <mat-icon>{{ dashboardData.kpis.todayTransactionsChange >= 0 ? 'trending_up' : 'trending_down'
+                  }}</mat-icon>
+                {{ formatPercentage(dashboardData.kpis.todayTransactionsChange) }}
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Average Order Value -->
+        <mat-card class="kpi-card average">
+          <mat-card-content>
+            <div class="kpi-icon">
+              <mat-icon>account_balance_wallet</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <p class="kpi-label">Avg Order Value</p>
+              <p class="kpi-value">{{ formatCurrency(dashboardData.kpis.averageOrderValue) }}</p>
+              <p class="kpi-change" [class.positive]="dashboardData.kpis.averageOrderValueChange >= 0"
+                [class.negative]="dashboardData.kpis.averageOrderValueChange < 0">
+                <mat-icon>{{ dashboardData.kpis.averageOrderValueChange >= 0 ? 'trending_up' : 'trending_down'
+                  }}</mat-icon>
+                {{ formatPercentage(dashboardData.kpis.averageOrderValueChange) }}
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Active Customers -->
+        <mat-card class="kpi-card customers">
+          <mat-card-content>
+            <div class="kpi-icon">
+              <mat-icon>people</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <p class="kpi-label">Active Customers</p>
+              <p class="kpi-value">{{ formatNumber(dashboardData.kpis.activeCustomers) }}</p>
+              <p class="kpi-change positive">
+                <mat-icon>add_circle</mat-icon>
+                {{ dashboardData.kpis.newCustomersToday }} new today
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Stock Value -->
+        <mat-card class="kpi-card inventory">
+          <mat-card-content>
+            <div class="kpi-icon">
+              <mat-icon>inventory_2</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <p class="kpi-label">Stock Value</p>
+              <p class="kpi-value">{{ formatCurrency(dashboardData.kpis.stockValue) }}</p>
+              <p class="kpi-change warn">
+                <mat-icon>warning</mat-icon>
+                {{ dashboardData.kpis.lowStockProducts }} low stock
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Total Products -->
+        <mat-card class="kpi-card products">
+          <mat-card-content>
+            <div class="kpi-icon">
+              <mat-icon>shopping_bag</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <p class="kpi-label">Total Products</p>
+              <p class="kpi-value">{{ formatNumber(dashboardData.kpis.totalProducts) }}</p>
+              <p class="kpi-change" [class.error]="dashboardData.kpis.outOfStockProducts > 0">
+                <mat-icon>{{ dashboardData.kpis.outOfStockProducts > 0 ? 'error' : 'check_circle' }}</mat-icon>
+                {{ dashboardData.kpis.outOfStockProducts }} out of stock
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+      <div class="charts-grid">
+        <!-- Sales Trend Chart -->
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>show_chart</mat-icon>
+              Sales Trend (Last 7 Days)
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-placeholder">
+              <mat-icon>insert_chart</mat-icon>
+              <p>Sales Trend Line Chart</p>
+              <p class="chart-note">Chart.js integration will display 7-day sales trend</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Category Sales Chart -->
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>pie_chart</mat-icon>
+              Sales by Category
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="category-list">
+              <div class="category-item" *ngFor="let category of dashboardData.categorySales">
+                <div class="category-header">
+                  <span class="category-name">{{ category.categoryName }}</span>
+                  <span class="category-value">{{ formatCurrency(category.sales) }}</span>
+                </div>
+                <div class="category-bar">
+                  <div class="bar-fill" [style.width.%]="category.percentage" [style.background]="category.color"></div>
+                </div>
+                <span class="category-percentage">{{ category.percentage.toFixed(1) }}%</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Payment Methods Chart -->
+        <mat-card class="chart-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>payment</mat-icon>
+              Payment Methods
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="payment-list">
+              <div class="payment-item" *ngFor="let payment of dashboardData.paymentMethodSales">
+                <div class="payment-icon">
+                  <mat-icon>{{ payment.method === 'Cash' ? 'payments' : payment.method === 'Card' ? 'credit_card' :
+                    'phone_android' }}</mat-icon>
+                </div>
+                <div class="payment-info">
+                  <p class="payment-method">{{ payment.method }}</p>
+                  <p class="payment-amount">{{ formatCurrency(payment.amount) }}</p>
+                </div>
+                <div class="payment-percentage">{{ payment.percentage.toFixed(0) }}%</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Recent Transactions & Inventory Alerts -->
+    <section class="data-tables-section">
+      <div class="tables-grid">
+        <!-- Recent Transactions -->
+        <mat-card class="table-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>receipt_long</mat-icon>
+              Recent Transactions
+            </mat-card-title>
+            <button mat-button color="primary" (click)="viewAllTransactions()">
+              View All
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="transactions-list">
+              <div class="transaction-item" *ngFor="let transaction of dashboardData.recentTransactions">
+                <div class="transaction-id">
+                  <mat-icon>receipt</mat-icon>
+                  <span>{{ transaction.id }}</span>
+                </div>
+                <div class="transaction-details">
+                  <p class="customer-name">{{ transaction.customerName }}</p>
+                  <p class="transaction-time">{{ formatTime(transaction.transactionDate) }} • {{ transaction.items }}
+                    items</p>
+                </div>
+                <div class="transaction-amount">
+                  <p class="amount">{{ formatCurrency(transaction.amount) }}</p>
+                  <span class="payment-badge">{{ transaction.paymentMethod }}</span>
+                </div>
+                <mat-icon class="status-icon" [class.completed]="transaction.status === 'completed'">
+                  {{ transaction.status === 'completed' ? 'check_circle' : 'pending' }}
+                </mat-icon>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Inventory Alerts -->
+        <mat-card class="table-card alerts-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>warning</mat-icon>
+              Inventory Alerts
+            </mat-card-title>
+            <button mat-button color="warn" (click)="viewInventory()">
+              View All
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="alerts-list">
+              <div class="alert-item" *ngFor="let alert of dashboardData.inventoryAlerts"
+                [class.critical]="alert.severity === 'critical'">
+                <mat-icon class="alert-icon" [class.critical]="alert.severity === 'critical'">
+                  {{ alert.severity === 'critical' ? 'error' : 'warning' }}
+                </mat-icon>
+                <div class="alert-details">
+                  <p class="product-name">{{ alert.productName }}</p>
+                  <p class="alert-info">
+                    <span class="sku">{{ alert.sku }}</span> •
+                    <span class="stock-level">{{ alert.currentStock }} units (Min: {{ alert.minStock }})</span>
+                  </p>
+                </div>
+                <span class="alert-badge" [class.critical]="alert.severity === 'critical'">
+                  {{ alert.alertType === 'out_of_stock' ? 'Out of Stock' : 'Low Stock' }}
+                </span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <!-- Top Products & Top Customers -->
+    <section class="top-items-section">
+      <div class="top-items-grid">
+        <!-- Top Products -->
+        <mat-card class="top-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>star</mat-icon>
+              Top Selling Products
+            </mat-card-title>
+            <button mat-button color="primary" (click)="viewTopProducts()">
+              View All
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="top-products-list">
+              <div class="product-item" *ngFor="let product of dashboardData.topProducts; let i = index">
+                <div class="rank">{{ i + 1 }}</div>
+                <div class="product-info">
+                  <p class="product-name">{{ product.productName }}</p>
+                  <p class="product-details">{{ product.sku }} • {{ product.quantitySold }} sold</p>
+                </div>
+                <div class="product-metrics">
+                  <p class="revenue">{{ formatCurrency(product.revenue) }}</p>
+                  <p class="margin">{{ product.profitMargin.toFixed(1) }}% margin</p>
+                </div>
+                <mat-icon class="trend-icon" [class]="getTrendColor(product.trend)">
+                  {{ getTrendIcon(product.trend) }}
+                </mat-icon>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Top Customers -->
+        <mat-card class="top-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>person_pin</mat-icon>
+              Top Customers
+            </mat-card-title>
+            <button mat-button color="primary" (click)="viewTopCustomers()">
+              View All
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="top-customers-list">
+              <div class="customer-item" *ngFor="let customer of dashboardData.topCustomers; let i = index">
+                <div class="rank">{{ i + 1 }}</div>
+                <div class="customer-info">
+                  <p class="customer-name">
+                    {{ customer.customerName }}
+                    <span class="tier-badge" [style.background]="getTierColor(customer.tier)">
+                      {{ customer.tier }}
+                    </span>
+                  </p>
+                  <p class="customer-details">{{ customer.phone }} • {{ customer.totalPurchases }} purchases</p>
+                </div>
+                <div class="customer-metrics">
+                  <p class="spent">{{ formatCurrency(customer.totalSpent) }}</p>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="localization-demo">
+  <mat-toolbar color="primary">
+    <span>{{ 'app.name' | translate }}</span>
+    <span class="spacer"></span>
+    <app-language-switcher></app-language-switcher>
+  </mat-toolbar>
+
+  <div class="demo-container">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ 'navigation.dashboard' | translate }}</mat-card-title>
+        <mat-card-subtitle>{{ 'app.tagline' | translate }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <h2>{{ 'common.actions' | translate }}</h2>
+        <div class="button-group">
+          <button mat-raised-button color="primary">{{ 'common.save' | translate }}</button>
+          <button mat-raised-button>{{ 'common.cancel' | translate }}</button>
+          <button mat-raised-button color="warn">{{ 'common.delete' | translate }}</button>
+          <button mat-raised-button color="accent">{{ 'common.edit' | translate }}</button>
+        </div>
+
+        <mat-divider style="margin: 20px 0;"></mat-divider>
+
+        <h2>{{ 'navigation.pos' | translate }}</h2>
+        <div class="button-group">
+          <button mat-raised-button>{{ 'pos.addItem' | translate }}</button>
+          <button mat-raised-button>{{ 'pos.checkout' | translate }}</button>
+          <button mat-raised-button>{{ 'pos.printReceipt' | translate }}</button>
+        </div>
+
+        <mat-divider style="margin: 20px 0;"></mat-divider>
+
+        <h2>{{ 'dashboard.quickActions' | translate }}</h2>
+        <div class="button-group">
+          <button mat-raised-button>{{ 'dashboard.newSale' | translate }}</button>
+          <button mat-raised-button>{{ 'dashboard.addProduct' | translate }}</button>
+          <button mat-raised-button>{{ 'dashboard.addCustomer' | translate }}</button>
+          <button mat-raised-button>{{ 'dashboard.viewReports' | translate }}</button>
+        </div>
+
+        <mat-divider style="margin: 20px 0;"></mat-divider>
+
+        <h2>{{ 'navigation.products' | translate }}</h2>
+        <p><strong>{{ 'products.productName' | translate }}:</strong> Test Product</p>
+        <p><strong>{{ 'products.category' | translate }}:</strong> Test Category</p>
+        <p><strong>{{ 'products.stock' | translate }}:</strong> 100 {{ 'common.quantity' | translate }}</p>
+        <p><strong>{{ 'products.sellingPrice' | translate }}:</strong> {{ 'currency.symbol' | translate }} 500</p>
+
+        <mat-divider style="margin: 20px 0;"></mat-divider>
+
+        <h2>{{ 'navigation.customers' | translate }}</h2>
+        <p><strong>{{ 'customers.customerName' | translate }}:</strong> John Doe</p>
+        <p><strong>{{ 'customers.email' | translate }}:</strong> john&#64;example.com</p>
+        <p><strong>{{ 'customers.phone' | translate }}:</strong> +94 77 123 4567</p>
+        <p><strong>{{ 'customers.totalPurchases' | translate }}:</strong> 25</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

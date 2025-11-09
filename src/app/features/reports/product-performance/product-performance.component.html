@@ -1,0 +1,345 @@
+<div class="product-performance-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <button mat-icon-button routerLink="/reports">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Product Performance</h1>
+        <p class="subtitle">Analyze product sales, profitability, and market performance</p>
+      </div>
+    </div>
+    <div class="action-buttons">
+      <button mat-raised-button color="primary" (click)="exportReport('pdf')">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Export PDF
+      </button>
+      <button mat-raised-button color="accent" (click)="exportReport('excel')">
+        <mat-icon>table_chart</mat-icon>
+        Export Excel
+      </button>
+      <button mat-raised-button (click)="exportReport('csv')">
+        <mat-icon>description</mat-icon>
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Report Period</mat-label>
+        <mat-select formControlName="period">
+          <mat-option *ngFor="let period of reportPeriods" [value]="period.value">
+            {{ period.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showCustomDateRange">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showCustomDateRange">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="loadProductReport()" *ngIf="showCustomDateRange">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </form>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading product performance data...</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading && productReport">
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon total">
+            <mat-icon>shopping_bag</mat-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Total Products</p>
+            <p class="card-value">{{ productReport.totalProducts }}</p>
+            <p class="card-subtitle">In catalog</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon revenue">
+            <mat-icon>paid</mat-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Total Revenue</p>
+            <p class="card-value">{{ formatCurrency(getTotalRevenue()) }}</p>
+            <p class="card-subtitle">From all products</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon profit">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Total Profit</p>
+            <p class="card-value">{{ formatCurrency(getTotalProfit()) }}</p>
+            <p class="card-subtitle">Gross profit</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="card-icon margin">
+            <mat-icon>percent</mat-icon>
+          </div>
+          <div class="card-info">
+            <p class="card-label">Avg Profit Margin</p>
+            <p class="card-value">{{ formatPercentage(getAvgProfitMargin()) }}</p>
+            <p class="card-subtitle">Across all products</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>donut_large</mat-icon>
+            Performance Distribution
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-placeholder">
+            <mat-icon>insert_chart</mat-icon>
+            <p>Performance Distribution Chart</p>
+            <p class="chart-note">Chart.js integration will display distribution of product performance</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>bar_chart</mat-icon>
+            Revenue by Category
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-placeholder">
+            <mat-icon>insert_chart</mat-icon>
+            <p>Category Revenue Chart</p>
+            <p class="chart-note">Chart.js integration will display revenue breakdown by category</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Top Performers Table -->
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>star</mat-icon>
+          Top Performing Products
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="topPerformersDataSource" matSort #topPerformersSort="matSort">
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+              <td mat-cell *matCellDef="let row">
+                <div class="product-info">{{ row.productName }}</div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sku">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
+              <td mat-cell *matCellDef="let row" class="sku">{{ row.sku }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="quantitySold">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Qty Sold</th>
+              <td mat-cell *matCellDef="let row" class="quantity">{{ row.quantitySold }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="revenue">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
+              <td mat-cell *matCellDef="let row" class="revenue">{{ formatCurrency(row.revenue) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="profitMargin">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Margin</th>
+              <td mat-cell *matCellDef="let row" class="margin">{{ formatPercentage(row.profitMargin) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="performanceScore">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Score</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="score-badge">{{ row.performanceScore }}</span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="topPerformersColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: topPerformersColumns;"></tr>
+          </table>
+          <mat-paginator #topPerformersPaginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Revenue by Category -->
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>category</mat-icon>
+          Revenue by Category
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="category-list">
+          <div class="category-item" *ngFor="let category of productReport.revenueByCategory">
+            <div class="category-header">
+              <span class="category-name">{{ category.categoryName }}</span>
+              <span class="category-revenue">{{ formatCurrency(category.revenue) }}</span>
+            </div>
+            <div class="category-stats">
+              <span class="stat">Profit: {{ formatCurrency(category.profit) }}</span>
+              <span class="stat">Margin: {{ formatPercentage((category.profit / category.revenue) * 100) }}</span>
+              <span class="stat" [class.positive]="category.growthRate >= 0" [class.negative]="category.growthRate < 0">
+                Growth: {{ formatPercentage(category.growthRate) }}
+              </span>
+            </div>
+            <div class="category-bar">
+              <div class="bar-fill" [style.width.%]="(category.revenue / getTotalRevenue()) * 100"></div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Underperformers Table -->
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>trending_down</mat-icon>
+          Underperforming Products
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="underperformersDataSource" matSort #underperformersSort="matSort">
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+              <td mat-cell *matCellDef="let row">
+                <div class="product-info">{{ row.productName }}</div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sku">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
+              <td mat-cell *matCellDef="let row" class="sku">{{ row.sku }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="quantitySold">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Qty Sold</th>
+              <td mat-cell *matCellDef="let row" class="quantity">{{ row.quantitySold }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="revenue">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
+              <td mat-cell *matCellDef="let row" class="revenue">{{ formatCurrency(row.revenue) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="profitMargin">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Margin</th>
+              <td mat-cell *matCellDef="let row" class="margin">{{ formatPercentage(row.profitMargin) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="returnRate">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Return Rate</th>
+              <td mat-cell *matCellDef="let row" class="return-rate">{{ formatPercentage(row.returnRate) }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="underperformersColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: underperformersColumns;"></tr>
+          </table>
+          <mat-paginator #underperformersPaginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Most Profitable Products Table -->
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>monetization_on</mat-icon>
+          Most Profitable Products
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="profitableDataSource" matSort #profitableSort="matSort">
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+              <td mat-cell *matCellDef="let row">
+                <div class="product-info">{{ row.productName }}</div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="sku">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
+              <td mat-cell *matCellDef="let row" class="sku">{{ row.sku }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="revenue">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
+              <td mat-cell *matCellDef="let row" class="revenue">{{ formatCurrency(row.revenue) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="profit">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Profit</th>
+              <td mat-cell *matCellDef="let row" class="profit">{{ formatCurrency(row.profit) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="profitMargin">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Margin</th>
+              <td mat-cell *matCellDef="let row" class="margin">{{ formatPercentage(row.profitMargin) }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="roi">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>ROI</th>
+              <td mat-cell *matCellDef="let row" class="roi">{{ formatPercentage(row.roi) }}</td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="profitableColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: profitableColumns;"></tr>
+          </table>
+          <mat-paginator #profitablePaginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,396 @@
+// Stock Adjustment Models
+export interface StockAdjustment {
+  id: string;
+  adjustmentNumber: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  adjustmentType: AdjustmentType;
+  quantity: number;
+  previousStock: number;
+  newStock: number;
+  reason: string;
+  notes?: string;
+  cost: number;
+  totalValue: number;
+  locationId?: string;
+  locationName?: string;
+  status: AdjustmentStatus;
+  createdBy: string;
+  approvedBy?: string;
+  createdAt: Date;
+  approvedAt?: Date;
+}
+
+export type AdjustmentType =
+  | 'increase'
+  | 'decrease'
+  | 'damage'
+  | 'loss'
+  | 'found'
+  | 'return'
+  | 'correction';
+export type AdjustmentStatus = 'pending' | 'approved' | 'rejected';
+
+export interface StockAdjustmentFormData {
+  productId: string;
+  adjustmentType: AdjustmentType;
+  quantity: number;
+  reason: string;
+  notes?: string;
+  locationId?: string;
+}
+
+// Stock Transfer Models
+export interface StockTransfer {
+  id: string;
+  transferNumber: string;
+  fromLocationId: string;
+  fromLocationName: string;
+  toLocationId: string;
+  toLocationName: string;
+  items: StockTransferItem[];
+  status: TransferStatus;
+  totalItems: number;
+  totalValue: number;
+  requestedBy: string;
+  approvedBy?: string;
+  receivedBy?: string;
+  notes?: string;
+  createdAt: Date;
+  approvedAt?: Date;
+  shippedAt?: Date;
+  receivedAt?: Date;
+}
+
+export interface StockTransferItem {
+  productId: string;
+  productName: string;
+  productSku: string;
+  quantity: number;
+  receivedQuantity?: number;
+  unitCost: number;
+  totalCost: number;
+}
+
+export type TransferStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'in_transit'
+  | 'completed'
+  | 'cancelled';
+
+export interface StockTransferFormData {
+  fromLocationId: string;
+  toLocationId: string;
+  items: StockTransferItem[];
+  notes?: string;
+}
+
+// Supplier Models
+export interface Supplier {
+  id: string;
+  supplierCode: string;
+  name: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  address: Address;
+  paymentTerms: string;
+  creditLimit?: number;
+  taxId?: string;
+  website?: string;
+  bankDetails?: BankDetails;
+  isActive: boolean;
+  rating?: number;
+  totalPurchases: number;
+  totalSpent: number;
+  lastPurchaseDate?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Address {
+  street?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country: string;
+}
+
+export interface BankDetails {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+  branchCode?: string;
+  swiftCode?: string;
+}
+
+export interface SupplierFormData {
+  name: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  address: Address;
+  paymentTerms: string;
+  creditLimit?: number;
+  taxId?: string;
+  website?: string;
+  bankDetails?: BankDetails;
+  notes?: string;
+  isActive: boolean;
+}
+
+// Purchase Order Models
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  supplierId: string;
+  supplierName: string;
+  items: PurchaseOrderItem[];
+  status: POStatus;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  shippingCost: number;
+  total: number;
+  expectedDeliveryDate?: Date;
+  actualDeliveryDate?: Date;
+  paymentStatus: PaymentStatus;
+  paymentMethod?: string;
+  notes?: string;
+  termsAndConditions?: string;
+  createdBy: string;
+  approvedBy?: string;
+  receivedBy?: string;
+  createdAt: Date;
+  approvedAt?: Date;
+  receivedAt?: Date;
+}
+
+export interface PurchaseOrderItem {
+  productId: string;
+  productName: string;
+  productSku: string;
+  quantity: number;
+  receivedQuantity: number;
+  unitCost: number;
+  tax: number;
+  discount: number;
+  total: number;
+}
+
+export type POStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'ordered'
+  | 'partially_received'
+  | 'received'
+  | 'cancelled';
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'overdue';
+
+export interface PurchaseOrderFormData {
+  supplierId: string;
+  items: PurchaseOrderItem[];
+  expectedDeliveryDate?: Date;
+  discount: number;
+  shippingCost: number;
+  notes?: string;
+  termsAndConditions?: string;
+}
+
+export interface GoodsReceivedNote {
+  id: string;
+  grnNumber: string;
+  purchaseOrderId: string;
+  poNumber: string;
+  supplierId: string;
+  supplierName: string;
+  items: GRNItem[];
+  totalItems: number;
+  receivedBy: string;
+  receivedAt: Date;
+  notes?: string;
+}
+
+export interface GRNItem {
+  productId: string;
+  productName: string;
+  productSku: string;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  damagedQuantity: number;
+  unitCost: number;
+  notes?: string;
+}
+
+// Stock Alert Models
+export interface StockAlert {
+  id: string;
+  alertType: AlertType;
+  productId: string;
+  productName: string;
+  productSku: string;
+  currentStock: number;
+  threshold?: number;
+  expiryDate?: Date;
+  locationId?: string;
+  locationName?: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  message: string;
+  acknowledgedBy?: string;
+  acknowledgedAt?: Date;
+  createdAt: Date;
+}
+
+export type AlertType =
+  | 'low_stock'
+  | 'out_of_stock'
+  | 'overstock'
+  | 'expiring_soon'
+  | 'expired';
+export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type AlertStatus = 'active' | 'acknowledged' | 'resolved';
+
+// Location/Warehouse Models
+export interface Location {
+  id: string;
+  code: string;
+  name: string;
+  type: LocationType;
+  address: Address;
+  isActive: boolean;
+  capacity?: number;
+  currentUtilization?: number;
+  manager?: string;
+  phone?: string;
+  email?: string;
+  createdAt: Date;
+}
+
+export type LocationType = 'warehouse' | 'store' | 'outlet' | 'storage';
+
+// Inventory Report Models
+export interface InventoryReport {
+  reportType: ReportType;
+  generatedAt: Date;
+  dateRange: DateRange;
+  data: any;
+}
+
+export type ReportType =
+  | 'stock_valuation'
+  | 'stock_movement'
+  | 'aging_analysis'
+  | 'variance_report'
+  | 'reorder_report';
+
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
+
+export interface StockValuation {
+  productId: string;
+  productName: string;
+  productSku: string;
+  quantity: number;
+  unitCost: number;
+  totalValue: number;
+  locationId?: string;
+  locationName?: string;
+}
+
+export interface StockMovement {
+  productId: string;
+  productName: string;
+  productSku: string;
+  movementType: MovementType;
+  quantity: number;
+  date: Date;
+  reference: string;
+  locationId?: string;
+}
+
+export type MovementType =
+  | 'sale'
+  | 'purchase'
+  | 'adjustment'
+  | 'transfer_in'
+  | 'transfer_out'
+  | 'return';
+
+export interface AgingAnalysis {
+  productId: string;
+  productName: string;
+  productSku: string;
+  quantity: number;
+  lastMovementDate: Date;
+  daysInStock: number;
+  category: AgingCategory;
+  value: number;
+}
+
+export type AgingCategory = '0-30' | '31-60' | '61-90' | '91-180' | '180+';
+
+// Filter and Search Models
+export interface InventoryFilter {
+  search?: string;
+  locationId?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  status?: string;
+  type?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SupplierFilter {
+  search?: string;
+  status?: string;
+  category?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PurchaseOrderFilter {
+  search?: string;
+  supplierId?: string;
+  status?: POStatus;
+  dateFrom?: Date;
+  dateTo?: Date;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Statistics Models
+export interface InventoryStatistics {
+  totalProducts: number;
+  totalStockValue: number;
+  lowStockItems: number;
+  outOfStockItems: number;
+  overstockItems: number;
+  pendingAdjustments: number;
+  pendingTransfers: number;
+  pendingPurchaseOrders: number;
+  activeAlerts: number;
+}
+
+// Paginated Response
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

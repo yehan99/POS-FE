@@ -1,0 +1,154 @@
+<div class="customer-reports-container">
+  <div class="header">
+    <div class="title-section">
+      <button mat-icon-button routerLink="/reports"><mat-icon>arrow_back</mat-icon></button>
+      <div>
+        <h1>Customer Reports</h1>
+        <p class="subtitle">Customer analytics, retention, and loyalty insights</p>
+      </div>
+    </div>
+    <div class="action-buttons">
+      <button mat-raised-button (click)="exportReport('pdf')"><mat-icon>picture_as_pdf</mat-icon>PDF</button>
+      <button mat-raised-button (click)="exportReport('excel')"><mat-icon>table_chart</mat-icon>Excel</button>
+    </div>
+  </div>
+
+  <mat-card class="filters-card">
+    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Period</mat-label>
+        <mat-select formControlName="period">
+          <mat-option *ngFor="let period of reportPeriods" [value]="period.value">{{ period.label
+            }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button type="button"
+        (click)="loadCustomerReport()"><mat-icon>refresh</mat-icon>Refresh</button>
+    </form>
+  </mat-card>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading customer data...</p>
+  </div>
+
+  <div class="summary-grid" *ngIf="!isLoading && customerReport">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon total"><mat-icon>people</mat-icon></div>
+        <div class="card-info">
+          <p class="card-label">Total Customers</p>
+          <p class="card-value">{{ customerReport.totalCustomers }}</p>
+          <p class="card-subtitle">{{ customerReport.newCustomers }} new this period</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon active"><mat-icon>check_circle</mat-icon></div>
+        <div class="card-info">
+          <p class="card-label">Active Customers</p>
+          <p class="card-value">{{ customerReport.activeCustomers }}</p>
+          <p class="card-subtitle">{{ formatPercentage(customerReport.customerRetention.retentionRate) }}
+            retention</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon value"><mat-icon>account_balance_wallet</mat-icon></div>
+        <div class="card-info">
+          <p class="card-label">Avg Customer Value</p>
+          <p class="card-value">{{ formatCurrency(customerReport.averageCustomerValue) }}</p>
+          <p class="card-subtitle">Per customer</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon lifetime"><mat-icon>timeline</mat-icon></div>
+        <div class="card-info">
+          <p class="card-label">Lifetime Value</p>
+          <p class="card-value">{{ formatCurrency(customerReport.customerLifetimeValue) }}</p>
+          <p class="card-subtitle">Average LTV</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <mat-card class="table-card" *ngIf="!isLoading && customerReport">
+    <mat-card-header>
+      <mat-card-title><mat-icon>star</mat-icon>Top Customers</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="topCustomersDataSource" matSort>
+          <ng-container matColumnDef="customerName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+            <td mat-cell *matCellDef="let customer">{{ customer.customerName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let customer"><span class="email">{{ customer.email }}</span></td>
+          </ng-container>
+
+          <ng-container matColumnDef="phone">
+            <th mat-header-cell *matHeaderCellDef>Phone</th>
+            <td mat-cell *matCellDef="let customer"><span class="phone">{{ customer.phone }}</span></td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalPurchases">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Purchases</th>
+            <td mat-cell *matCellDef="let customer"><span class="purchases">{{ customer.totalPurchases
+                }}</span></td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalSpent">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Spent</th>
+            <td mat-cell *matCellDef="let customer"><span class="spent">{{
+                formatCurrency(customer.totalSpent) }}</span></td>
+          </ng-container>
+
+          <ng-container matColumnDef="averageOrderValue">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Avg Order</th>
+            <td mat-cell *matCellDef="let customer">{{ formatCurrency(customer.averageOrderValue) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="lastPurchaseDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Purchase</th>
+            <td mat-cell *matCellDef="let customer">{{ formatDate(customer.lastPurchaseDate) }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="tier-card" *ngIf="!isLoading && customerReport">
+    <mat-card-header>
+      <mat-card-title><mat-icon>emoji_events</mat-icon>Customer Tiers</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="tier-grid">
+        <div class="tier-item" *ngFor="let tier of customerReport.customersByTier">
+          <div class="tier-header">
+            <span class="tier-name">{{ tier.tier }}</span>
+            <span class="tier-count">{{ tier.customerCount }} customers</span>
+          </div>
+          <p class="tier-spent">{{ formatCurrency(tier.totalSpent) }}</p>
+          <p class="tier-avg">Avg: {{ formatCurrency(tier.averageSpent) }}</p>
+          <div class="tier-bar">
+            <div class="bar-fill" [style.width.%]="tier.percentage"></div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

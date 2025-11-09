@@ -1,0 +1,158 @@
+<div class="reports-dashboard-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>Reports & Analytics</h1>
+      <p class="subtitle">Comprehensive business insights and performance metrics</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading reports data...</p>
+  </div>
+
+  <!-- Report Categories Grid -->
+  <div class="reports-grid" *ngIf="!isLoading && summary">
+    <mat-card *ngFor="let category of reportCategories" class="report-category-card"
+      (click)="navigateTo(category.route)">
+      <mat-card-content>
+        <div class="category-header" [style.background]="category.color">
+          <mat-icon>{{ category.icon }}</mat-icon>
+        </div>
+
+        <div class="category-body">
+          <h2>{{ category.title }}</h2>
+          <p class="description">{{ category.description }}</p>
+
+          <div class="stats-row">
+            <div class="stat-item" *ngFor="let stat of category.stats">
+              <span class="stat-label">{{ stat.label }}</span>
+              <span class="stat-value">{{ stat.value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-footer">
+          <button mat-button color="primary">
+            View Details
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Quick Stats Overview -->
+  <div class="quick-stats-section" *ngIf="!isLoading && summary">
+    <h2 class="section-title">
+      <mat-icon>dashboard</mat-icon>
+      Quick Overview
+    </h2>
+
+    <div class="quick-stats-grid">
+      <!-- Sales Quick Stats -->
+      <mat-card class="quick-stat-card sales">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Today's Sales</p>
+            <p class="stat-value">{{ formatCurrency(summary.salesSummary.todaySales) }}</p>
+            <p class="stat-change positive">
+              <mat-icon>trending_up</mat-icon>
+              {{ summary.salesSummary.salesGrowth }}% vs yesterday
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Monthly Sales -->
+      <mat-card class="quick-stat-card revenue">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>account_balance_wallet</mat-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Monthly Sales</p>
+            <p class="stat-value">{{ formatCurrency(summary.salesSummary.monthSales) }}</p>
+            <p class="stat-change positive">
+              <mat-icon>trending_up</mat-icon>
+              On track for target
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Inventory Value -->
+      <mat-card class="quick-stat-card inventory">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>inventory</mat-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Stock Value</p>
+            <p class="stat-value">{{ formatCurrency(summary.inventorySummary.totalValue) }}</p>
+            <p class="stat-change" [class.warning]="summary.inventorySummary.lowStockCount > 0">
+              <mat-icon>warning</mat-icon>
+              {{ summary.inventorySummary.lowStockCount }} low stock items
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Active Customers -->
+      <mat-card class="quick-stat-card customers">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Active Customers</p>
+            <p class="stat-value">{{ summary.customerSummary.activeCustomers }}</p>
+            <p class="stat-change positive">
+              <mat-icon>trending_up</mat-icon>
+              {{ summary.customerSummary.retentionRate }}% retention
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Product Performance -->
+      <mat-card class="quick-stat-card products">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>category</mat-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Top Performers</p>
+            <p class="stat-value">{{ summary.productSummary.topPerformers }}</p>
+            <p class="stat-change">
+              <mat-icon>insights</mat-icon>
+              {{ summary.productSummary.averageMargin }}% avg margin
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Yearly Revenue -->
+      <mat-card class="quick-stat-card yearly">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>timeline</mat-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">Yearly Revenue</p>
+            <p class="stat-value">{{ formatCurrency(summary.salesSummary.yearSales) }}</p>
+            <p class="stat-change positive">
+              <mat-icon>trending_up</mat-icon>
+              {{ summary.salesSummary.salesGrowth }}% YoY growth
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

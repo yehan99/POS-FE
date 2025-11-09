@@ -1,0 +1,45 @@
+.localization-demo {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .demo-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+  }
+
+  mat-card {
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 20px 0 15px 0;
+      color: #333;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    p {
+      margin: 10px 0;
+      font-size: 14px;
+
+      strong {
+        color: #555;
+      }
+    }
+  }
+
+  .button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 15px 0;
+
+    button {
+      min-width: 120px;
+    }
+  }
+}

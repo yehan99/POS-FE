@@ -1,0 +1,62 @@
+@use "../login/login.component.scss" as *;
+
+.register-card {
+  max-width: 550px;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+
+  .half-width {
+    flex: 1;
+  }
+}
+
+.section-divider {
+  margin: 1.5rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+
+  span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.terms-checkbox {
+  margin-bottom: 1.5rem;
+
+  a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  mat-error {
+    font-size: 0.75rem;
+    color: #f44336;
+    margin-top: 0.25rem;
+    display: block;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .register-card {
+    padding: 2rem 1.25rem;
+  }
+}

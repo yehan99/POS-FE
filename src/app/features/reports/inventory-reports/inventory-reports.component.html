@@ -1,0 +1,285 @@
+<div class="inventory-reports-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <button mat-icon-button routerLink="/reports">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1>Inventory Reports</h1>
+        <p class="subtitle">Stock valuation, movement analysis, and aging reports</p>
+      </div>
+    </div>
+    <div class="action-buttons">
+      <button mat-raised-button (click)="exportReport('pdf')">
+        <mat-icon>picture_as_pdf</mat-icon>
+        PDF
+      </button>
+      <button mat-raised-button (click)="exportReport('excel')">
+        <mat-icon>table_chart</mat-icon>
+        Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Period</mat-label>
+        <mat-select formControlName="period">
+          <mat-option *ngFor="let period of reportPeriods" [value]="period.value">
+            {{ period.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showCustomDateRange">
+        <mat-label>Start Date</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showCustomDateRange">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button type="button" (click)="loadInventoryReport()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </form>
+  </mat-card>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading inventory data...</p>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid" *ngIf="!isLoading && inventoryReport">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon total">
+          <mat-icon>inventory</mat-icon>
+        </div>
+        <div class="card-info">
+          <p class="card-label">Stock Value</p>
+          <p class="card-value">{{ formatCurrency(inventoryReport.totalStockValue) }}</p>
+          <p class="card-subtitle">{{ inventoryReport.totalProducts }} products</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon low">
+          <mat-icon>trending_down</mat-icon>
+        </div>
+        <div class="card-info">
+          <p class="card-label">Low Stock</p>
+          <p class="card-value">{{ inventoryReport.lowStockItems }}</p>
+          <p class="card-subtitle">Needs reorder</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon out">
+          <mat-icon>error</mat-icon>
+        </div>
+        <div class="card-info">
+          <p class="card-label">Out of Stock</p>
+          <p class="card-value">{{ inventoryReport.outOfStockItems }}</p>
+          <p class="card-subtitle">Urgent attention</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="card-icon over">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="card-info">
+          <p class="card-label">Overstock</p>
+          <p class="card-value">{{ inventoryReport.overstockItems }}</p>
+          <p class="card-subtitle">Review required</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Stock Movement Table -->
+  <mat-card class="table-card" *ngIf="!isLoading && inventoryReport">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>sync_alt</mat-icon>
+        Stock Movement Analysis
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="stockMovementDataSource" matSort #movementSort="matSort">
+          <ng-container matColumnDef="productName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+            <td mat-cell *matCellDef="let item">{{ item.productName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sku">
+            <th mat-header-cell *matHeaderCellDef>SKU</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="sku">{{ item.sku }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="openingStock">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Opening</th>
+            <td mat-cell *matCellDef="let item">{{ item.openingStock }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="stockIn">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>In</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="stock-in">+{{ item.stockIn }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="stockOut">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Out</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="stock-out">-{{ item.stockOut }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="adjustments">
+            <th mat-header-cell *matHeaderCellDef>Adj</th>
+            <td mat-cell *matCellDef="let item">
+              <span [class.positive]="item.adjustments > 0" [class.negative]="item.adjustments < 0">
+                {{ item.adjustments }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="closingStock">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Closing</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="closing">{{ item.closingStock }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="movementRate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Turnover</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="rate">{{ item.movementRate.toFixed(2) }}x</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedMovementColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedMovementColumns;"></tr>
+        </table>
+      </div>
+      <mat-paginator #movementPaginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Stock Valuation Table -->
+  <mat-card class="table-card" *ngIf="!isLoading && inventoryReport">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>account_balance</mat-icon>
+        Stock Valuation
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="stockValuationDataSource" matSort #valuationSort="matSort">
+          <ng-container matColumnDef="productName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+            <td mat-cell *matCellDef="let item">{{ item.productName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sku">
+            <th mat-header-cell *matHeaderCellDef>SKU</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="sku">{{ item.sku }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Qty</th>
+            <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="costPrice">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Cost Price</th>
+            <td mat-cell *matCellDef="let item">{{ formatCurrency(item.costPrice) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="sellingPrice">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Selling Price</th>
+            <td mat-cell *matCellDef="let item">{{ formatCurrency(item.sellingPrice) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalCost">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Cost</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="cost">{{ formatCurrency(item.totalCost) }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalValue">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Value</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="value">{{ formatCurrency(item.totalValue) }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="potentialProfit">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Potential Profit</th>
+            <td mat-cell *matCellDef="let item">
+              <span class="profit">{{ formatCurrency(item.potentialProfit) }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedValuationColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedValuationColumns;"></tr>
+        </table>
+      </div>
+      <mat-paginator #valuationPaginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Aging Analysis -->
+  <mat-card class="aging-card" *ngIf="!isLoading && inventoryReport">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>schedule</mat-icon>
+        Stock Aging Analysis
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="aging-grid">
+        <div class="aging-item" *ngFor="let age of inventoryReport.agingAnalysis">
+          <div class="aging-header">
+            <span class="age-range">{{ age.ageRange }} days</span>
+            <span class="age-percentage">{{ formatPercentage(age.percentage) }}</span>
+          </div>
+          <div class="aging-body">
+            <p class="product-count">{{ age.productCount }} products</p>
+            <p class="age-value">{{ formatCurrency(age.totalValue) }}</p>
+          </div>
+          <div class="aging-bar">
+            <div class="bar-fill" [style.width.%]="age.percentage"></div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

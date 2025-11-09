@@ -1,0 +1,430 @@
+.customer-detail-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .back-button {
+        mat-icon {
+          font-size: 24px;
+        }
+      }
+
+      .title-info {
+        h1 {
+          margin: 0;
+          font-size: 32px;
+          font-weight: 600;
+          color: #1a237e;
+        }
+
+        .subtitle {
+          margin: 4px 0 0 0;
+          color: #666;
+          font-size: 14px;
+
+          strong {
+            color: #1976d2;
+            font-family: "Courier New", monospace;
+          }
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+
+      button {
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+
+      .danger {
+        color: #d32f2f;
+      }
+    }
+  }
+
+  .status-container {
+    margin-bottom: 24px;
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+
+      &.active {
+        background: #c8e6c9;
+        color: #2e7d32;
+      }
+
+      &.inactive {
+        background: #ffcdd2;
+        color: #c62828;
+      }
+    }
+  }
+
+  // Overview Cards
+  .overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .overview-card {
+      mat-card-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px !important;
+
+        .card-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          &.loyalty {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+
+          &.points {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+          }
+
+          &.purchases {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+          }
+
+          &.spent {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          }
+
+          mat-icon {
+            color: white;
+            font-size: 32px;
+            width: 32px;
+            height: 32px;
+          }
+        }
+
+        .card-details {
+          flex: 1;
+
+          .label {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+          }
+
+          .value {
+            margin: 4px 0 0 0;
+            font-size: 26px;
+            font-weight: 600;
+            color: #333;
+          }
+        }
+      }
+    }
+  }
+
+  // Content Grid
+  .content-grid {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 24px;
+
+    .left-column,
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    // Info Cards
+    .info-card {
+      mat-card-header {
+        mat-card-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 18px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 16px;
+
+          mat-icon {
+            color: #1976d2;
+          }
+        }
+      }
+
+      mat-card-content {
+        .info-row {
+          display: flex;
+          align-items: flex-start;
+          gap: 16px;
+          padding: 12px 0;
+          border-bottom: 1px solid #f0f0f0;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          > mat-icon {
+            color: #1976d2;
+            margin-top: 2px;
+          }
+
+          .info-content {
+            flex: 1;
+
+            .label {
+              margin: 0;
+              font-size: 12px;
+              color: #666;
+              font-weight: 500;
+            }
+
+            .value {
+              margin: 4px 0 0 0;
+              font-size: 15px;
+              color: #333;
+              word-break: break-word;
+            }
+          }
+        }
+
+        .notes-text {
+          margin: 0;
+          padding: 16px;
+          background: #f5f5f5;
+          border-radius: 8px;
+          color: #333;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+      }
+    }
+
+    // History Cards
+    .history-card {
+      mat-card-header {
+        mat-card-title {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 18px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 16px;
+
+          mat-icon {
+            color: #1976d2;
+          }
+        }
+      }
+
+      mat-card-content {
+        .table-container {
+          overflow-x: auto;
+
+          table {
+            width: 100%;
+
+            th {
+              background: #f5f5f5;
+              font-weight: 600;
+              color: #333;
+              font-size: 13px;
+            }
+
+            td {
+              font-size: 14px;
+            }
+
+            .transaction-id {
+              font-family: "Courier New", monospace;
+              background: #e3f2fd;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 11px;
+              font-weight: 600;
+              color: #1976d2;
+            }
+
+            .points-earned {
+              display: inline-block;
+              background: #fff9c4;
+              color: #f57f17;
+              padding: 4px 8px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 12px;
+            }
+          }
+        }
+
+        .loyalty-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+
+          .loyalty-transaction {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+
+            &:hover {
+              background: #eeeeee;
+            }
+
+            .transaction-icon {
+              width: 48px;
+              height: 48px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+
+              mat-icon {
+                color: white;
+                font-size: 24px;
+                width: 24px;
+                height: 24px;
+              }
+            }
+
+            .transaction-details {
+              flex: 1;
+              min-width: 0;
+
+              .transaction-type {
+                margin: 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #333;
+              }
+
+              .transaction-description {
+                margin: 4px 0;
+                font-size: 13px;
+                color: #666;
+              }
+
+              .transaction-date {
+                margin: 4px 0 0 0;
+                font-size: 11px;
+                color: #999;
+              }
+            }
+
+            .transaction-points {
+              font-size: 20px;
+              font-weight: 700;
+              flex-shrink: 0;
+            }
+          }
+        }
+
+        .no-data {
+          text-align: center;
+          padding: 40px 20px;
+
+          mat-icon {
+            font-size: 64px;
+            width: 64px;
+            height: 64px;
+            color: #ccc;
+            margin-bottom: 16px;
+          }
+
+          p {
+            margin: 0;
+            color: #666;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+
+  p {
+    margin-top: 20px;
+    color: #666;
+    font-size: 16px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .customer-detail-container {
+    .content-grid {
+      grid-template-columns: 1fr;
+
+      .left-column {
+        order: 1;
+      }
+
+      .right-column {
+        order: 2;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .customer-detail-container {
+    padding: 16px;
+
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      .action-buttons {
+        width: 100%;
+        flex-wrap: wrap;
+
+        button {
+          flex: 1;
+        }
+      }
+    }
+
+    .overview-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+}

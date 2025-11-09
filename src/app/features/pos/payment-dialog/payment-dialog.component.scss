@@ -1,0 +1,224 @@
+.payment-dialog {
+  min-width: 500px;
+  max-width: 600px;
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1e293b;
+
+      mat-icon {
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+        color: #667eea;
+      }
+    }
+  }
+
+  mat-dialog-content {
+    padding: 0;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  // Order Summary
+  .order-summary {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      font-size: 1rem;
+
+      &.total {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 2px solid #e2e8f0;
+        font-size: 1.25rem;
+        font-weight: 700;
+
+        .amount {
+          color: #667eea;
+        }
+      }
+
+      .amount {
+        font-weight: 600;
+
+        &.discount {
+          color: #10b981;
+        }
+      }
+    }
+
+    mat-divider {
+      margin: 0.5rem 0;
+    }
+  }
+
+  // Payment Methods
+  .payment-methods {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+
+    .method-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0.5rem;
+      height: auto;
+      transition: all 0.2s;
+
+      mat-icon {
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      span {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      &:hover:not([color="primary"]) {
+        background: #f1f5f9;
+      }
+    }
+  }
+
+  // Payment Sections
+  .payment-section {
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #475569;
+      margin: 0 0 1rem 0;
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    // Quick Amounts
+    .quick-amounts {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+
+      button {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.25rem;
+        min-width: 0;
+
+        &:hover {
+          background: #667eea;
+          color: white;
+        }
+      }
+    }
+
+    // Change Display
+    .change-display {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      color: white;
+      margin-top: 1rem;
+
+      .change-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .change-amount {
+        font-size: 2rem;
+        font-weight: 700;
+      }
+    }
+
+    // Split Payment Info
+    .split-info {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        font-size: 1rem;
+
+        strong {
+          font-size: 1.1rem;
+
+          &.complete {
+            color: #10b981;
+          }
+
+          &.remaining {
+            color: #ef4444;
+          }
+        }
+      }
+    }
+  }
+
+  mat-dialog-actions {
+    padding: 1rem 0 0 0;
+    margin: 0;
+    border-top: 1px solid #e2e8f0;
+
+    .complete-btn {
+      min-width: 180px;
+      height: 44px;
+      font-size: 1rem;
+      font-weight: 600;
+
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .payment-dialog {
+    min-width: 100%;
+
+    .payment-methods {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-amounts {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+  }
+}

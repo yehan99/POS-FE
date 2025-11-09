@@ -1,0 +1,227 @@
+<div class="purchase-orders-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="title-section">
+            <h1>Purchase Orders</h1>
+            <p class="subtitle">Create and manage purchase orders from suppliers</p>
+        </div>
+        <div class="action-buttons">
+            <button mat-stroked-button (click)="exportPOs()">
+                <mat-icon>download</mat-icon>
+                Export
+            </button>
+            <button mat-raised-button color="primary" (click)="createPurchaseOrder()">
+                <mat-icon>add</mat-icon>
+                Create PO
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <mat-card class="filters-card">
+        <mat-card-content>
+            <form [formGroup]="filterForm" class="filters-form">
+                <mat-form-field appearance="outline" class="search-field">
+                    <mat-label>Search</mat-label>
+                    <input matInput formControlName="search" placeholder="Search by PO number, supplier...">
+                    <mat-icon matPrefix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Supplier</mat-label>
+                    <mat-select formControlName="supplierId">
+                        <mat-option value="">All Suppliers</mat-option>
+                        <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                            {{ supplier.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Status</mat-label>
+                    <mat-select formControlName="status">
+                        <mat-option value="">All Statuses</mat-option>
+                        <mat-option *ngFor="let status of poStatuses" [value]="status">
+                            {{ status.replace('_', ' ') | titlecase }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Date From</mat-label>
+                    <input matInput [matDatepicker]="dateFromPicker" formControlName="dateFrom"
+                        (dateChange)="applyDateFilter()">
+                    <mat-datepicker-toggle matSuffix [for]="dateFromPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #dateFromPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Date To</mat-label>
+                    <input matInput [matDatepicker]="dateToPicker" formControlName="dateTo"
+                        (dateChange)="applyDateFilter()">
+                    <mat-datepicker-toggle matSuffix [for]="dateToPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #dateToPicker></mat-datepicker>
+                </mat-form-field>
+
+                <button mat-stroked-button type="button" (click)="clearFilters()" class="clear-btn">
+                    <mat-icon>clear</mat-icon>
+                    Clear
+                </button>
+            </form>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Purchase Orders Table -->
+    <mat-card class="table-card">
+        <mat-card-content>
+            <div class="table-container">
+                <table mat-table [dataSource]="dataSource" matSort>
+
+                    <!-- Checkbox Column -->
+                    <ng-container matColumnDef="select">
+                        <th mat-header-cell *matHeaderCellDef>
+                            <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                                [checked]="selection.hasValue() && isAllSelected()"
+                                [indeterminate]="selection.hasValue() && !isAllSelected()">
+                            </mat-checkbox>
+                        </th>
+                        <td mat-cell *matCellDef="let row">
+                            <mat-checkbox (click)="$event.stopPropagation()"
+                                (change)="$event ? selection.toggle(row) : null" [checked]="selection.isSelected(row)">
+                            </mat-checkbox>
+                        </td>
+                    </ng-container>
+
+                    <!-- PO Number Column -->
+                    <ng-container matColumnDef="poNumber">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>PO Number</th>
+                        <td mat-cell *matCellDef="let po">
+                            <span class="po-number">{{ po.poNumber }}</span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Supplier Column -->
+                    <ng-container matColumnDef="supplier">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Supplier</th>
+                        <td mat-cell *matCellDef="let po">
+                            <div class="supplier-info">
+                                <strong>{{ po.supplierName }}</strong>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <!-- Total Amount Column -->
+                    <ng-container matColumnDef="totalAmount">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Amount</th>
+                        <td mat-cell *matCellDef="let po">
+                            <span class="amount">{{ formatCurrency(po.total) }}</span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Status Column -->
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+                        <td mat-cell *matCellDef="let po">
+                            <span class="status-badge" [style.backgroundColor]="getStatusColor(po.status)">
+                                {{ po.status.replace('_', ' ') | titlecase }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Payment Status Column -->
+                    <ng-container matColumnDef="paymentStatus">
+                        <th mat-header-cell *matHeaderCellDef>Payment</th>
+                        <td mat-cell *matCellDef="let po">
+                            <span class="payment-badge"
+                                [style.backgroundColor]="getPaymentStatusColor(po.paymentStatus)">
+                                {{ po.paymentStatus | titlecase }}
+                            </span>
+                        </td>
+                    </ng-container>
+
+                    <!-- Order Date Column -->
+                    <ng-container matColumnDef="orderDate">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Order Date</th>
+                        <td mat-cell *matCellDef="let po">
+                            {{ formatDate(po.createdAt) }}
+                        </td>
+                    </ng-container>
+
+                    <!-- Expected Delivery Column -->
+                    <ng-container matColumnDef="expectedDelivery">
+                        <th mat-header-cell *matHeaderCellDef>Expected Delivery</th>
+                        <td mat-cell *matCellDef="let po">
+                            {{ po.expectedDeliveryDate ? formatDate(po.expectedDeliveryDate) : 'N/A' }}
+                        </td>
+                    </ng-container>
+
+                    <!-- Actions Column -->
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                        <td mat-cell *matCellDef="let po">
+                            <button mat-icon-button [matMenuTriggerFor]="menu">
+                                <mat-icon>more_vert</mat-icon>
+                            </button>
+                            <mat-menu #menu="matMenu">
+                                <button mat-menu-item (click)="viewPODetails(po)">
+                                    <mat-icon>visibility</mat-icon>
+                                    <span>View Details</span>
+                                </button>
+                                <button mat-menu-item (click)="editPO(po)" *ngIf="po.status === 'draft'">
+                                    <mat-icon>edit</mat-icon>
+                                    <span>Edit</span>
+                                </button>
+                                <button mat-menu-item (click)="downloadPDF(po)">
+                                    <mat-icon>picture_as_pdf</mat-icon>
+                                    <span>Download PDF</span>
+                                </button>
+                                <mat-divider></mat-divider>
+                                <button mat-menu-item (click)="approvePO(po)" *ngIf="canApprove(po)">
+                                    <mat-icon>check_circle</mat-icon>
+                                    <span>Approve</span>
+                                </button>
+                                <button mat-menu-item (click)="sendPO(po)" *ngIf="canSend(po)">
+                                    <mat-icon>send</mat-icon>
+                                    <span>Send to Supplier</span>
+                                </button>
+                                <button mat-menu-item (click)="receivePO(po)" *ngIf="canReceive(po)">
+                                    <mat-icon>inventory</mat-icon>
+                                    <span>Receive Items</span>
+                                </button>
+                                <mat-divider *ngIf="canCancel(po)"></mat-divider>
+                                <button mat-menu-item (click)="cancelPO(po)" *ngIf="canCancel(po)"
+                                    class="cancel-action">
+                                    <mat-icon>cancel</mat-icon>
+                                    <span>Cancel PO</span>
+                                </button>
+                            </mat-menu>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" *ngIf="isLoading">
+                    <mat-spinner diameter="50"></mat-spinner>
+                </div>
+
+                <!-- No Data -->
+                <div class="no-data" *ngIf="!isLoading && dataSource.data.length === 0">
+                    <mat-icon>receipt_long</mat-icon>
+                    <p>No purchase orders found</p>
+                    <button mat-raised-button color="primary" (click)="createPurchaseOrder()">
+                        <mat-icon>add</mat-icon>
+                        Create First Purchase Order
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paginator -->
+            <mat-paginator [length]="totalPOs" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 50]"
+                (page)="onPageChange($event)" showFirstLastButtons>
+            </mat-paginator>
+        </mat-card-content>
+    </mat-card>
+</div>

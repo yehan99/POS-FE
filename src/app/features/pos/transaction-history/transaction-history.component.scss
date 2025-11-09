@@ -1,0 +1,203 @@
+.transaction-history {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    button {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  .filter-card {
+    margin-bottom: 24px;
+
+    .filter-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: start;
+
+      .search-field {
+        grid-column: 1 / -1;
+      }
+
+      mat-form-field {
+        width: 100%;
+      }
+
+      .clear-btn {
+        align-self: end;
+        height: 56px;
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+
+  .table-card {
+    .table-container {
+      overflow-x: auto;
+      position: relative;
+      min-height: 400px;
+
+      .transactions-table {
+        width: 100%;
+        background: white;
+
+        th {
+          background: #f5f5f5;
+          font-weight: 600;
+          color: #333;
+        }
+
+        td,
+        th {
+          padding: 16px;
+        }
+
+        .transaction-number {
+          font-family: "Courier New", monospace;
+          font-weight: 600;
+          color: #3f51b5;
+        }
+
+        .amount {
+          font-weight: 600;
+          color: #2e7d32;
+        }
+
+        .payment-method {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            color: #666;
+          }
+        }
+
+        .item-chip {
+          font-size: 12px;
+          min-height: 28px;
+          padding: 4px 12px;
+        }
+
+        mat-chip {
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .no-data {
+          text-align: center;
+          padding: 48px 16px;
+        }
+
+        .no-data-message {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          color: #999;
+
+          mat-icon {
+            font-size: 64px;
+            width: 64px;
+            height: 64px;
+            opacity: 0.3;
+          }
+
+          p {
+            margin: 0;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+
+    .loading-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    mat-paginator {
+      border-top: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .transaction-history {
+    padding: 16px;
+
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      h1 {
+        font-size: 24px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .filter-card {
+      .filter-form {
+        grid-template-columns: 1fr;
+
+        .clear-btn {
+          width: 100%;
+        }
+      }
+    }
+
+    .table-card {
+      .table-container {
+        .transactions-table {
+          font-size: 12px;
+
+          td,
+          th {
+            padding: 8px;
+          }
+        }
+      }
+    }
+  }
+}

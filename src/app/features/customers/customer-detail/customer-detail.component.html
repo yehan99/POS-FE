@@ -1,0 +1,302 @@
+<div class="customer-detail-container" *ngIf="customer && !isLoading">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="title-info">
+        <h1>{{ customer.firstName }} {{ customer.lastName }}</h1>
+        <p class="subtitle">Customer Code: <strong>{{ customer.customerCode }}</strong></p>
+      </div>
+    </div>
+    <div class="action-buttons">
+      <button mat-stroked-button (click)="sendMessage()">
+        <mat-icon>message</mat-icon>
+        Send Message
+      </button>
+      <button mat-raised-button color="primary" (click)="editCustomer()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-icon-button [matMenuTriggerFor]="menu" color="primary">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="addLoyaltyPoints()">
+          <mat-icon>add</mat-icon>
+          <span>Add Loyalty Points</span>
+        </button>
+        <button mat-menu-item (click)="redeemLoyaltyPoints()">
+          <mat-icon>redeem</mat-icon>
+          <span>Redeem Points</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="deleteCustomer()" class="danger">
+          <mat-icon>delete</mat-icon>
+          <span>Delete Customer</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- Status Badge -->
+  <div class="status-container">
+    <span class="status-badge" [class.active]="customer.isActive" [class.inactive]="!customer.isActive">
+      {{ customer.isActive ? 'Active' : 'Inactive' }}
+    </span>
+  </div>
+
+  <!-- Overview Cards -->
+  <div class="overview-cards">
+    <mat-card class="overview-card">
+      <mat-card-content>
+        <div class="card-icon loyalty">
+          <mat-icon>{{ getLoyaltyTierIcon(customer.loyaltyTier) }}</mat-icon>
+        </div>
+        <div class="card-details">
+          <p class="label">Loyalty Tier</p>
+          <p class="value" [style.color]="getLoyaltyTierColor(customer.loyaltyTier)">
+            {{ customer.loyaltyTier | titlecase }}
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="overview-card">
+      <mat-card-content>
+        <div class="card-icon points">
+          <mat-icon>stars</mat-icon>
+        </div>
+        <div class="card-details">
+          <p class="label">Loyalty Points</p>
+          <p class="value">{{ customer.loyaltyPoints }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="overview-card">
+      <mat-card-content>
+        <div class="card-icon purchases">
+          <mat-icon>shopping_cart</mat-icon>
+        </div>
+        <div class="card-details">
+          <p class="label">Total Purchases</p>
+          <p class="value">{{ customer.totalPurchases }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="overview-card">
+      <mat-card-content>
+        <div class="card-icon spent">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="card-details">
+          <p class="label">Total Spent</p>
+          <p class="value">{{ formatCurrency(customer.totalSpent) }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="content-grid">
+
+    <!-- Left Column -->
+    <div class="left-column">
+
+      <!-- Contact Information -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>contact_phone</mat-icon>
+            Contact Information
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <mat-icon>phone</mat-icon>
+            <div class="info-content">
+              <p class="label">Phone</p>
+              <p class="value">{{ customer.phone }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <mat-icon>email</mat-icon>
+            <div class="info-content">
+              <p class="label">Email</p>
+              <p class="value">{{ customer.email || 'Not provided' }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <mat-icon>location_on</mat-icon>
+            <div class="info-content">
+              <p class="label">Address</p>
+              <p class="value">{{ getFullAddress() }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Personal Information -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>person</mat-icon>
+            Personal Information
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <mat-icon>cake</mat-icon>
+            <div class="info-content">
+              <p class="label">Date of Birth</p>
+              <p class="value">{{ formatDateShort(customer.dateOfBirth) }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <mat-icon>wc</mat-icon>
+            <div class="info-content">
+              <p class="label">Gender</p>
+              <p class="value">{{ customer.gender ? (customer.gender | titlecase) : 'Not specified' }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <mat-icon>event</mat-icon>
+            <div class="info-content">
+              <p class="label">Member Since</p>
+              <p class="value">{{ formatDateShort(customer.createdAt) }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <mat-icon>shopping_bag</mat-icon>
+            <div class="info-content">
+              <p class="label">Last Purchase</p>
+              <p class="value">{{ formatDateShort(customer.lastPurchaseDate) }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Notes -->
+      <mat-card class="info-card" *ngIf="customer.notes">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>notes</mat-icon>
+            Notes
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="notes-text">{{ customer.notes }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Right Column -->
+    <div class="right-column">
+
+      <!-- Purchase History -->
+      <mat-card class="history-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>history</mat-icon>
+            Purchase History
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="table-container" *ngIf="purchaseHistory.length > 0">
+            <table mat-table [dataSource]="purchaseHistory">
+
+              <ng-container matColumnDef="date">
+                <th mat-header-cell *matHeaderCellDef>Date</th>
+                <td mat-cell *matCellDef="let purchase">{{ formatDate(purchase.date) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="transactionId">
+                <th mat-header-cell *matHeaderCellDef>Transaction ID</th>
+                <td mat-cell *matCellDef="let purchase">
+                  <span class="transaction-id">{{ purchase.transactionId }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="items">
+                <th mat-header-cell *matHeaderCellDef>Items</th>
+                <td mat-cell *matCellDef="let purchase">{{ purchase.items }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef>Total</th>
+                <td mat-cell *matCellDef="let purchase">{{ formatCurrency(purchase.total) }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="paymentMethod">
+                <th mat-header-cell *matHeaderCellDef>Payment</th>
+                <td mat-cell *matCellDef="let purchase">{{ purchase.paymentMethod }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="pointsEarned">
+                <th mat-header-cell *matHeaderCellDef>Points</th>
+                <td mat-cell *matCellDef="let purchase">
+                  <span class="points-earned">+{{ purchase.pointsEarned }}</span>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedHistoryColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedHistoryColumns;"></tr>
+            </table>
+          </div>
+
+          <div class="no-data" *ngIf="purchaseHistory.length === 0">
+            <mat-icon>shopping_cart</mat-icon>
+            <p>No purchase history yet</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Loyalty Transactions -->
+      <mat-card class="history-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>loyalty</mat-icon>
+            Loyalty Transactions
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="loyalty-list" *ngIf="loyaltyTransactions.length > 0">
+            <div class="loyalty-transaction" *ngFor="let transaction of loyaltyTransactions">
+              <div class="transaction-icon" [style.backgroundColor]="getLoyaltyTypeColor(transaction.type)">
+                <mat-icon>{{ getLoyaltyTypeIcon(transaction.type) }}</mat-icon>
+              </div>
+              <div class="transaction-details">
+                <p class="transaction-type">{{ transaction.type | titlecase }}</p>
+                <p class="transaction-description">{{ transaction.description }}</p>
+                <p class="transaction-date">{{ formatDate(transaction.createdAt) }}</p>
+              </div>
+              <div class="transaction-points" [style.color]="getLoyaltyTypeColor(transaction.type)">
+                {{ transaction.type === 'redeemed' || transaction.type === 'expired' ? '-' : '+' }}{{ transaction.points
+                }}
+              </div>
+            </div>
+          </div>
+
+          <div class="no-data" *ngIf="loyaltyTransactions.length === 0">
+            <mat-icon>stars</mat-icon>
+            <p>No loyalty transactions yet</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="isLoading">
+  <mat-spinner diameter="50"></mat-spinner>
+  <p>Loading customer details...</p>
+</div>

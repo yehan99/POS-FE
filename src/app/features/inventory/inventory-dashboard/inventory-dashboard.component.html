@@ -1,0 +1,171 @@
+<div class="inventory-dashboard-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>Inventory Management</h1>
+      <p class="subtitle">Manage stock levels, transfers, and suppliers</p>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="statistics-grid" *ngIf="statistics && !isLoading">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon products">
+          <mat-icon>inventory</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Total Products</p>
+          <p class="stat-value">{{ statistics.totalProducts }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon value">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Stock Value</p>
+          <p class="stat-value">{{ formatCurrency(statistics.totalStockValue) }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/alerts')">
+      <mat-card-content>
+        <div class="stat-icon warning">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Low Stock Items</p>
+          <p class="stat-value">{{ statistics.lowStockItems }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/alerts')">
+      <mat-card-content>
+        <div class="stat-icon danger">
+          <mat-icon>error</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Out of Stock</p>
+          <p class="stat-value">{{ statistics.outOfStockItems }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/adjustments')">
+      <mat-card-content>
+        <div class="stat-icon pending">
+          <mat-icon>edit</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Pending Adjustments</p>
+          <p class="stat-value">{{ statistics.pendingAdjustments }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/transfers')">
+      <mat-card-content>
+        <div class="stat-icon transfer">
+          <mat-icon>swap_horiz</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Pending Transfers</p>
+          <p class="stat-value">{{ statistics.pendingTransfers }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/purchase-orders')">
+      <mat-card-content>
+        <div class="stat-icon po">
+          <mat-icon>shopping_cart</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Pending POs</p>
+          <p class="stat-value">{{ statistics.pendingPurchaseOrders }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/alerts')">
+      <mat-card-content>
+        <div class="stat-icon alerts">
+          <mat-icon>notifications_active</mat-icon>
+        </div>
+        <div class="stat-details">
+          <p class="stat-label">Active Alerts</p>
+          <p class="stat-value">{{ statistics.activeAlerts }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Quick Actions -->
+  <mat-card class="quick-actions-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>flash_on</mat-icon>
+        Quick Actions
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="quick-actions-grid">
+        <button mat-raised-button *ngFor="let action of quickActions" (click)="navigateTo(action.route)"
+          class="action-button" [style.background]="action.color">
+          <mat-icon>{{ action.icon }}</mat-icon>
+          <span>{{ action.label }}</span>
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Recent Alerts -->
+  <mat-card class="alerts-card" *ngIf="recentAlerts.length > 0">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>notifications</mat-icon>
+        Recent Alerts
+      </mat-card-title>
+      <button mat-button color="primary" (click)="navigateTo('/inventory/alerts')">
+        View All
+      </button>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="alerts-list">
+        <div class="alert-item" *ngFor="let alert of recentAlerts">
+          <div class="alert-icon" [style.backgroundColor]="getAlertSeverityColor(alert.severity)">
+            <mat-icon>{{ alert.alertType === 'low_stock' ? 'trending_down' :
+              alert.alertType === 'out_of_stock' ? 'error' :
+              alert.alertType === 'overstock' ? 'trending_up' : 'schedule' }}</mat-icon>
+          </div>
+          <div class="alert-details">
+            <p class="alert-product">{{ alert.productName }}</p>
+            <p class="alert-message">{{ alert.message }}</p>
+            <p class="alert-meta">
+              <span class="alert-type">{{ alert.alertType | titlecase }}</span>
+              <span class="alert-severity" [style.color]="getAlertSeverityColor(alert.severity)">
+                {{ alert.severity | titlecase }}
+              </span>
+            </p>
+          </div>
+          <div class="alert-stock">
+            <p class="stock-label">Current</p>
+            <p class="stock-value">{{ alert.currentStock }}</p>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading inventory data...</p>
+  </div>
+</div>

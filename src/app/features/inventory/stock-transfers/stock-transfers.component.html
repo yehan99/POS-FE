@@ -1,0 +1,234 @@
+<div class="stock-transfers-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1 class="text-2xl font-bold">Stock Transfers</h1>
+      <p class="subtitle">Manage inter-location stock movements</p>
+    </div>
+    <div class="action-buttons">
+      <button mat-raised-button color="primary" (click)="createTransfer()">
+        <mat-icon>add</mat-icon>
+        Create Transfer
+      </button>
+      <button mat-stroked-button (click)="exportTransfers()">
+        <mat-icon>file_download</mat-icon>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" placeholder="Transfer number, product...">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option [value]="null">All Statuses</mat-option>
+          <mat-option value="draft">Draft</mat-option>
+          <mat-option value="pending">Pending</mat-option>
+          <mat-option value="approved">Approved</mat-option>
+          <mat-option value="in_transit">In Transit</mat-option>
+          <mat-option value="completed">Completed</mat-option>
+          <mat-option value="cancelled">Cancelled</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>From Location</mat-label>
+        <mat-select formControlName="fromLocationId">
+          <mat-option [value]="null">All Locations</mat-option>
+          <mat-option *ngFor="let location of locations" [value]="location.id">
+            {{ location.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To Location</mat-label>
+        <mat-select formControlName="toLocationId">
+          <mat-option [value]="null">All Locations</mat-option>
+          <mat-option *ngFor="let location of locations" [value]="location.id">
+            {{ location.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" (click)="clearFilters()" class="clear-button">
+        <mat-icon>clear</mat-icon>
+        Clear
+      </button>
+    </form>
+  </mat-card>
+
+  <!-- Bulk Actions Bar -->
+  <div class="bulk-actions-bar" *ngIf="selection.hasValue()">
+    <span class="selection-count">{{ selection.selected.length }} selected</span>
+    <div class="bulk-action-buttons">
+      <button mat-raised-button color="primary" (click)="bulkApprove()">
+        <mat-icon>check</mat-icon>
+        Approve Selected
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <mat-card class="table-card">
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="loadTransfers()">
+        <!-- Checkbox Column -->
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox (change)="$event ? toggleAll() : null" [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+              [checked]="selection.isSelected(row)">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- Transfer Number Column -->
+        <ng-container matColumnDef="transferNumber">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Transfer #</th>
+          <td mat-cell *matCellDef="let transfer">
+            <span class="transfer-number">{{ transfer.transferNumber }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Product Column -->
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Products</th>
+          <td mat-cell *matCellDef="let transfer">
+            <div class="product-info">
+              <span class="product-name" *ngIf="transfer.items.length === 1">
+                {{ transfer.items[0].productName }}
+              </span>
+              <span class="product-name" *ngIf="transfer.items.length > 1">
+                {{ transfer.items.length }} Products
+              </span>
+              <span class="product-sku" *ngIf="transfer.items.length === 1">
+                {{ transfer.items[0].productSku }}
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Quantity Column -->
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Items</th>
+          <td mat-cell *matCellDef="let transfer">
+            <span class="quantity-badge">{{ transfer.totalItems }}</span>
+          </td>
+        </ng-container>
+
+        <!-- From Location Column -->
+        <ng-container matColumnDef="fromLocation">
+          <th mat-header-cell *matHeaderCellDef>From Location</th>
+          <td mat-cell *matCellDef="let transfer">
+            <div class="location-info">
+              <mat-icon class="location-icon">place</mat-icon>
+              <span>{{ transfer.fromLocationName }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- To Location Column -->
+        <ng-container matColumnDef="toLocation">
+          <th mat-header-cell *matHeaderCellDef>To Location</th>
+          <td mat-cell *matCellDef="let transfer">
+            <div class="location-info">
+              <mat-icon class="location-icon">place</mat-icon>
+              <span>{{ transfer.toLocationName }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let transfer">
+            <span class="status-badge" [ngClass]="'status-' + transfer.status">
+              {{ transfer.status | titlecase }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Requested Date Column -->
+        <ng-container matColumnDef="requestedDate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Created Date</th>
+          <td mat-cell *matCellDef="let transfer">
+            {{ formatDate(transfer.createdAt) }}
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let transfer">
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="viewDetails(transfer)">
+                <mat-icon>visibility</mat-icon>
+                <span>View Details</span>
+              </button>
+              <button mat-menu-item *ngIf="canApprove(transfer)" (click)="approveTransfer(transfer.id)">
+                <mat-icon>check_circle</mat-icon>
+                <span>Approve</span>
+              </button>
+              <button mat-menu-item *ngIf="canShip(transfer)" (click)="shipTransfer(transfer.id)">
+                <mat-icon>local_shipping</mat-icon>
+                <span>Mark as Shipped</span>
+              </button>
+              <button mat-menu-item *ngIf="canReceive(transfer)" (click)="receiveTransfer(transfer.id)">
+                <mat-icon>done_all</mat-icon>
+                <span>Receive Transfer</span>
+              </button>
+              <button mat-menu-item (click)="cancelTransfer(transfer.id)"
+                [disabled]="transfer.status === 'completed' || transfer.status === 'cancelled'">
+                <mat-icon>cancel</mat-icon>
+                <span>Cancel</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <!-- Header and Row Declarations -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <!-- No Data Row -->
+        <tr class="mat-row no-data-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div class="no-data">
+              <mat-icon>inventory_2</mat-icon>
+              <p>No stock transfers found</p>
+              <button mat-raised-button color="primary" (click)="createTransfer()">
+                Create First Transfer
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Loading Spinner -->
+      <div class="loading-spinner" *ngIf="loading">
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator [length]="totalItems" [pageSize]="pageSize" [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPageChange($event)" showFirstLastButtons>
+    </mat-paginator>
+  </mat-card>
+</div>

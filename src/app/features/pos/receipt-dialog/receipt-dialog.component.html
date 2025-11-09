@@ -1,0 +1,62 @@
+<div class="receipt-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Receipt Preview</h2>
+    <button mat-icon-button (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <div class="settings-panel">
+      <h3>Print Settings</h3>
+
+      <div class="settings-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Printer Type</mat-label>
+          <mat-select [(ngModel)]="printerType" (selectionChange)="onPrinterTypeChange()">
+            <mat-option value="thermal">Thermal Printer</mat-option>
+            <mat-option value="a4">A4 Printer</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Paper Width</mat-label>
+          <mat-select [(ngModel)]="paperWidth" (selectionChange)="onPaperWidthChange()">
+            <mat-option *ngFor="let option of paperWidthOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="settings-checkboxes">
+        <mat-checkbox [(ngModel)]="showLogo" (change)="onSettingChange()">
+          Show Logo
+        </mat-checkbox>
+        <mat-checkbox [(ngModel)]="showItemCodes" (change)="onSettingChange()">
+          Show Item Codes
+        </mat-checkbox>
+        <mat-checkbox [(ngModel)]="showDiscounts" (change)="onSettingChange()">
+          Show Discounts
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <h3>Preview</h3>
+      <div class="receipt-preview" [innerHTML]="receiptHtml"></div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="close()">Cancel</button>
+    <button mat-raised-button color="accent" (click)="download()">
+      <mat-icon>download</mat-icon>
+      Download
+    </button>
+    <button mat-raised-button color="primary" (click)="print()">
+      <mat-icon>print</mat-icon>
+      Print
+    </button>
+  </mat-dialog-actions>
+</div>
