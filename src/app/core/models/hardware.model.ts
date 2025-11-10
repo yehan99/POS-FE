@@ -60,6 +60,8 @@ export interface HardwareDevice {
   enabled: boolean;
   lastConnected?: Date;
   error?: string;
+  operationsCount?: number; // Track total operations
+  errorCount?: number; // Track error count
 }
 
 // Printer configuration

@@ -1,0 +1,609 @@
+// ========================================
+// LUXURY TABLES STYLESHEET
+// Paradise POS - Elegant Table Styling
+// ========================================
+
+// ============ BASE TABLE STYLES ============
+.luxury-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: $surface;
+  border-radius: $radius-xl;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+  border: 1px solid $border-light;
+
+  // ============ TABLE HEADER ============
+  thead {
+    background-color: $background-secondary;
+
+    tr {
+      border-bottom: 2px solid $border-medium;
+    }
+
+    th {
+      padding: $spacing-4 $spacing-6;
+      text-align: left;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $primary-900;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      user-select: none;
+
+      &.sortable {
+        cursor: pointer;
+        transition: all $transition-fast;
+        position: relative;
+        padding-right: $spacing-10;
+
+        &:hover {
+          color: $primary-700;
+          background-color: $surface-hover;
+        }
+
+        // Sort indicator
+        &::after {
+          content: "⇅";
+          position: absolute;
+          right: $spacing-4;
+          opacity: 0.3;
+          transition: opacity $transition-fast;
+        }
+
+        &.sorted-asc::after {
+          content: "↑";
+          opacity: 1;
+          color: $accent-600;
+        }
+
+        &.sorted-desc::after {
+          content: "↓";
+          opacity: 1;
+          color: $accent-600;
+        }
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+
+      &.text-right {
+        text-align: right;
+      }
+    }
+  }
+
+  // ============ TABLE BODY ============
+  tbody {
+    tr {
+      border-bottom: 1px solid $border-light;
+      transition: all $transition-fast;
+
+      &:nth-child(even) {
+        background-color: $background-secondary;
+      }
+
+      &:hover {
+        background-color: $surface-hover;
+        transform: translateX(2px);
+        box-shadow: inset 3px 0 0 $accent-500;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &.selected {
+        background-color: rgba($accent-500, 0.08);
+
+        &:hover {
+          background-color: rgba($accent-500, 0.12);
+        }
+      }
+
+      &.clickable {
+        cursor: pointer;
+      }
+
+      // Row states
+      &.active {
+        background-color: rgba($success, 0.08);
+      }
+
+      &.inactive {
+        background-color: rgba($neutral-300, 0.3);
+        color: $text-disabled;
+      }
+
+      &.warning {
+        background-color: rgba($warning, 0.08);
+      }
+
+      &.danger {
+        background-color: rgba($error, 0.08);
+      }
+    }
+
+    td {
+      padding: $spacing-4 $spacing-6;
+      font-size: $font-size-base;
+      color: $text-primary;
+      vertical-align: middle;
+      min-height: 48px;
+
+      &.text-center {
+        text-align: center;
+      }
+
+      &.text-right {
+        text-align: right;
+      }
+
+      &.font-bold {
+        font-weight: $font-weight-semibold;
+      }
+
+      &.text-secondary {
+        color: $text-secondary;
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+  // ============ EMPTY STATE ============
+  .table-empty {
+    padding: $spacing-16 $spacing-8;
+    text-align: center;
+    color: $text-tertiary;
+
+    .empty-icon {
+      font-size: 48px;
+      color: $neutral-300;
+      margin-bottom: $spacing-4;
+    }
+
+    .empty-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $text-secondary;
+      margin-bottom: $spacing-2;
+    }
+
+    .empty-message {
+      font-size: $font-size-sm;
+      color: $text-tertiary;
+    }
+  }
+}
+
+// ============ COMPACT TABLE VARIANT ============
+.luxury-table.compact {
+  thead th {
+    padding: $spacing-3 $spacing-4;
+    font-size: $font-size-xs;
+  }
+
+  tbody td {
+    padding: $spacing-3 $spacing-4;
+    font-size: $font-size-sm;
+  }
+}
+
+// ============ BORDERED TABLE VARIANT ============
+.luxury-table.bordered {
+  thead th,
+  tbody td {
+    border-right: 1px solid $border-light;
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+}
+
+// ============ STRIPED TABLE VARIANT ============
+.luxury-table.striped {
+  tbody tr:nth-child(even) {
+    background-color: rgba($neutral-100, 0.5);
+  }
+}
+
+// ============ TABLE CONTAINER ============
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: $radius-xl;
+  background-color: $surface;
+  box-shadow: $shadow-md;
+  border: 1px solid $border-light;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $neutral-100;
+    border-radius: $radius-full;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $neutral-400;
+    border-radius: $radius-full;
+
+    &:hover {
+      background: $neutral-500;
+    }
+  }
+}
+
+// ============ TABLE WRAPPER WITH HEADER ============
+.table-wrapper {
+  background-color: $surface;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-md;
+  border: 1px solid $border-light;
+  overflow: hidden;
+
+  .table-header {
+    padding: $spacing-6;
+    border-bottom: 1px solid $border-light;
+    @include flex-between;
+
+    .table-title {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-semibold;
+      color: $primary-900;
+      font-family: $font-family-display;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: $spacing-3;
+      align-items: center;
+    }
+  }
+
+  .table-filters {
+    padding: $spacing-4 $spacing-6;
+    background-color: $background-secondary;
+    border-bottom: 1px solid $border-light;
+    display: flex;
+    gap: $spacing-4;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+// ============ TABLE ACTIONS (ROW) ============
+.table-actions {
+  display: flex;
+  gap: $spacing-2;
+  align-items: center;
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    border-radius: $radius-md;
+    cursor: pointer;
+    transition: all $transition-fast;
+    color: $text-secondary;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: $surface-hover;
+      color: $text-primary;
+    }
+
+    &.edit-btn:hover {
+      background-color: rgba($info, 0.1);
+      color: $info;
+    }
+
+    &.delete-btn:hover {
+      background-color: rgba($error, 0.1);
+      color: $error;
+    }
+
+    &.view-btn:hover {
+      background-color: rgba($accent-500, 0.1);
+      color: $accent-600;
+    }
+  }
+}
+
+// ============ STATUS BADGES ============
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-1 $spacing-3;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: $radius-full;
+  white-space: nowrap;
+
+  &.status-active {
+    background-color: rgba($success, 0.1);
+    color: darken($success, 10%);
+  }
+
+  &.status-inactive {
+    background-color: rgba($neutral-400, 0.2);
+    color: $text-disabled;
+  }
+
+  &.status-pending {
+    background-color: rgba($warning, 0.1);
+    color: darken($warning, 10%);
+  }
+
+  &.status-completed {
+    background-color: rgba($info, 0.1);
+    color: darken($info, 10%);
+  }
+
+  &.status-cancelled {
+    background-color: rgba($error, 0.1);
+    color: darken($error, 10%);
+  }
+
+  &.status-draft {
+    background-color: rgba($neutral-400, 0.1);
+    color: $text-secondary;
+  }
+}
+
+// ============ PAGINATION ============
+.table-pagination {
+  padding: $spacing-5 $spacing-6;
+  border-top: 1px solid $border-light;
+  @include flex-between;
+  flex-wrap: wrap;
+  gap: $spacing-4;
+  background-color: $background-secondary;
+
+  .pagination-info {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+
+    .count-highlight {
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+  }
+
+  .pagination-controls {
+    display: flex;
+    gap: $spacing-2;
+    align-items: center;
+
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      padding: 0 $spacing-3;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $text-primary;
+      background-color: transparent;
+      border: 1px solid $border-medium;
+      border-radius: $radius-md;
+      cursor: pointer;
+      transition: all $transition-fast;
+
+      &:hover:not(:disabled):not(.active) {
+        background-color: $surface-hover;
+        border-color: $border-dark;
+      }
+
+      &.active {
+        background-color: $accent-500;
+        color: $text-inverse;
+        border-color: $accent-500;
+        font-weight: $font-weight-semibold;
+        box-shadow: $shadow-sm;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .page-ellipsis {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      color: $text-tertiary;
+      user-select: none;
+    }
+  }
+
+  .per-page-selector {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+
+    select {
+      height: 36px;
+      padding: 0 $spacing-6 0 $spacing-3;
+      font-size: $font-size-sm;
+      border-radius: $radius-md;
+      border: 1px solid $border-medium;
+      background-color: $surface;
+      cursor: pointer;
+
+      &:hover {
+        border-color: $border-dark;
+      }
+    }
+  }
+}
+
+// ============ LOADING STATE ============
+.table-loading {
+  position: relative;
+  min-height: 200px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba($surface, 0.8);
+    backdrop-filter: blur(2px);
+    @include flex-center;
+    z-index: 10;
+  }
+
+  .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+  }
+}
+
+// ============ RESPONSIVE TABLE ============
+@media (max-width: 768px) {
+  .luxury-table {
+    &.responsive {
+      thead {
+        display: none;
+      }
+
+      tbody {
+        tr {
+          display: block;
+          margin-bottom: $spacing-4;
+          border: 1px solid $border-light;
+          border-radius: $radius-lg;
+          box-shadow: $shadow-sm;
+
+          &:hover {
+            transform: none;
+            box-shadow: $shadow-md;
+          }
+        }
+
+        td {
+          display: flex;
+          justify-content: space-between;
+          padding: $spacing-3 $spacing-4;
+          border-bottom: 1px solid $border-light;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &::before {
+            content: attr(data-label);
+            font-weight: $font-weight-semibold;
+            color: $text-secondary;
+            font-size: $font-size-sm;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            margin-right: $spacing-4;
+          }
+        }
+      }
+    }
+  }
+
+  .table-pagination {
+    flex-direction: column;
+    align-items: stretch;
+
+    .pagination-info {
+      text-align: center;
+    }
+
+    .pagination-controls {
+      justify-content: center;
+    }
+
+    .per-page-selector {
+      justify-content: center;
+    }
+  }
+}
+
+// ============ SELECTION CHECKBOX ============
+.table-checkbox {
+  input[type="checkbox"] {
+    margin: 0;
+  }
+}
+
+// ============ EXPANDABLE ROWS ============
+.expandable-row {
+  td {
+    padding: 0 !important;
+  }
+
+  .expand-content {
+    padding: $spacing-6;
+    background-color: $background-secondary;
+    border-top: 1px solid $border-medium;
+    animation: slideDown $transition-base;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+// ============ TABLE UTILITIES ============
+.text-truncate {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-wrap {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}

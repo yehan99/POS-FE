@@ -1,0 +1,296 @@
+<div class="hardware-status-container">
+  <!-- Header -->
+  <div class="status-header">
+    <div class="header-left">
+      <h1>Hardware Status Dashboard</h1>
+      <p class="subtitle">Real-time hardware monitoring and diagnostics</p>
+    </div>
+    <div class="header-right">
+      <button mat-icon-button [color]="autoRefreshEnabled ? 'primary' : ''" (click)="toggleAutoRefresh()" [matTooltip]="
+          autoRefreshEnabled ? 'Auto-refresh enabled' : 'Auto-refresh disabled'
+        ">
+        <mat-icon>{{
+          autoRefreshEnabled ? "sync" : "sync_disabled"
+          }}</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" (click)="refreshStatus()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- System Health Overview -->
+  <div class="system-health-cards">
+    <mat-card class="health-card overall-health">
+      <mat-card-content>
+        <div class="card-icon">
+          <mat-icon>dashboard</mat-icon>
+        </div>
+        <div class="card-details">
+          <h3>System Health</h3>
+          <div class="health-score" [ngClass]="getHealthColor(systemHealth.overall)">
+            {{ systemHealth.overall }}%
+          </div>
+          <p class="card-subtitle">Overall score</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="health-card">
+      <mat-card-content>
+        <div class="card-icon connected">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="card-details">
+          <h3>Connected</h3>
+          <div class="card-value">
+            {{ systemHealth.connectedDevices }} / {{ systemHealth.totalDevices }}
+          </div>
+          <p class="card-subtitle">Active devices</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="health-card">
+      <mat-card-content>
+        <div class="card-icon operations">
+          <mat-icon>bar_chart</mat-icon>
+        </div>
+        <div class="card-details">
+          <h3>Operations</h3>
+          <div class="card-value">{{ systemHealth.totalOperations }}</div>
+          <p class="card-subtitle">Total operations</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="health-card">
+      <mat-card-content>
+        <div class="card-icon" [ngClass]="systemHealth.totalErrors > 0 ? 'error' : 'success'">
+          <mat-icon>{{ systemHealth.totalErrors > 0 ? 'error' : 'verified' }}</mat-icon>
+        </div>
+        <div class="card-details">
+          <h3>Errors</h3>
+          <div class="card-value">{{ systemHealth.totalErrors }}</div>
+          <p class="card-subtitle">Total errors</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Content -->
+  <div class="status-content">
+    <!-- Left Panel - Device List -->
+    <div class="left-panel">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Devices</mat-card-title>
+          <mat-card-subtitle>{{ deviceHealthList.length }} devices registered</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="device-list">
+            <div *ngFor="let device of deviceHealthList" class="device-item"
+              [class.selected]="selectedDevice?.deviceId === device.deviceId" (click)="selectDevice(device)">
+              <div class="device-icon">
+                <mat-icon [ngClass]="getStatusColor(device.status)">{{
+                  getDeviceIcon(device.type)
+                  }}</mat-icon>
+              </div>
+              <div class="device-info">
+                <h4>{{ device.deviceName }}</h4>
+                <p class="device-type">{{ device.type }}</p>
+              </div>
+              <div class="device-status">
+                <mat-chip [ngClass]="getStatusColor(device.status)" class="status-chip">
+                  {{ device.status }}
+                </mat-chip>
+                <div class="health-badge" [ngClass]="getHealthColor(device.healthScore)">
+                  {{ device.healthScore }}%
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="deviceHealthList.length === 0" class="empty-state">
+              <mat-icon>device_hub</mat-icon>
+              <p>No devices registered</p>
+              <button mat-raised-button color="primary" routerLink="/hardware">
+                Configure Devices
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Right Panel - Device Details & Alerts -->
+    <div class="right-panel">
+      <!-- Device Details -->
+      <mat-card *ngIf="selectedDevice" class="device-details-card">
+        <mat-card-header>
+          <div class="device-header">
+            <mat-icon [ngClass]="getStatusColor(selectedDevice.status)">{{
+              getDeviceIcon(selectedDevice.type)
+              }}</mat-icon>
+            <div class="device-title">
+              <mat-card-title>{{ selectedDevice.deviceName }}</mat-card-title>
+              <mat-card-subtitle>{{ selectedDevice.type }}</mat-card-subtitle>
+            </div>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Status</span>
+              <mat-chip [ngClass]="getStatusColor(selectedDevice.status)" class="status-chip">
+                {{ selectedDevice.status }}
+              </mat-chip>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Health Score</span>
+              <div class="health-score-large" [ngClass]="getHealthColor(selectedDevice.healthScore)">
+                {{ selectedDevice.healthScore }}%
+              </div>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Uptime</span>
+              <span class="detail-value">{{
+                formatUptime(selectedDevice.uptime)
+                }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Operations</span>
+              <span class="detail-value">{{
+                selectedDevice.operationsCount
+                }}</span>
+            </div>
+
+            <div class="detail-item">
+              <span class="detail-label">Errors</span>
+              <span class="detail-value" [ngClass]="selectedDevice.errorCount > 0 ? 'error' : ''">{{
+                selectedDevice.errorCount }}</span>
+            </div>
+
+            <div class="detail-item" *ngIf="selectedDevice.responseTime">
+              <span class="detail-label">Response Time</span>
+              <span class="detail-value">{{ selectedDevice.responseTime }}ms</span>
+            </div>
+
+            <div class="detail-item" *ngIf="selectedDevice.lastActivity">
+              <span class="detail-label">Last Activity</span>
+              <span class="detail-value">{{
+                selectedDevice.lastActivity | date : "short"
+                }}</span>
+            </div>
+          </div>
+
+          <div class="device-actions">
+            <button mat-raised-button color="primary" (click)="testDevice(selectedDevice)">
+              <mat-icon>play_arrow</mat-icon>
+              Test Device
+            </button>
+            <button mat-stroked-button routerLink="/hardware">
+              <mat-icon>settings</mat-icon>
+              Configure
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Alerts Panel -->
+      <mat-card class="alerts-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>notifications</mat-icon>
+            Alerts
+            <mat-chip *ngIf="alerts.length > 0" class="alert-count">
+              {{ alerts.length }}
+            </mat-chip>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="alerts-list" *ngIf="alerts.length > 0">
+            <div *ngFor="let alert of alerts" class="alert-item" [ngClass]="alert.type"
+              [class.acknowledged]="alert.acknowledged">
+              <mat-icon class="alert-icon">{{
+                alert.type === "error"
+                ? "error"
+                : alert.type === "warning"
+                ? "warning"
+                : "info"
+                }}</mat-icon>
+              <div class="alert-content">
+                <strong>{{ alert.device }}</strong>
+                <p>{{ alert.message }}</p>
+                <span class="alert-time">{{
+                  alert.timestamp | date : "short"
+                  }}</span>
+              </div>
+              <div class="alert-actions">
+                <button mat-icon-button (click)="acknowledgeAlert(alert)" *ngIf="!alert.acknowledged"
+                  matTooltip="Acknowledge">
+                  <mat-icon>check</mat-icon>
+                </button>
+                <button mat-icon-button (click)="dismissAlert(alert)" matTooltip="Dismiss">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="alerts.length === 0" class="empty-alerts">
+            <mat-icon>check_circle</mat-icon>
+            <p>No active alerts</p>
+          </div>
+
+          <button mat-button *ngIf="alerts.length > 0" (click)="clearAllAlerts()" class="clear-all-btn">
+            Clear All
+          </button>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Recent Events -->
+      <mat-card class="events-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>history</mat-icon>
+            Recent Events
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="events-timeline" *ngIf="recentEvents.length > 0">
+            <div *ngFor="let event of recentEvents.slice(0, 10)" class="event-item">
+              <div class="event-icon" [ngClass]="getEventColor(event.type)">
+                <mat-icon>{{ getEventIcon(event.type) }}</mat-icon>
+              </div>
+              <div class="event-content">
+                <p class="event-type">{{ event.type }}</p>
+                <span class="event-time">{{
+                  event.timestamp | date : "short"
+                  }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="recentEvents.length === 0" class="empty-events">
+            <mat-icon>event_note</mat-icon>
+            <p>No recent events</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Footer Info -->
+  <div class="status-footer" *ngIf="lastRefreshTime">
+    <mat-icon>schedule</mat-icon>
+    <span>Last updated: {{ lastRefreshTime | date : "medium" }}</span>
+    <span class="separator">|</span>
+    <span>System uptime: {{ formatUptime(systemHealth.systemUptime) }}</span>
+    <span class="separator" *ngIf="autoRefreshEnabled">|</span>
+    <span *ngIf="autoRefreshEnabled">Auto-refresh: {{ refreshInterval }}s</span>
+  </div>
+</div>

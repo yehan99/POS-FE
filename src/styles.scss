@@ -3,24 +3,115 @@
 /* Import Material Prebuilt Theme */
 @import "@angular/material/prebuilt-themes/indigo-pink.css";
 
-/* Import Inter font */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+/* Import Professional Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap");
+
+/* Import Design System */
+@import "./styles/variables";
+@import "./styles/mixins";
+@import "./styles/forms";
+@import "./styles/tables";
+@import "./styles/components";
 
 /* TailwindCSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+// ========================================
+// GLOBAL LUXURY STYLES
+// ========================================
+
 html,
 body {
   height: 100%;
-  font-family: "Inter", "Roboto", "Helvetica Neue", sans-serif;
-}
-body {
-  margin: 0;
-  background-color: #f8fafc;
+  font-family: $font-family-primary;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  margin: 0;
+  background-color: $background-secondary;
+}
+
+// ============ CONTAINER & LAYOUT ============
+.container {
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 $spacing-6;
+
+  @media (max-width: 768px) {
+    padding: 0 $spacing-4;
+  }
+}
+
+.page-container {
+  padding: $spacing-8;
+  max-width: $container-max-width;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: $spacing-6 $spacing-4;
+  }
+}
+
+.section-spacing {
+  margin-bottom: $spacing-8;
+}
+
+// ============ TYPOGRAPHY ============
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $font-family-display;
+  color: $primary-900;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  margin: 0;
+}
+
+h1 {
+  font-size: $font-size-4xl;
+}
+h2 {
+  font-size: $font-size-3xl;
+}
+h3 {
+  font-size: $font-size-2xl;
+}
+h4 {
+  font-size: $font-size-xl;
+}
+h5 {
+  font-size: $font-size-lg;
+}
+h6 {
+  font-size: $font-size-base;
+}
+
+p {
+  margin: 0 0 $spacing-4 0;
+  line-height: $line-height-relaxed;
+}
+
+a {
+  color: $accent-600;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $accent-700;
+  }
+}
+
+// ============ FORM FIXES ============
 /* CRITICAL FIX: Override TailwindCSS preflight that adds line-through to inputs */
 input,
 textarea,
@@ -34,9 +125,9 @@ select,
   text-decoration-color: transparent !important;
   -webkit-text-decoration: none !important;
   -webkit-text-decoration-line: none !important;
+  font-family: $font-family-primary !important;
 }
 
-/* Additional Material form field fixes */
 .mat-mdc-form-field {
   * {
     text-decoration: none !important;
@@ -52,93 +143,240 @@ select,
   }
 }
 
-/* Custom scrollbar styling */
+// ============ LUXURY SCROLLBAR ============
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: $neutral-100;
+  border-radius: $radius-full;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: $neutral-400;
+  border-radius: $radius-full;
+
+  &:hover {
+    background: $neutral-500;
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Global utility classes */
+// ============ UTILITY CLASSES ============
 .glass-effect {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: $shadow-lg;
 }
 
-.shadow-soft {
-  box-shadow: 0 2px 15px 0 rgba(0, 0, 0, 0.1);
+.gradient-primary {
+  background: linear-gradient(135deg, $primary-600, $primary-900);
+  color: $text-inverse;
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, $accent-500, $accent-700);
+  color: $text-inverse;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, $primary-900, $primary-600);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Material Snackbar Custom Styles */
-.success-snackbar {
-  background-color: #48bb78 !important;
-  color: white !important;
+.luxury-shadow {
+  box-shadow: $shadow-xl;
+}
 
-  .mat-mdc-snack-bar-label {
-    color: white !important;
+// ============ MATERIAL OVERRIDES ============
+.mat-mdc-snack-bar-container {
+  border-radius: $radius-lg !important;
+
+  &.success-snackbar {
+    background-color: $success !important;
+    color: $text-inverse !important;
+    box-shadow: $shadow-lg !important;
+
+    .mat-mdc-snack-bar-label,
+    .mat-mdc-button {
+      color: $text-inverse !important;
+    }
   }
 
-  .mat-mdc-button {
-    color: white !important;
+  &.error-snackbar {
+    background-color: $error !important;
+    color: $text-inverse !important;
+    box-shadow: $shadow-lg !important;
+
+    .mat-mdc-snack-bar-label,
+    .mat-mdc-button {
+      color: $text-inverse !important;
+    }
+  }
+
+  &.warning-snackbar {
+    background-color: $warning !important;
+    color: $text-inverse !important;
+    box-shadow: $shadow-lg !important;
+
+    .mat-mdc-snack-bar-label,
+    .mat-mdc-button {
+      color: $text-inverse !important;
+    }
+  }
+
+  &.info-snackbar {
+    background-color: $info !important;
+    color: $text-inverse !important;
+    box-shadow: $shadow-lg !important;
+
+    .mat-mdc-snack-bar-label,
+    .mat-mdc-button {
+      color: $text-inverse !important;
+    }
   }
 }
 
-.error-snackbar {
-  background-color: #f56565 !important;
-  color: white !important;
+// Material Button Enhancements
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button {
+  border-radius: $radius-lg !important;
+  box-shadow: $shadow-sm !important;
+  font-weight: $font-weight-semibold !important;
+  letter-spacing: 0.025em !important;
+  text-transform: none !important;
+  padding: 0 $spacing-6 !important;
+  min-height: 40px !important;
 
-  .mat-mdc-snack-bar-label {
-    color: white !important;
+  &:hover:not([disabled]) {
+    box-shadow: $shadow-md !important;
+    transform: translateY(-1px);
   }
 
-  .mat-mdc-button {
-    color: white !important;
-  }
-}
-
-.warning-snackbar {
-  background-color: #ed8936 !important;
-  color: white !important;
-
-  .mat-mdc-snack-bar-label {
-    color: white !important;
-  }
-
-  .mat-mdc-button {
-    color: white !important;
+  &:active:not([disabled]) {
+    transform: translateY(0);
   }
 }
 
-.info-snackbar {
-  background-color: #4299e1 !important;
-  color: white !important;
+.mat-mdc-outlined-button {
+  border-radius: $radius-lg !important;
+  font-weight: $font-weight-semibold !important;
+  letter-spacing: 0.025em !important;
+  text-transform: none !important;
+  padding: 0 $spacing-6 !important;
+  min-height: 40px !important;
+  border-width: 2px !important;
 
-  .mat-mdc-snack-bar-label {
-    color: white !important;
+  &:hover:not([disabled]) {
+    background-color: rgba($primary-500, 0.04) !important;
   }
+}
 
-  .mat-mdc-button {
-    color: white !important;
+.mat-mdc-flat-button,
+.mat-mdc-button {
+  border-radius: $radius-lg !important;
+  font-weight: $font-weight-semibold !important;
+  letter-spacing: 0.025em !important;
+  text-transform: none !important;
+  padding: 0 $spacing-6 !important;
+  min-height: 40px !important;
+}
+
+// Icon buttons
+.mat-mdc-icon-button {
+  border-radius: $radius-md !important;
+
+  &:hover:not([disabled]) {
+    background-color: rgba($primary-500, 0.08) !important;
   }
+}
+
+// Material Card Enhancements
+.mat-mdc-card {
+  border-radius: $radius-xl !important;
+  box-shadow: $shadow-md !important;
+  border: 1px solid $border-light !important;
+}
+
+// Material Form Field Enhancements
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    .mat-mdc-form-field-flex {
+      .mat-mdc-form-field-infix {
+        input,
+        textarea {
+          font-family: $font-family-primary !important;
+          color: $text-primary !important;
+        }
+      }
+    }
+  }
+}
+
+// Material Dialog Enhancements
+.mat-mdc-dialog-container {
+  border-radius: $radius-2xl !important;
+  box-shadow: $shadow-2xl !important;
+}
+
+// ============ ANIMATIONS ============
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn $transition-base;
+}
+
+.animate-slide-in {
+  animation: slideIn $transition-slow;
+}
+
+// ============ LOADING STATES ============
+.loading-spinner {
+  @include flex-center;
+  padding: $spacing-10;
+
+  .spinner-text {
+    margin-top: $spacing-4;
+    color: $text-secondary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+// ============ FOCUS STYLES ============
+*:focus-visible {
+  outline: 2px solid $accent-500;
+  outline-offset: 2px;
+  border-radius: $radius-sm;
 }

@@ -44,7 +44,7 @@ Paradise POS includes comprehensive hardware integration supporting essential re
 
 ### 4. Payment Terminals
 - **Card Types**: VISA, Mastercard, American Express, Discover, Diners Club, JCB, UnionPay
-- **Payment Methods**: 
+- **Payment Methods**:
   - Chip & PIN (EMV)
   - Magnetic Stripe
   - NFC/Contactless (Tap to Pay)
@@ -74,7 +74,9 @@ Paradise POS includes comprehensive hardware integration supporting essential re
 
 ### 1. Access Hardware Configuration
 ```
-Navigate to: http://localhost:4200/hardware
+Hardware Config:     http://localhost:4200/hardware
+Status Dashboard:    http://localhost:4200/hardware/status
+Receipt Designer:    http://localhost:4200/hardware/receipt-designer
 ```
 
 ### 2. Add Your First Device
@@ -190,10 +192,10 @@ The system automatically detects:
    ```javascript
    // ESC/POS Standard
    [27, 112, 0, 50, 250]  // ESC p 0 50 250
-   
+
    // Star Printers
    [7]  // BEL character
-   
+
    // Epson
    [27, 112, 48, 55, 121]  // ESC p 0 55 121
    ```
@@ -223,7 +225,7 @@ The system automatically detects:
    ```
 
 3. **Supported Gateways**:
-   
+
    | Gateway | Connection | Features |
    |---------|------------|----------|
    | Commercial Bank | HTTPS | EMV, NFC, QR |
@@ -441,7 +443,7 @@ hardwareService.getDevice(id: string): HardwareDevice | undefined
 
 // Update Device Status
 hardwareService.updateDeviceStatus(
-  deviceId: string, 
+  deviceId: string,
   status: ConnectionStatus
 ): void
 
@@ -460,7 +462,7 @@ hardwareService.getEvents(): Observable<HardwareEvent>
 ```typescript
 // Print Receipt
 printerService.printReceipt(
-  printerId: string, 
+  printerId: string,
   job: PrintJob
 ): Promise<void>
 
@@ -485,7 +487,7 @@ scannerService.stopScanning(scannerId: string): void
 
 // Manual Scan
 scannerService.manualScan(
-  scannerId: string, 
+  scannerId: string,
   code: string
 ): Promise<ScanResult>
 
@@ -507,19 +509,19 @@ cashDrawerService.openDrawer(drawerId: string): Promise<void>
 
 // Open For Sale
 cashDrawerService.openForSale(
-  drawerId: string, 
+  drawerId: string,
   amount: number
 ): Promise<void>
 
 // Open For Refund
 cashDrawerService.openForRefund(
-  drawerId: string, 
+  drawerId: string,
   amount: number
 ): Promise<void>
 
 // Link To Printer
 cashDrawerService.linkToPrinter(
-  drawerId: string, 
+  drawerId: string,
   printerId: string
 ): void
 ```
@@ -529,20 +531,20 @@ cashDrawerService.linkToPrinter(
 ```typescript
 // Process Payment
 paymentTerminalService.processPayment(
-  terminalId: string, 
+  terminalId: string,
   transaction: PaymentTransaction
 ): Promise<PaymentTransaction>
 
 // Process NFC Payment
 paymentTerminalService.processNFCPayment(
-  terminalId: string, 
+  terminalId: string,
   amount: number
 ): Promise<PaymentTransaction>
 
 // Refund Payment
 paymentTerminalService.refundPayment(
-  terminalId: string, 
-  originalTransactionId: string, 
+  terminalId: string,
+  originalTransactionId: string,
   amount: number
 ): Promise<PaymentTransaction>
 
@@ -559,9 +561,305 @@ paymentTerminalService.detectCardType(
 
 ---
 
-## 🎨 Receipt Template Customization (Upcoming)
+## 🎨 Receipt Template Customization
 
-### Template Designer Features
+### Receipt Template Designer Features
+Paradise POS includes a powerful visual receipt template designer accessible at `/hardware/receipt-designer`.
+
+#### Key Features
+- ✅ Visual template editor with live preview
+- ✅ Multiple template support (create, edit, duplicate, delete)
+- ✅ Logo upload and positioning
+- ✅ Customizable sections (Header, Items, Totals, Footer)
+- ✅ Font size and style customization
+- ✅ Text alignment options (left, center, right)
+- ✅ Border style selection
+- ✅ Paper width configuration (58mm, 80mm)
+- ✅ Import/Export templates as JSON
+- ✅ Set default template
+- ✅ Real-time preview with sample data
+- ✅ Print preview functionality
+
+#### Creating a New Template
+
+1. Navigate to `/hardware/receipt-designer`
+2. Click **"New Template"** button
+3. Configure basic settings:
+   - Template name
+   - Description
+   - Paper width (58mm or 80mm)
+
+4. Customize sections using tabs:
+
+**Header Tab:**
+- Enable/disable logo
+- Upload logo image
+- Business name font size and style
+- Show/hide address
+- Show/hide contact info (phone, email)
+- Header alignment
+
+**Items Tab:**
+- Show/hide SKU
+- Show/hide quantity
+- Show/hide unit price
+- Show/hide item total
+- Show/hide discount
+- Show/hide tax
+
+**Totals Tab:**
+- Show/hide subtotal
+- Show/hide discount
+- Show/hide tax
+- Show/hide total
+- Show/hide paid amount
+- Show/hide change
+- Bold total option
+
+**Footer Tab:**
+- Show/hide transaction ID
+- Show/hide cashier name
+- Show/hide date/time
+- Custom thank you message
+- Terms and conditions
+
+**Styles Tab:**
+- Font family (monospace, sans-serif)
+- Border style (none, single, double, dashed)
+- Section spacing
+
+5. Preview updates in real-time (right panel)
+6. Click **"Save Template"** when satisfied
+
+#### Template Management
+
+**Duplicate Template:**
+- Select template from left sidebar
+- Click menu (⋮) → "Duplicate"
+- Modify duplicated template as needed
+
+**Set as Default:**
+- Select template
+- Click menu (⋮) → "Set as Default"
+- This template will be used for all receipts
+
+**Export Template:**
+- Select template
+- Click menu (⋮) → "Export"
+- Downloads template as JSON file
+
+**Import Template:**
+- Click menu (⋮) → "Import"
+- Select JSON file
+- Template added to library
+
+**Delete Template:**
+- Select template (cannot delete default)
+- Click menu (⋮) → "Delete"
+- Confirm deletion
+
+### Example Template Structure
+```typescript
+interface ReceiptTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  paperWidth: 58 | 80; // mm
+  sections: {
+    header: {
+      enabled: boolean;
+      logo?: {
+        enabled: boolean;
+        imageData?: string; // Base64
+        width: number;
+        height: number;
+        alignment: 'left' | 'center' | 'right';
+      };
+      businessName: {
+        enabled: boolean;
+        fontSize: 'small' | 'medium' | 'large' | 'xlarge';
+        bold: boolean;
+      };
+      address: {
+        enabled: boolean;
+        showFullAddress: boolean;
+      };
+      contact: {
+        enabled: boolean;
+        showPhone: boolean;
+        showEmail: boolean;
+      };
+      alignment: 'left' | 'center' | 'right';
+    };
+    items: {
+      enabled: boolean;
+      showSKU: boolean;
+      showQuantity: boolean;
+      showUnitPrice: boolean;
+      showItemTotal: boolean;
+      showDiscount: boolean;
+    };
+    totals: {
+      enabled: boolean;
+      showSubtotal: boolean;
+      showDiscount: boolean;
+      showTax: boolean;
+      showTotal: boolean;
+      showPaid: boolean;
+      showChange: boolean;
+      boldTotal: boolean;
+      alignment: 'left' | 'right';
+    };
+    footer: {
+      enabled: boolean;
+      showTransactionId: boolean;
+      showCashier: boolean;
+      showDateTime: boolean;
+      thankYouMessage?: string;
+      alignment: 'left' | 'center' | 'right';
+    };
+  };
+  styles: {
+    font: 'monospace' | 'sans-serif';
+    borderStyle: 'none' | 'single' | 'double' | 'dashed';
+    sectionSpacing: number;
+  };
+}
+```
+
+### Integration with Printer Service
+
+The receipt template designer integrates seamlessly with the printer service:
+
+```typescript
+// Get current template
+const template = await receiptTemplateService.getCurrentTemplate();
+
+// Generate receipt with template
+const receiptText = receiptTemplateService.generateReceiptPreview(
+  template,
+  {
+    businessName: 'My Store',
+    items: [...],
+    total: 1000,
+    // ... other receipt data
+  }
+);
+
+// Print using printer service
+await printerService.printReceipt(printerId, {
+  id: 'receipt-1',
+  deviceId: printerId,
+  content: receiptText,
+  // ...
+});
+```
+
+---
+
+## 📊 Hardware Status Dashboard
+
+### Real-time Monitoring
+Access the Hardware Status Dashboard at `/hardware/status` for comprehensive device monitoring.
+
+#### Dashboard Features
+- ✅ System health overview (0-100 score)
+- ✅ Real-time connection status
+- ✅ Device health metrics
+- ✅ Operations and error tracking
+- ✅ Alert notifications
+- ✅ Recent events timeline
+- ✅ Auto-refresh (configurable interval)
+- ✅ Device uptime tracking
+- ✅ Response time monitoring
+- ✅ Quick device testing
+
+#### System Health Cards
+
+**Overall System Health:**
+- Aggregate health score (0-100%)
+- Based on connected devices, errors, and operations
+- Color-coded: Green (80%+), Yellow (50-79%), Red (<50%)
+
+**Connected Devices:**
+- Shows X / Total devices connected
+- Real-time status updates
+
+**Operations:**
+- Total operations count
+- Across all devices (prints, scans, payments)
+
+**Errors:**
+- Total error count
+- Highlights problematic devices
+
+#### Device List
+Left panel shows all registered devices with:
+- Device icon and name
+- Device type (PRINTER, SCANNER, etc.)
+- Connection status chip
+- Health score badge
+- Click to view details
+
+#### Device Details Panel
+Select a device to view:
+- Connection status
+- Health score (0-100%)
+- Uptime
+- Total operations
+- Error count
+- Response time
+- Last activity timestamp
+- Quick test button
+- Configure device link
+
+#### Alerts Panel
+Real-time alerts for:
+- **Error Alerts** (Red): Device errors, connection failures
+- **Warning Alerts** (Yellow): Disconnected devices, low health scores, high error counts
+- **Info Alerts** (Blue): General notifications
+
+Alert actions:
+- Acknowledge alert (mark as seen)
+- Dismiss alert (remove)
+- Clear all alerts
+
+#### Recent Events Timeline
+Shows last 30 hardware events:
+- Device connected/disconnected
+- Print complete
+- Scan complete
+- Payment complete
+- Drawer opened
+- Device errors
+
+Color-coded event icons:
+- Green: Success events
+- Red: Error events
+- Blue: Info events
+
+#### Auto-Refresh
+- Toggle auto-refresh on/off
+- Configurable interval (default: 5 seconds)
+- Manual refresh button
+- Last updated timestamp
+
+#### Health Score Calculation
+
+Device health score factors:
+- Connection status (major factor)
+- Error count (reduces score)
+- Response time (affects score)
+- Uptime (minor factor)
+
+System health score:
+- Average of all device health scores
+- Weighted by connection status
+- Penalized for total errors
+
+---
+
+## 🎨 Receipt Template Designer (Visual Customization)
 - Visual drag-and-drop editor
 - Custom logo upload
 - Adjustable fonts and sizes
@@ -665,7 +963,7 @@ const customPrinterConfig: PrinterConfig = {
 async function discoverNetworkPrinters() {
   const subnet = '192.168.1';
   const printers = [];
-  
+
   for (let i = 1; i <= 254; i++) {
     const ip = `${subnet}.${i}`;
     try {
@@ -675,7 +973,7 @@ async function discoverNetworkPrinters() {
       // Not a printer
     }
   }
-  
+
   return printers;
 }
 ```
@@ -685,12 +983,12 @@ async function discoverNetworkPrinters() {
 ```typescript
 // Generate barcode on receipt
 function printBarcodeOnReceipt(
-  printer: Printer, 
-  data: string, 
+  printer: Printer,
+  data: string,
   type: 'EAN13' | 'CODE128' | 'QR'
 ) {
   let commands: number[] = [];
-  
+
   if (type === 'EAN13') {
     commands = [
       0x1D, 0x68, 0x64, // Barcode height 100
@@ -700,7 +998,7 @@ function printBarcodeOnReceipt(
       0x00 // Null terminator
     ];
   }
-  
+
   printer.send(commands);
 }
 ```
@@ -737,18 +1035,20 @@ function printBarcodeOnReceipt(
 - ✅ Real-time Status Monitoring
 - ✅ Event Logging
 - ✅ 8 Sri Lankan Payment Gateways
+- ✅ Hardware Status Dashboard
+- ✅ Receipt Template Designer
 
 ### Upcoming (v1.1.0)
 - 🔜 Customer Display Service
 - 🔜 Weight Scale Service
-- 🔜 Receipt Template Designer
-- 🔜 Hardware Status Dashboard
 - 🔜 Cloud-based device management
 - 🔜 Remote printer access
+- 🔜 Advanced analytics
+- 🔜 Device usage reports
 
 ---
 
-**Documentation Version**: 1.0.0  
-**Last Updated**: November 9, 2025  
+**Documentation Version**: 1.0.0
+**Last Updated**: November 10, 2025
 **Maintained By**: Paradise POS Development Team
 

@@ -1,0 +1,8 @@
+<div class="luxury-card" [class.variant-default]="variant === 'default'"
+  [class.variant-elevated]="variant === 'elevated'" [class.variant-outlined]="variant === 'outlined'"
+  [class.variant-interactive]="variant === 'interactive'" [class.padding-none]="padding === 'none'"
+  [class.padding-small]="padding === 'small'" [class.padding-medium]="padding === 'medium'"
+  [class.padding-large]="padding === 'large'" [class.hoverable]="hoverable" [class.clickable]="clickable"
+  [class.full-height]="fullHeight">
+  <ng-content></ng-content>
+</div>

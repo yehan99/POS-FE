@@ -32,12 +32,18 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDividerModule } from '@angular/material/divider';
 
 // Translation
 import { TranslateModule } from '@ngx-translate/core';
+
+// Components
 import { LanguageSwitcherComponent } from './components/language-switcher/language-switcher.component';
 import { LocalizationDemoComponent } from './components/localization-demo/localization-demo.component';
-import { MatDividerModule } from '@angular/material/divider';
+import { FormErrorComponent } from './components/form-error/form-error.component';
+import { EmptyStateComponent } from './components/empty-state/empty-state.component';
+import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { CardComponent } from './components/card/card.component';
 
 const MATERIAL_MODULES = [
   MatButtonModule,
@@ -73,9 +79,12 @@ const MATERIAL_MODULES = [
 
 @NgModule({
   declarations: [
-    // Shared components will be declared here
     LanguageSwitcherComponent,
     LocalizationDemoComponent,
+    FormErrorComponent,
+    EmptyStateComponent,
+    MainLayoutComponent,
+    CardComponent,
   ],
   imports: [
     CommonModule,
@@ -94,7 +103,10 @@ const MATERIAL_MODULES = [
     ...MATERIAL_MODULES,
     LanguageSwitcherComponent,
     LocalizationDemoComponent,
-    // Shared components will be exported here
+    FormErrorComponent,
+    EmptyStateComponent,
+    MainLayoutComponent,
+    CardComponent,
   ],
 })
 export class SharedModule {}

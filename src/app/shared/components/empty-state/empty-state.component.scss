@@ -1,0 +1,120 @@
+@import "../../../../styles/variables";
+@import "../../../../styles/mixins";
+
+.empty-state {
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-12;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+
+  &--small {
+    padding: $spacing-8;
+
+    .empty-state__icon mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    .empty-state__title {
+      font-size: $font-size-base;
+    }
+
+    .empty-state__message {
+      font-size: $font-size-sm;
+    }
+  }
+
+  &--medium {
+    padding: $spacing-12;
+
+    .empty-state__icon mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+    }
+
+    .empty-state__title {
+      font-size: $font-size-lg;
+    }
+
+    .empty-state__message {
+      font-size: $font-size-base;
+    }
+  }
+
+  &--large {
+    padding: $spacing-16;
+
+    .empty-state__icon mat-icon {
+      font-size: 80px;
+      width: 80px;
+      height: 80px;
+    }
+
+    .empty-state__title {
+      font-size: $font-size-xl;
+    }
+
+    .empty-state__message {
+      font-size: $font-size-lg;
+    }
+  }
+
+  &__icon {
+    margin-bottom: $spacing-4;
+
+    mat-icon {
+      color: $text-secondary;
+      opacity: 0.6;
+    }
+  }
+
+  &__title {
+    margin: 0 0 $spacing-2 0;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  &__message {
+    margin: 0 0 $spacing-6 0;
+    color: $text-secondary;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  &__action {
+    mat-icon {
+      margin-right: $spacing-2;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@include respond-to(md) {
+  .empty-state {
+    padding: $spacing-8;
+
+    &--medium,
+    &--large {
+      padding: $spacing-10;
+    }
+
+    &__message {
+      max-width: 300px;
+      font-size: $font-size-sm;
+    }
+  }
+}

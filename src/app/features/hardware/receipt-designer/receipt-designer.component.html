@@ -1,0 +1,397 @@
+<div class="receipt-designer-container">
+  <!-- Header -->
+  <div class="designer-header">
+    <div class="header-left">
+      <h1>Receipt Template Designer</h1>
+      <p class="subtitle">Customize your receipt layout and appearance</p>
+    </div>
+    <div class="header-right">
+      <button mat-icon-button [color]="autoPreview ? 'primary' : ''" (click)="toggleAutoPreview()"
+        matTooltip="Toggle auto-preview">
+        <mat-icon>{{ autoPreview ? "visibility" : "visibility_off" }}</mat-icon>
+      </button>
+      <button mat-raised-button (click)="printPreview()" *ngIf="workingTemplate">
+        <mat-icon>print</mat-icon>
+        Print Preview
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="designer-content">
+    <!-- Left Sidebar - Template List -->
+    <div class="templates-sidebar">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Templates</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <button mat-raised-button color="primary" (click)="createNewTemplate()" class="new-template-btn">
+            <mat-icon>add</mat-icon>
+            New Template
+          </button>
+
+          <mat-list class="templates-list">
+            <mat-list-item *ngFor="let template of templates" [class.selected]="selectedTemplate?.id === template.id"
+              (click)="selectTemplate(template)">
+              <mat-icon matListItemIcon>receipt</mat-icon>
+              <div matListItemTitle>{{ template.name }}</div>
+              <div matListItemLine>
+                <mat-chip class="paper-width-chip">{{ template.paperWidth }}mm</mat-chip>
+                <mat-chip *ngIf="template.isDefault" class="default-chip">Default</mat-chip>
+              </div>
+            </mat-list-item>
+
+            <mat-list-item *ngIf="templates.length === 0">
+              <div matListItemTitle class="empty-text">No templates</div>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Center Panel - Editor -->
+    <div class="editor-panel" *ngIf="selectedTemplate || isNewTemplate">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>edit</mat-icon>
+            {{ workingTemplate?.name || 'Template Editor' }}
+          </mat-card-title>
+          <div class="header-actions">
+            <button mat-button *ngIf="!isEditing" (click)="startEditing()">
+              <mat-icon>edit</mat-icon>
+              Edit
+            </button>
+            <button mat-raised-button color="primary" *ngIf="isEditing" (click)="saveTemplate()"
+              [disabled]="!hasUnsavedChanges">
+              <mat-icon>save</mat-icon>
+              Save
+            </button>
+            <button mat-button *ngIf="isEditing" (click)="cancelEditing()">
+              Cancel
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="templateMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </div>
+        </mat-card-header>
+
+        <mat-menu #templateMenu="matMenu">
+          <button mat-menu-item (click)="duplicateTemplate()">
+            <mat-icon>content_copy</mat-icon>
+            Duplicate
+          </button>
+          <button mat-menu-item (click)="setAsDefault()" *ngIf="!selectedTemplate?.isDefault">
+            <mat-icon>star</mat-icon>
+            Set as Default
+          </button>
+          <button mat-menu-item (click)="exportTemplate()">
+            <mat-icon>download</mat-icon>
+            Export
+          </button>
+          <button mat-menu-item (click)="importInput.click()">
+            <mat-icon>upload</mat-icon>
+            Import
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="deleteTemplate()" [disabled]="selectedTemplate?.isDefault">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </mat-menu>
+
+        <input #importInput type="file" accept=".json" (change)="importTemplate($event)" style="display: none" />
+
+        <mat-card-content *ngIf="workingTemplate && isEditing">
+          <!-- Basic Settings -->
+          <div class="basic-settings">
+            <mat-form-field appearance="outline">
+              <mat-label>Template Name</mat-label>
+              <input matInput [(ngModel)]="workingTemplate.name" (ngModelChange)="onTemplateChange()" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Description</mat-label>
+              <input matInput [(ngModel)]="workingTemplate.description" (ngModelChange)="onTemplateChange()" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Paper Width</mat-label>
+              <mat-select [(ngModel)]="workingTemplate.paperWidth" (ngModelChange)="onTemplateChange()">
+                <mat-option *ngFor="let width of paperWidths" [value]="width.value">
+                  {{ width.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Tabs for Sections -->
+          <mat-tab-group [(selectedIndex)]="selectedTab" animationDuration="0ms">
+            <!-- Header Tab -->
+            <mat-tab label="Header">
+              <div class="tab-content">
+                <mat-slide-toggle [(ngModel)]="workingTemplate.sections.header.enabled"
+                  (ngModelChange)="onTemplateChange()">
+                  Enable Header Section
+                </mat-slide-toggle>
+
+                <div *ngIf="workingTemplate.sections.header.enabled" class="section-config">
+                  <!-- Logo -->
+                  <h3>Logo</h3>
+                  <mat-slide-toggle [(ngModel)]="workingTemplate.sections.header.logo!.enabled"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Logo
+                  </mat-slide-toggle>
+
+                  <div *ngIf="workingTemplate.sections.header.logo?.enabled" class="logo-config">
+                    <button mat-raised-button (click)="logoInput.click()">
+                      <mat-icon>upload</mat-icon>
+                      Upload Logo
+                    </button>
+                    <button mat-button (click)="removeLogo()" *ngIf="workingTemplate.sections.header.logo?.imageData">
+                      <mat-icon>delete</mat-icon>
+                      Remove Logo
+                    </button>
+                    <input #logoInput type="file" accept="image/*" (change)="uploadLogo($event)"
+                      style="display: none" />
+                  </div>
+
+                  <!-- Business Name -->
+                  <h3>Business Name</h3>
+                  <mat-slide-toggle [(ngModel)]="workingTemplate.sections.header.businessName.enabled"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Business Name
+                  </mat-slide-toggle>
+
+                  <div *ngIf="workingTemplate.sections.header.businessName.enabled">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Font Size</mat-label>
+                      <mat-select [(ngModel)]="workingTemplate.sections.header.businessName.fontSize"
+                        (ngModelChange)="onTemplateChange()">
+                        <mat-option *ngFor="let size of fontSizes" [value]="size">
+                          {{ size | titlecase }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-slide-toggle [(ngModel)]="workingTemplate.sections.header.businessName.bold"
+                      (ngModelChange)="onTemplateChange()">
+                      Bold
+                    </mat-slide-toggle>
+                  </div>
+
+                  <!-- Address & Contact -->
+                  <h3>Address & Contact</h3>
+                  <mat-slide-toggle [(ngModel)]="workingTemplate.sections.header.address.enabled"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Address
+                  </mat-slide-toggle>
+
+                  <mat-slide-toggle [(ngModel)]="workingTemplate.sections.header.contact.enabled"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Contact Info
+                  </mat-slide-toggle>
+
+                  <div *ngIf="workingTemplate.sections.header.contact.enabled" class="contact-options">
+                    <mat-checkbox [(ngModel)]="workingTemplate.sections.header.contact.showPhone"
+                      (ngModelChange)="onTemplateChange()">
+                      Phone
+                    </mat-checkbox>
+                    <mat-checkbox [(ngModel)]="workingTemplate.sections.header.contact.showEmail"
+                      (ngModelChange)="onTemplateChange()">
+                      Email
+                    </mat-checkbox>
+                  </div>
+
+                  <!-- Alignment -->
+                  <mat-form-field appearance="outline">
+                    <mat-label>Header Alignment</mat-label>
+                    <mat-select [(ngModel)]="workingTemplate.sections.header.alignment"
+                      (ngModelChange)="onTemplateChange()">
+                      <mat-option *ngFor="let align of alignments" [value]="align">
+                        {{ align | titlecase }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Items Tab -->
+            <mat-tab label="Items">
+              <div class="tab-content">
+                <mat-slide-toggle [(ngModel)]="workingTemplate.sections.items.enabled"
+                  (ngModelChange)="onTemplateChange()">
+                  Enable Items Section
+                </mat-slide-toggle>
+
+                <div *ngIf="workingTemplate.sections.items.enabled" class="section-config">
+                  <h3>Item Display Options</h3>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.items.showSKU"
+                    (ngModelChange)="onTemplateChange()">
+                    Show SKU
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.items.showQuantity"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Quantity
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.items.showUnitPrice"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Unit Price
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.items.showItemTotal"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Item Total
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.items.showDiscount"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Discount
+                  </mat-checkbox>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Totals Tab -->
+            <mat-tab label="Totals">
+              <div class="tab-content">
+                <mat-slide-toggle [(ngModel)]="workingTemplate.sections.totals.enabled"
+                  (ngModelChange)="onTemplateChange()">
+                  Enable Totals Section
+                </mat-slide-toggle>
+
+                <div *ngIf="workingTemplate.sections.totals.enabled" class="section-config">
+                  <h3>Totals Display Options</h3>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.totals.showSubtotal"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Subtotal
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.totals.showDiscount"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Discount
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.totals.showTax"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Tax
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.totals.showTotal"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Total
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.totals.showPaid"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Paid Amount
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.totals.showChange"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Change
+                  </mat-checkbox>
+
+                  <mat-slide-toggle [(ngModel)]="workingTemplate.sections.totals.boldTotal"
+                    (ngModelChange)="onTemplateChange()">
+                    Bold Total
+                  </mat-slide-toggle>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Footer Tab -->
+            <mat-tab label="Footer">
+              <div class="tab-content">
+                <mat-slide-toggle [(ngModel)]="workingTemplate.sections.footer.enabled"
+                  (ngModelChange)="onTemplateChange()">
+                  Enable Footer Section
+                </mat-slide-toggle>
+
+                <div *ngIf="workingTemplate.sections.footer.enabled" class="section-config">
+                  <h3>Footer Options</h3>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.footer.showTransactionId"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Transaction ID
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.footer.showCashier"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Cashier
+                  </mat-checkbox>
+                  <mat-checkbox [(ngModel)]="workingTemplate.sections.footer.showDateTime"
+                    (ngModelChange)="onTemplateChange()">
+                    Show Date/Time
+                  </mat-checkbox>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Thank You Message</mat-label>
+                    <textarea matInput [(ngModel)]="workingTemplate.sections.footer.thankYouMessage"
+                      (ngModelChange)="onTemplateChange()" rows="2"></textarea>
+                  </mat-form-field>
+                </div>
+              </div>
+            </mat-tab>
+
+            <!-- Styles Tab -->
+            <mat-tab label="Styles">
+              <div class="tab-content">
+                <h3>General Styles</h3>
+                <mat-form-field appearance="outline">
+                  <mat-label>Font Family</mat-label>
+                  <mat-select [(ngModel)]="workingTemplate.styles.font" (ngModelChange)="onTemplateChange()">
+                    <mat-option value="monospace">Monospace</mat-option>
+                    <mat-option value="sans-serif">Sans-serif</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Border Style</mat-label>
+                  <mat-select [(ngModel)]="workingTemplate.styles.borderStyle" (ngModelChange)="onTemplateChange()">
+                    <mat-option *ngFor="let style of borderStyles" [value]="style.value">
+                      {{ style.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Section Spacing (lines)</mat-label>
+                  <input matInput type="number" min="0" max="5" [(ngModel)]="workingTemplate.styles.sectionSpacing"
+                    (ngModelChange)="onTemplateChange()" />
+                </mat-form-field>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+
+          <div class="editor-actions" *ngIf="isEditing">
+            <button mat-raised-button color="primary" (click)="saveTemplate()" [disabled]="!hasUnsavedChanges">
+              <mat-icon>save</mat-icon>
+              Save Template
+            </button>
+            <button mat-button (click)="updatePreview()">
+              <mat-icon>refresh</mat-icon>
+              Update Preview
+            </button>
+          </div>
+        </mat-card-content>
+
+        <mat-card-content *ngIf="!isEditing && workingTemplate">
+          <div class="view-mode">
+            <p class="info-text">Click "Edit" to modify this template</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Right Panel - Preview -->
+    <div class="preview-panel">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>visibility</mat-icon>
+            Preview
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="receipt-preview">
+            <pre class="preview-text">{{ previewText }}</pre>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

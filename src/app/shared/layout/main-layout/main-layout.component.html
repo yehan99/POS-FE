@@ -1,1 +1,171 @@
-<p>main-layout works!</p>
+<p>
+<div class="layout-container">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+                <mat-icon>menu</mat-icon>
+            </button>
+            <div class="logo">
+                <mat-icon class="logo-icon">storefront</mat-icon>
+                <span class="logo-text">Paradise POS</span>
+            </div>
+        </div>
+
+        <nav class="header-nav">
+            <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+                <mat-icon>dashboard</mat-icon>
+                <span>Dashboard</span>
+            </a>
+            <a routerLink="/pos" routerLinkActive="active" class="nav-link">
+                <mat-icon>point_of_sale</mat-icon>
+                <span>POS</span>
+            </a>
+            <a routerLink="/products" routerLinkActive="active" class="nav-link">
+                <mat-icon>inventory_2</mat-icon>
+                <span>Products</span>
+            </a>
+            <a routerLink="/customers" routerLinkActive="active" class="nav-link">
+                <mat-icon>people</mat-icon>
+                <span>Customers</span>
+            </a>
+            <a routerLink="/reports" routerLinkActive="active" class="nav-link">
+                <mat-icon>analytics</mat-icon>
+                <span>Reports</span>
+            </a>
+        </nav>
+
+        <div class="header-right">
+            <button class="icon-button" aria-label="Search" (click)="openSearch()">
+                <mat-icon>search</mat-icon>
+            </button>
+            <button class="icon-button" aria-label="Notifications" (click)="openNotifications()">
+                <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" matBadgeSize="small">
+                    notifications
+                </mat-icon>
+            </button>
+            <button class="user-menu" [matMenuTriggerFor]="userMenu">
+                <div class="user-avatar">{{ userInitials }}</div>
+                <div class="user-info">
+                    <span class="user-name">{{ userName }}</span>
+                    <span class="user-role">{{ userRole }}</span>
+                </div>
+                <mat-icon>arrow_drop_down</mat-icon>
+            </button>
+            <mat-menu #userMenu="matMenu" class="user-dropdown">
+                <button mat-menu-item>
+                    <mat-icon>person</mat-icon>
+                    <span>Profile</span>
+                </button>
+                <button mat-menu-item>
+                    <mat-icon>settings</mat-icon>
+                    <span>Settings</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="logout()">
+                    <mat-icon>logout</mat-icon>
+                    <span>Logout</span>
+                </button>
+            </mat-menu>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+        <nav class="sidebar-nav">
+            <a routerLink="/dashboard" routerLinkActive="active" class="sidebar-link" title="Dashboard">
+                <mat-icon>dashboard</mat-icon>
+                <span class="link-text">Dashboard</span>
+            </a>
+            <a routerLink="/pos" routerLinkActive="active" class="sidebar-link" title="Point of Sale">
+                <mat-icon>point_of_sale</mat-icon>
+                <span class="link-text">Point of Sale</span>
+            </a>
+
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <span>Inventory</span>
+                </div>
+                <a routerLink="/products" routerLinkActive="active" class="sidebar-link" title="Products">
+                    <mat-icon>inventory_2</mat-icon>
+                    <span class="link-text">Products</span>
+                </a>
+                <a routerLink="/categories" routerLinkActive="active" class="sidebar-link" title="Categories">
+                    <mat-icon>category</mat-icon>
+                    <span class="link-text">Categories</span>
+                </a>
+                <a routerLink="/inventory" routerLinkActive="active" class="sidebar-link" title="Stock">
+                    <mat-icon>store</mat-icon>
+                    <span class="link-text">Stock</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <span>Sales</span>
+                </div>
+                <a routerLink="/sales" routerLinkActive="active" class="sidebar-link" title="Sales">
+                    <mat-icon>shopping_cart</mat-icon>
+                    <span class="link-text">Sales</span>
+                </a>
+                <a routerLink="/customers" routerLinkActive="active" class="sidebar-link" title="Customers">
+                    <mat-icon>people</mat-icon>
+                    <span class="link-text">Customers</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <span>Management</span>
+                </div>
+                <a routerLink="/reports" routerLinkActive="active" class="sidebar-link" title="Reports">
+                    <mat-icon>analytics</mat-icon>
+                    <span class="link-text">Reports</span>
+                </a>
+                <a routerLink="/settings" routerLinkActive="active" class="sidebar-link" title="Settings">
+                    <mat-icon>settings</mat-icon>
+                    <span class="link-text">Settings</span>
+                </a>
+                <a routerLink="/users" routerLinkActive="active" class="sidebar-link" title="Users">
+                    <mat-icon>admin_panel_settings</mat-icon>
+                    <span class="link-text">Users</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs" *ngIf="breadcrumbs.length > 0">
+            <a *ngFor="let crumb of breadcrumbs; let last = last" [routerLink]="crumb.url" [class.active]="last"
+                class="breadcrumb-item">
+                {{ crumb.label }}
+                <mat-icon *ngIf="!last" class="breadcrumb-separator">chevron_right</mat-icon>
+            </a>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <router-outlet></router-outlet>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <span class="version">Paradise POS v{{ version }}</span>
+                <span class="separator">•</span>
+                <span class="copyright">© 2025 Paradise POS. All rights reserved.</span>
+            </div>
+            <div class="footer-right">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <span class="separator">•</span>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <span class="separator">•</span>
+                <a href="#" class="footer-link">Support</a>
+            </div>
+        </div>
+    </footer>
+</div>

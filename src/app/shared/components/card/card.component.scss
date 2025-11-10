@@ -1,0 +1,150 @@
+@import "../../../../styles/variables";
+@import "../../../../styles/mixins";
+
+// ========================================
+// LUXURY CARD COMPONENT
+// ========================================
+
+.luxury-card {
+  background: $background;
+  border-radius: $radius-xl;
+  transition: all $transition-base;
+
+  // ============ VARIANTS ============
+  &.variant-default {
+    border: 1px solid $border-light;
+    box-shadow: $shadow-sm;
+  }
+
+  &.variant-elevated {
+    border: 1px solid $border-light;
+    box-shadow: $shadow-lg;
+
+    &:hover {
+      box-shadow: $shadow-xl;
+    }
+  }
+
+  &.variant-outlined {
+    border: 2px solid $border-medium;
+    box-shadow: none;
+
+    &:hover {
+      border-color: $accent-500;
+      box-shadow: 0 0 0 3px rgba($accent-500, 0.1);
+    }
+  }
+
+  &.variant-interactive {
+    border: 1px solid $border-light;
+    box-shadow: $shadow-md;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $shadow-xl;
+      border-color: $accent-400;
+    }
+
+    &:active {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+  }
+
+  // ============ PADDING SIZES ============
+  &.padding-none {
+    padding: 0;
+  }
+
+  &.padding-small {
+    padding: $spacing-4;
+  }
+
+  &.padding-medium {
+    padding: $spacing-6;
+  }
+
+  &.padding-large {
+    padding: $spacing-8;
+  }
+
+  // ============ MODIFIERS ============
+  &.hoverable:not(.variant-interactive) {
+    &:hover {
+      box-shadow: $shadow-lg;
+      transform: translateY(-2px);
+    }
+  }
+
+  &.clickable {
+    cursor: pointer;
+    user-select: none;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &.full-height {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+// ============ CARD HEADER ============
+::ng-deep .luxury-card {
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: $spacing-4;
+    margin-bottom: $spacing-4;
+    border-bottom: 1px solid $border-light;
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: $spacing-3;
+      margin: 0;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $primary-900;
+
+      mat-icon {
+        color: $accent-600;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .card-subtitle {
+      margin: $spacing-1 0 0 0;
+      font-size: $font-size-sm;
+      color: $text-secondary;
+      font-weight: $font-weight-normal;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: $spacing-2;
+    }
+  }
+
+  // ============ CARD CONTENT ============
+  .card-content {
+    flex: 1;
+  }
+
+  // ============ CARD FOOTER ============
+  .card-footer {
+    padding-top: $spacing-4;
+    margin-top: $spacing-4;
+    border-top: 1px solid $border-light;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
