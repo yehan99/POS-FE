@@ -302,7 +302,7 @@ select,
   border: 1px solid $border-light !important;
 }
 
-// Material Form Field Enhancements
+// Material Form Field Enhancements - Global Height Reduction
 .mat-mdc-form-field {
   .mat-mdc-text-field-wrapper {
     .mat-mdc-form-field-flex {
@@ -315,6 +315,335 @@ select,
       }
     }
   }
+}
+
+// Global Form Field Height Reduction for Legacy Material (mat-form-field)
+.mat-form-field-appearance-outline {
+  .mat-form-field-wrapper {
+    padding-bottom: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  .mat-form-field-flex {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 0.75rem !important;
+    align-items: center !important;
+  }
+
+  .mat-form-field-infix {
+    padding: 0.25rem 0 !important;
+    border-top-width: 0.75rem !important;
+    min-height: 40px !important;
+  }
+
+  .mat-form-field-subscript-wrapper {
+    margin-top: 0.25rem !important;
+    padding-top: 0 !important;
+  }
+
+  .mat-input-element,
+  .mat-select-trigger {
+    line-height: 1.4 !important;
+    height: auto !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mat-select-arrow-wrapper {
+    transform: translateY(0) !important;
+  }
+
+  .mat-form-field-label {
+    top: 1.25rem !important;
+  }
+
+  &.mat-form-field-can-float.mat-form-field-should-float .mat-form-field-label,
+  &.mat-form-field-can-float
+    .mat-input-server:focus
+    + .mat-form-field-label-wrapper
+    .mat-form-field-label {
+    transform: translateY(-1.5rem) scale(0.75) !important;
+    padding: 0 4px !important;
+    background-color: white !important;
+  }
+
+  .mat-form-field-outline-thick {
+    color: $primary-600 !important;
+  }
+
+  // Ensure label doesn't overlap with input text
+  &.mat-focused .mat-form-field-label,
+  &.mat-form-field-should-float .mat-form-field-label {
+    transform: translateY(-1.5rem) scale(0.75) !important;
+    padding: 0 4px !important;
+    background-color: white !important;
+  }
+}
+
+// Fill appearance for legacy material
+.mat-form-field-appearance-fill {
+  .mat-form-field-flex {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding-top: 0 !important;
+  }
+
+  .mat-form-field-infix {
+    padding: 0.6rem 0 0.4rem 0 !important;
+  }
+}
+
+// Global Form Field Height Reduction for MDC Material (mat-mdc-form-field)
+.mat-mdc-text-field {
+  &.mat-mdc-form-field-has-icon-suffix {
+    .mat-mdc-text-field-wrapper {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .mat-mdc-text-field-wrapper {
+    padding-bottom: 0 !important;
+  }
+
+  .mat-mdc-form-field-flex {
+    min-height: 40px !important;
+    height: 40px !important;
+    align-items: center !important;
+  }
+
+  .mat-mdc-form-field-infix {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .mat-mdc-floating-label {
+    top: 20px !important;
+  }
+
+  &.mdc-text-field--filled,
+  &.mdc-text-field--outlined {
+    height: 40px !important;
+
+    .mat-mdc-form-field-infix {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+  }
+
+  .mdc-text-field__input {
+    height: 24px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+.mat-mdc-form-field-subscript-wrapper {
+  height: auto !important;
+  min-height: 14px !important;
+  margin-top: 0.25rem !important;
+}
+
+.mat-mdc-select {
+  .mat-mdc-select-trigger {
+    height: 24px !important;
+    min-height: 24px !important;
+  }
+
+  .mat-mdc-select-value {
+    line-height: 24px !important;
+  }
+}
+
+// Additional aggressive overrides for all input types
+.mat-mdc-input-element,
+input.mat-mdc-input-element,
+.mat-input-element,
+input.mat-input-element {
+  height: auto !important;
+  line-height: 1.4 !important;
+  padding: 0 !important;
+}
+
+// Date picker input fields
+.mat-datepicker-input {
+  height: auto !important;
+  line-height: 1.4 !important;
+}
+
+// Material Form Field Enhancements - Global Height Reduction
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    .mat-mdc-form-field-flex {
+      .mat-mdc-form-field-infix {
+        input,
+        textarea {
+          font-family: $font-family-primary !important;
+          color: $text-primary !important;
+        }
+      }
+    }
+  }
+}
+
+// Global Form Field Height Reduction for Legacy Material (mat-form-field)
+.mat-form-field-appearance-outline {
+  .mat-form-field-wrapper {
+    padding-bottom: 0.5rem !important;
+    margin: 0 !important;
+  }
+
+  .mat-form-field-flex {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 0 0.75rem !important;
+    align-items: center !important;
+  }
+
+  .mat-form-field-infix {
+    padding: 0.25rem 0 !important;
+    border-top-width: 0.75rem !important;
+    min-height: 40px !important;
+  }
+
+  .mat-form-field-subscript-wrapper {
+    margin-top: 0.25rem !important;
+    padding-top: 0 !important;
+  }
+
+  .mat-input-element,
+  .mat-select-trigger {
+    line-height: 1.4 !important;
+    height: auto !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mat-select-arrow-wrapper {
+    transform: translateY(0) !important;
+  }
+
+  .mat-form-field-label {
+    top: 1.25rem !important;
+  }
+
+  &.mat-form-field-can-float.mat-form-field-should-float .mat-form-field-label,
+  &.mat-form-field-can-float
+    .mat-input-server:focus
+    + .mat-form-field-label-wrapper
+    .mat-form-field-label {
+    transform: translateY(-1.5rem) scale(0.75) !important;
+    padding: 0 4px !important;
+    background-color: white !important;
+  }
+
+  .mat-form-field-outline-thick {
+    color: $primary-600 !important;
+  }
+
+  // Ensure label doesn't overlap with input text
+  &.mat-focused .mat-form-field-label,
+  &.mat-form-field-should-float .mat-form-field-label {
+    transform: translateY(-1.5rem) scale(0.75) !important;
+    padding: 0 4px !important;
+    background-color: white !important;
+  }
+}
+
+// Fill appearance for legacy material
+.mat-form-field-appearance-fill {
+  .mat-form-field-flex {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding-top: 0 !important;
+  }
+
+  .mat-form-field-infix {
+    padding: 0.6rem 0 0.4rem 0 !important;
+  }
+}
+
+// Global Form Field Height Reduction for MDC Material (mat-mdc-form-field)
+.mat-mdc-text-field {
+  &.mat-mdc-form-field-has-icon-suffix {
+    .mat-mdc-text-field-wrapper {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .mat-mdc-text-field-wrapper {
+    padding-bottom: 0 !important;
+  }
+
+  .mat-mdc-form-field-flex {
+    min-height: 40px !important;
+    height: 40px !important;
+    align-items: center !important;
+  }
+
+  .mat-mdc-form-field-infix {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .mat-mdc-floating-label {
+    top: 20px !important;
+  }
+
+  &.mdc-text-field--filled,
+  &.mdc-text-field--outlined {
+    height: 40px !important;
+
+    .mat-mdc-form-field-infix {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+  }
+
+  .mdc-text-field__input {
+    height: 24px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+.mat-mdc-form-field-subscript-wrapper {
+  height: auto !important;
+  min-height: 14px !important;
+  margin-top: 0.25rem !important;
+}
+
+.mat-mdc-select {
+  .mat-mdc-select-trigger {
+    height: 24px !important;
+    min-height: 24px !important;
+  }
+
+  .mat-mdc-select-value {
+    line-height: 24px !important;
+  }
+}
+
+// Additional aggressive overrides for all input types
+.mat-mdc-input-element,
+input.mat-mdc-input-element,
+.mat-input-element,
+input.mat-input-element {
+  height: auto !important;
+  line-height: 1.4 !important;
+  padding: 0 !important;
+}
+
+// Date picker input fields
+.mat-datepicker-input {
+  height: auto !important;
+  line-height: 1.4 !important;
 }
 
 // Material Dialog Enhancements

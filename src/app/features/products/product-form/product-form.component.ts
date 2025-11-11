@@ -408,6 +408,16 @@ export class ProductFormComponent implements OnInit {
     }
   }
 
+  getSelectedCategoryName(): string {
+    const categoryId = this.productForm.get('category')?.value;
+    if (!categoryId) {
+      return 'Not assigned';
+    }
+
+    const category = this.categories.find((c) => c.id === categoryId);
+    return category ? category.name : 'Not assigned';
+  }
+
   private showSnackBar(
     message: string,
     type: 'success' | 'error' | 'warning'

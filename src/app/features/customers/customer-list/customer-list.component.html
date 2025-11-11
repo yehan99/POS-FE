@@ -1,302 +1,317 @@
-<div class="customer-list-container">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <h1>Customer Management</h1>
-      <p class="subtitle">Manage customer profiles and loyalty programs</p>
+<section class="customer-management">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Sales &amp; CRM</p>
+        <h1>Customer Management</h1>
+        <p class="subtitle">Manage customer profiles, loyalty tiers, and engagement.</p>
+      </div>
     </div>
-    <div class="action-buttons">
-      <button mat-raised-button color="primary" (click)="createCustomer()">
+    <div class="page-header__actions">
+      <button mat-flat-button color="primary" class="action-primary" (click)="createCustomer()">
         <mat-icon>person_add</mat-icon>
         Add Customer
       </button>
-      <button mat-stroked-button (click)="importCustomers()">
+      <button mat-stroked-button type="button" (click)="importCustomers()">
         <mat-icon>upload</mat-icon>
         Import
       </button>
-      <button mat-stroked-button (click)="exportCustomers()">
+      <button mat-stroked-button type="button" (click)="exportCustomers()">
         <mat-icon>download</mat-icon>
         Export
       </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Statistics Cards -->
-  <div class="statistics-cards" *ngIf="statistics">
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon">
-          <mat-icon>people</mat-icon>
+  <app-card variant="elevated" padding="large" class="insights-panel" *ngIf="statistics as stats">
+    <div class="insights-panel__header">
+      <h2>Customer Insights</h2>
+      <p>Quick metrics to understand how your customer base is performing.</p>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--primary">
+          <mat-icon>groups</mat-icon>
         </div>
-        <div class="stat-details">
-          <p class="stat-label">Total Customers</p>
-          <p class="stat-value">{{ statistics.totalCustomers }}</p>
+        <div class="insight-card__details">
+          <span class="label">Total Customers</span>
+          <span class="value">{{ stats.totalCustomers | number }}</span>
         </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon active">
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--success">
           <mat-icon>check_circle</mat-icon>
         </div>
-        <div class="stat-details">
-          <p class="stat-label">Active Customers</p>
-          <p class="stat-value">{{ statistics.activeCustomers }}</p>
+        <div class="insight-card__details">
+          <span class="label">Active Customers</span>
+          <span class="value">{{ stats.activeCustomers | number }}</span>
         </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon new">
-          <mat-icon>person_add</mat-icon>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--accent">
+          <mat-icon>person_add_alt</mat-icon>
         </div>
-        <div class="stat-details">
-          <p class="stat-label">New This Month</p>
-          <p class="stat-value">{{ statistics.newCustomersThisMonth }}</p>
+        <div class="insight-card__details">
+          <span class="label">New This Month</span>
+          <span class="value">{{ stats.newCustomersThisMonth | number }}</span>
         </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon points">
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--amber">
           <mat-icon>stars</mat-icon>
         </div>
-        <div class="stat-details">
-          <p class="stat-label">Total Loyalty Points</p>
-          <p class="stat-value">{{ statistics.totalLoyaltyPoints.toLocaleString() }}</p>
+        <div class="insight-card__details">
+          <span class="label">Total Loyalty Points</span>
+          <span class="value">{{ stats.totalLoyaltyPoints | number }}</span>
         </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon spent">
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--info">
           <mat-icon>account_balance_wallet</mat-icon>
         </div>
-        <div class="stat-details">
-          <p class="stat-label">Avg. Customer Spend</p>
-          <p class="stat-value">{{ formatCurrency(statistics.averageSpent) }}</p>
+        <div class="insight-card__details">
+          <span class="label">Avg. Customer Spend</span>
+          <span class="value">{{ formatCurrency(stats.averageSpent) }}</span>
         </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+      </div>
+    </div>
+  </app-card>
 
-  <!-- Filters -->
-  <mat-card class="filters-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filters-form">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search</mat-label>
-          <input matInput formControlName="search" placeholder="Name, phone, email, or code">
-          <mat-icon matPrefix>search</mat-icon>
-        </mat-form-field>
+  <app-card variant="elevated" padding="large" class="filter-panel">
+    <div class="filter-panel__header">
+      <div>
+        <h2>Smart Filters</h2>
+        <p>Refine by loyalty tier, engagement status, email availability, or spending.</p>
+      </div>
+      <div class="filter-panel__meta">
+        <mat-icon color="primary">groups</mat-icon>
+        <span>{{ totalCustomers | number }} customers</span>
+      </div>
+    </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Loyalty Tier</mat-label>
-          <mat-select formControlName="loyaltyTier">
-            <mat-option value="">All Tiers</mat-option>
-            <mat-option *ngFor="let tier of loyaltyTiers" [value]="tier">
-              {{ tier | titlecase }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="isActive">
-            <mat-option value="">All</mat-option>
-            <mat-option value="true">Active</mat-option>
-            <mat-option value="false">Inactive</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Has Email</mat-label>
-          <mat-select formControlName="hasEmail">
-            <mat-option value="">All</mat-option>
-            <mat-option value="true">Yes</mat-option>
-            <mat-option value="false">No</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Min Spent</mat-label>
-          <input matInput type="number" formControlName="minTotalSpent" placeholder="0">
-          <span matPrefix>LKR&nbsp;</span>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Max Spent</mat-label>
-          <input matInput type="number" formControlName="maxTotalSpent" placeholder="999999">
-          <span matPrefix>LKR&nbsp;</span>
-        </mat-form-field>
-
-        <button mat-stroked-button type="button" (click)="clearFilters()" class="clear-btn">
-          <mat-icon>clear</mat-icon>
-          Clear
+    <form [formGroup]="filterForm" class="filter-grid">
+      <mat-form-field appearance="outline" class="filter-grid__field filter-grid__search">
+        <mat-label>Search customers</mat-label>
+        <input matInput formControlName="search" placeholder="Name, phone, email, or code">
+        <mat-icon matPrefix>search</mat-icon>
+        <button *ngIf="filterForm.get('search')?.value" mat-icon-button matSuffix type="button"
+          (click)="filterForm.get('search')?.reset('')">
+          <mat-icon>close</mat-icon>
         </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+      </mat-form-field>
 
-  <!-- Bulk Actions -->
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Loyalty tier</mat-label>
+        <mat-select formControlName="loyaltyTier">
+          <mat-option value="">All tiers</mat-option>
+          <mat-option *ngFor="let tier of loyaltyTiers" [value]="tier">
+            {{ tier | titlecase }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="isActive">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option value="true">Active</mat-option>
+          <mat-option value="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Email availability</mat-label>
+        <mat-select formControlName="hasEmail">
+          <mat-option value="">All</mat-option>
+          <mat-option value="true">Has email</mat-option>
+          <mat-option value="false">No email</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Minimum spent</mat-label>
+        <input matInput type="number" formControlName="minTotalSpent" placeholder="0.00">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Maximum spent</mat-label>
+        <input matInput type="number" formControlName="maxTotalSpent" placeholder="0.00">
+      </mat-form-field>
+
+      <div class="filter-grid__footer">
+        <button mat-stroked-button type="button" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Reset Filters
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="loadCustomers()">
+          <mat-icon>refresh</mat-icon>
+          Apply Filters
+        </button>
+      </div>
+    </form>
+  </app-card>
+
   <div class="bulk-actions" *ngIf="selection.selected.length > 0">
-    <span class="selection-count">{{ selection.selected.length }} customer(s) selected</span>
-    <button mat-raised-button color="warn" (click)="bulkDelete()">
+    <div class="bulk-actions__info">
+      <mat-icon>checklist</mat-icon>
+      <span>{{ selection.selected.length }} customer(s) selected</span>
+    </div>
+    <button mat-stroked-button color="warn" type="button" (click)="bulkDelete()">
       <mat-icon>delete</mat-icon>
       Delete Selected
     </button>
   </div>
 
-  <!-- Customer Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange()">
-
-          <!-- Checkbox Column -->
-          <ng-container matColumnDef="select">
-            <th mat-header-cell *matHeaderCellDef>
-              <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                [checked]="selection.hasValue() && isAllSelected()"
-                [indeterminate]="selection.hasValue() && !isAllSelected()">
-              </mat-checkbox>
-            </th>
-            <td mat-cell *matCellDef="let row">
-              <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(row) : null"
-                [checked]="selection.isSelected(row)">
-              </mat-checkbox>
-            </td>
-          </ng-container>
-
-          <!-- Customer Code Column -->
-          <ng-container matColumnDef="customerCode">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
-            <td mat-cell *matCellDef="let customer">
-              <span class="customer-code">{{ customer.customerCode }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-            <td mat-cell *matCellDef="let customer">
-              <div class="customer-name">
-                <strong>{{ customer.firstName }} {{ customer.lastName }}</strong>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Phone Column -->
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let customer">{{ customer.phone }}</td>
-          </ng-container>
-
-          <!-- Email Column -->
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
-            <td mat-cell *matCellDef="let customer">
-              {{ customer.email || 'N/A' }}
-            </td>
-          </ng-container>
-
-          <!-- Loyalty Tier Column -->
-          <ng-container matColumnDef="loyaltyTier">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Tier</th>
-            <td mat-cell *matCellDef="let customer">
-              <span class="loyalty-tier-badge" [style.backgroundColor]="getLoyaltyTierColor(customer.loyaltyTier)">
-                <mat-icon>{{ getLoyaltyTierIcon(customer.loyaltyTier) }}</mat-icon>
-                {{ customer.loyaltyTier | titlecase }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Loyalty Points Column -->
-          <ng-container matColumnDef="loyaltyPoints">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Points</th>
-            <td mat-cell *matCellDef="let customer">
-              <span class="points-badge">{{ customer.loyaltyPoints }}</span>
-            </td>
-          </ng-container>
-
-          <!-- Total Spent Column -->
-          <ng-container matColumnDef="totalSpent">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Spent</th>
-            <td mat-cell *matCellDef="let customer">
-              {{ formatCurrency(customer.totalSpent) }}
-            </td>
-          </ng-container>
-
-          <!-- Last Purchase Column -->
-          <ng-container matColumnDef="lastPurchase">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Purchase</th>
-            <td mat-cell *matCellDef="let customer">
-              {{ formatDate(customer.lastPurchaseDate) }}
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-            <td mat-cell *matCellDef="let customer">
-              <span class="status-badge" [class.active]="customer.isActive" [class.inactive]="!customer.isActive">
-                {{ customer.isActive ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let customer">
-              <button mat-icon-button [matMenuTriggerFor]="menu">
-                <mat-icon>more_vert</mat-icon>
-              </button>
-              <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="viewCustomer(customer)">
-                  <mat-icon>visibility</mat-icon>
-                  <span>View Details</span>
-                </button>
-                <button mat-menu-item (click)="editCustomer(customer)">
-                  <mat-icon>edit</mat-icon>
-                  <span>Edit</span>
-                </button>
-                <button mat-menu-item (click)="deleteCustomer(customer)" class="danger">
-                  <mat-icon>delete</mat-icon>
-                  <span>Delete</span>
-                </button>
-              </mat-menu>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="viewCustomer(row)"
-            class="clickable-row"></tr>
-        </table>
-
-        <!-- Loading Spinner -->
-        <div class="loading-spinner" *ngIf="isLoading">
-          <mat-spinner diameter="50"></mat-spinner>
-        </div>
-
-        <!-- No Data -->
-        <div class="no-data" *ngIf="!isLoading && dataSource.data.length === 0">
-          <mat-icon>people_outline</mat-icon>
-          <p>No customers found</p>
-          <button mat-raised-button color="primary" (click)="createCustomer()">
-            Add Your First Customer
-          </button>
-        </div>
+  <app-card variant="default" padding="none" class="table-card mt-4">
+    <div class="table-card__header">
+      <div>
+        <h2>Customers</h2>
+        <p>Browse and manage customer records with bulk actions and quick filters.</p>
       </div>
+      <div class="table-card__meta" *ngIf="!isLoading">
+        <mat-icon color="primary">insights</mat-icon>
+        <span>{{ dataSource.data.length | number }} shown · {{ totalCustomers | number }} total</span>
+      </div>
+    </div>
 
-      <!-- Paginator -->
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSortChange()" class="customers-table">
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox (change)="$event ? toggleAllRows() : null" [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? toggleSelection(row) : null"
+              [checked]="selection.isSelected(row)">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="customerCode">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+          <td mat-cell *matCellDef="let customer">
+            <span class="customer-code">{{ customer.customerCode }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+          <td mat-cell *matCellDef="let customer">
+            <div class="customer-name">
+              <strong>{{ customer.firstName }} {{ customer.lastName }}</strong>
+              <span *ngIf="customer.email" class="customer-name__email">{{ customer.email }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef>Phone</th>
+          <td mat-cell *matCellDef="let customer">{{ customer.phone || 'N/A' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let customer">{{ customer.email || 'N/A' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="loyaltyTier">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tier</th>
+          <td mat-cell *matCellDef="let customer">
+            <span class="loyalty-tier" [style.--tier-color]="getLoyaltyTierColor(customer.loyaltyTier)">
+              <mat-icon>{{ getLoyaltyTierIcon(customer.loyaltyTier) }}</mat-icon>
+              {{ customer.loyaltyTier | titlecase }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="loyaltyPoints">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Points</th>
+          <td mat-cell *matCellDef="let customer">
+            <span class="points-chip">{{ customer.loyaltyPoints | number }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="totalSpent">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Spent</th>
+          <td mat-cell *matCellDef="let customer">{{ formatCurrency(customer.totalSpent) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="lastPurchase">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Last Purchase</th>
+          <td mat-cell *matCellDef="let customer">{{ formatDate(customer.lastPurchaseDate) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let customer">
+            <span class="status-chip" [class.status-chip--active]="customer.isActive"
+              [class.status-chip--inactive]="!customer.isActive">
+              {{ customer.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let customer" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="customerActions" (click)="$event.stopPropagation()">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #customerActions="matMenu">
+              <button mat-menu-item (click)="viewCustomer(customer)">
+                <mat-icon>visibility</mat-icon>
+                <span>View Details</span>
+              </button>
+              <button mat-menu-item (click)="editCustomer(customer)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+              </button>
+              <button mat-menu-item class="danger" (click)="deleteCustomer(customer)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="data-row" (click)="viewCustomer(row)"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state">
+              <mat-icon>people_outline</mat-icon>
+              <h3>No customers found</h3>
+              <p>Try adjusting the filters or add a new customer.</p>
+              <button mat-stroked-button color="primary" type="button" (click)="createCustomer()">
+                Add your first customer
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="table-loading" *ngIf="isLoading">
+        <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+      </div>
+    </div>
+
+    <div class="table-footer">
+      <div class="table-footer__summary">
+        <mat-icon>info</mat-icon>
+        <span>
+          Showing page {{ currentPage + 1 }} · {{ dataSource.data.length | number }} of
+          {{ totalCustomers | number }} customers
+        </span>
+      </div>
       <mat-paginator [length]="totalCustomers" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 50, 100]"
         (page)="onPageChange($event)" showFirstLastButtons>
       </mat-paginator>
-    </mat-card-content>
-  </mat-card>
-</div>
+    </div>
+  </app-card>
+</section>

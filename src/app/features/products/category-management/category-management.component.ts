@@ -1,9 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProductCategory } from '../../../core/models';
 import { CategoryService } from '../services/category.service';
+
+interface CategoryMetrics {
+  total: number;
+  active: number;
+  inactive: number;
+  nextSortOrder: number;
+}
 
 @Component({
   selector: 'app-category-management',
@@ -15,7 +21,15 @@ export class CategoryManagementComponent implements OnInit {
   categories: ProductCategory[] = [];
   isLoading = false;
   isEditing = false;
+  isSaving = false;
   editingCategory: ProductCategory | null = null;
+  categoryMetrics: CategoryMetrics = {
+    total: 0,
+    active: 0,
+    inactive: 0,
+    nextSortOrder: 1,
+  };
+  lastUpdated: Date | null = null;
 
   categoryForm: FormGroup;
 
@@ -48,10 +62,15 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   loadCategories(): void {
+    if (this.isLoading) {
+      return;
+    }
     this.isLoading = true;
     this.categoryService.loadCategories().subscribe({
       next: (categories) => {
         this.categories = categories.sort((a, b) => a.sortOrder - b.sortOrder);
+        this.updateMetrics();
+        this.lastUpdated = new Date();
         this.isLoading = false;
       },
       error: (error) => {
@@ -63,11 +82,12 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.categoryForm.invalid) {
+    if (this.categoryForm.invalid || this.isSaving) {
       this.categoryForm.markAllAsTouched();
       return;
     }
 
+    this.isSaving = true;
     const categoryData: Partial<ProductCategory> = {
       ...this.categoryForm.value,
       tenantId: 'TENANT001', // TODO: Get from auth service
@@ -87,6 +107,7 @@ export class CategoryManagementComponent implements OnInit {
           `Category ${this.isEditing ? 'updated' : 'created'} successfully`,
           'success'
         );
+        this.isSaving = false;
         this.resetForm();
         this.loadCategories();
       },
@@ -96,6 +117,7 @@ export class CategoryManagementComponent implements OnInit {
           `Failed to ${this.isEditing ? 'update' : 'create'} category`,
           'error'
         );
+        this.isSaving = false;
       },
     });
   }
@@ -147,12 +169,25 @@ export class CategoryManagementComponent implements OnInit {
   resetForm(): void {
     this.isEditing = false;
     this.editingCategory = null;
+    this.isSaving = false;
     this.categoryForm.reset({
       name: '',
       description: '',
       sortOrder: 0,
       isActive: true,
     });
+    this.categoryForm.markAsPristine();
+    this.categoryForm.markAsUntouched();
+  }
+
+  refreshCategories(): void {
+    if (!this.isLoading) {
+      this.loadCategories();
+    }
+  }
+
+  trackByCategory(_index: number, category: ProductCategory): string {
+    return category.id;
   }
 
   private showSnackBar(message: string, type: 'success' | 'error'): void {
@@ -162,5 +197,23 @@ export class CategoryManagementComponent implements OnInit {
       verticalPosition: 'top',
       panelClass: [`${type}-snackbar`],
     });
+  }
+
+  private updateMetrics(): void {
+    const total = this.categories.length;
+    const active = this.categories.filter((category) => category.isActive)
+      .length;
+    const inactive = total - active;
+    const highestSort = this.categories.reduce(
+      (max, category) => Math.max(max, category.sortOrder ?? 0),
+      0
+    );
+
+    this.categoryMetrics = {
+      total,
+      active,
+      inactive,
+      nextSortOrder: highestSort + 1,
+    };
   }
 }

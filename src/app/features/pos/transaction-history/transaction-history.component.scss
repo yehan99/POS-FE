@@ -1,206 +1,428 @@
 @import "../../../../styles/variables";
 @import "../../../../styles/mixins";
 
+:host {
+  display: block;
+}
+
 .transaction-history {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
 
-  .header {
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+
+  &__title {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    gap: 1.25rem;
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .ghost-button {
+      border: 1px solid rgba($text-primary, 0.12);
+      background: rgba($text-primary, 0.02);
+      transition: background $transition-base, border-color $transition-base;
+
+      &:hover {
+        background: rgba($text-primary, 0.08);
+        border-color: rgba($primary-600, 0.4);
+        color: $primary-600;
+      }
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-semibold;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba($text-primary, 0.45);
     }
 
     h1 {
       margin: 0;
-      font-size: 28px;
-      font-weight: 500;
-      color: #333;
+      font-size: 2.1rem;
+      font-weight: $font-weight-semibold;
+      color: rgba($text-primary, 0.88);
     }
+  }
 
-    button {
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+
+    .action-primary {
+      box-shadow: 0 14px 30px rgba($primary-600, 0.22);
+
       mat-icon {
-        margin-right: 8px;
+        margin-right: 0.35rem;
       }
-    }
-  }
-
-  .filter-card {
-    margin-bottom: 24px;
-
-    .filter-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      align-items: start;
-
-      .search-field {
-        grid-column: 1 / -1;
-      }
-
-      mat-form-field {
-        width: 100%;
-      }
-
-      .clear-btn {
-        align-self: end;
-        height: 56px;
-
-        mat-icon {
-          margin-right: 8px;
-        }
-      }
-    }
-  }
-
-  .table-card {
-    .table-container {
-      overflow-x: auto;
-      position: relative;
-      min-height: 400px;
-
-      .transactions-table {
-        width: 100%;
-        background: white;
-
-        th {
-          background: #f5f5f5;
-          font-weight: 600;
-          color: #333;
-        }
-
-        td,
-        th {
-          padding: 16px;
-        }
-
-        .transaction-number {
-          font-family: "Courier New", monospace;
-          font-weight: 600;
-          color: #3f51b5;
-        }
-
-        .amount {
-          font-weight: 600;
-          color: #2e7d32;
-        }
-
-        .payment-method {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-
-          mat-icon {
-            font-size: 20px;
-            width: 20px;
-            height: 20px;
-            color: #666;
-          }
-        }
-
-        .item-chip {
-          font-size: 12px;
-          min-height: 28px;
-          padding: 4px 12px;
-        }
-
-        mat-chip {
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .no-data {
-          text-align: center;
-          padding: 48px 16px;
-        }
-
-        .no-data-message {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-          color: #999;
-
-          mat-icon {
-            font-size: 64px;
-            width: 64px;
-            height: 64px;
-            opacity: 0.3;
-          }
-
-          p {
-            margin: 0;
-            font-size: 16px;
-          }
-        }
-      }
-    }
-
-    .loading-container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 24px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    mat-paginator {
-      border-top: 1px solid #e0e0e0;
-      background: #fafafa;
     }
   }
 }
 
-@media (max-width: 768px) {
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.375rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+
+    p {
+      margin: 0.25rem 0 0;
+      color: $text-secondary;
+      font-size: 0.95rem;
+    }
+  }
+
+  &__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: $radius-full;
+    background: rgba($primary-600, 0.08);
+    color: $primary-600;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 1.2rem 1.5rem;
+
+  &__search {
+    grid-column: span 2;
+  }
+
+  &__footer {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: flex-end;
+
+    button mat-icon {
+      margin-right: 0.4rem;
+    }
+  }
+
+  &__loading {
+    flex: 1;
+
+    mat-progress-bar {
+      height: 4px;
+      border-radius: $radius-full;
+    }
+  }
+}
+
+.table-card {
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.75rem 2rem 1.5rem;
+    border-bottom: 1px solid rgba($text-primary, 0.08);
+
+    h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+    }
+
+    p {
+      margin: 0.3rem 0 0;
+      color: $text-secondary;
+    }
+  }
+
+  &__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: rgba($text-primary, 0.68);
+    font-weight: $font-weight-medium;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+
+  .transactions-table {
+    width: 100%;
+    min-width: 880px;
+    border-spacing: 0;
+
+    mat-header-row {
+      background: rgba($text-primary, 0.04);
+    }
+
+    mat-header-cell {
+      font-weight: $font-weight-semibold;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba($text-primary, 0.6);
+      border-bottom-color: rgba($text-primary, 0.12);
+    }
+
+    mat-header-cell,
+    mat-cell {
+      padding: 1.1rem 1.25rem;
+      border-bottom-color: rgba($text-primary, 0.08);
+    }
+
+    mat-row:hover mat-cell {
+      background: rgba($primary-500, 0.08);
+    }
+  }
+}
+
+.transaction-number {
+  font-weight: $font-weight-semibold;
+  color: rgba($text-primary, 0.85);
+}
+
+.item-chip {
+  background: rgba($accent-500, 0.12);
+  color: $accent-700;
+  font-weight: $font-weight-medium;
+}
+
+.payment-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: $radius-full;
+  background: rgba($text-primary, 0.04);
+  color: $text-secondary;
+  font-size: 0.85rem;
+  font-weight: $font-weight-medium;
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    color: $primary-600;
+  }
+}
+
+.amount {
+  font-weight: $font-weight-semibold;
+  color: $primary-600;
+}
+
+.table-footer {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba($text-primary, 0.08);
+  padding: 1.15rem 2rem 1.5rem;
+  gap: 0.75rem;
+
+  &__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: $text-secondary;
+
+    mat-icon {
+      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      color: rgba($text-primary, 0.45);
+    }
+  }
+
+  .mat-paginator {
+    border-top: none;
+    padding: 0;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  text-align: center;
+  padding: 3.5rem 1rem;
+  color: $text-secondary;
+
+  mat-icon {
+    font-size: 2.8rem;
+    width: 2.8rem;
+    height: 2.8rem;
+    color: rgba($text-primary, 0.35);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+.actions-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+:host
+  ::ng-deep
+  .filter-grid__field.mat-form-field-appearance-outline
+  .mat-form-field-flex {
+  min-height: 48px;
+  padding: 0 0.75rem;
+  align-items: center;
+}
+
+:host ::ng-deep .filter-grid__field .mat-form-field-wrapper {
+  padding-bottom: 0.75rem;
+}
+
+:host ::ng-deep .filter-grid__field .mat-form-field-infix {
+  padding: 0.5rem 0;
+  border-top-width: 0.5rem;
+}
+
+:host ::ng-deep .filter-grid__field .mat-form-field-subscript-wrapper {
+  margin-top: 0.25rem;
+}
+
+:host ::ng-deep .filter-grid__field .mat-input-element,
+:host ::ng-deep .filter-grid__field .mat-select-trigger {
+  line-height: 1.5;
+}
+
+:host ::ng-deep .filter-grid__field .mat-select-arrow-wrapper {
+  transform: translateY(0);
+}
+
+@media (max-width: $breakpoint-xl) {
+  .filter-grid {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+
+    &__search,
+    &__footer {
+      grid-column: span 3;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-lg) {
   .transaction-history {
-    padding: 16px;
+    padding: 2rem;
+  }
 
-    .header {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+
+    &__search,
+    &__footer {
+      grid-column: span 2;
+    }
+  }
+
+  .table-card__header,
+  .table-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .table-container {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .transaction-history {
+    padding: 1.75rem 1.25rem 2.25rem;
+  }
+
+  .page-header__actions {
+    width: 100%;
+    justify-content: stretch;
+
+    button {
+      flex: 1;
+    }
+  }
+
+  .filter-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+
+    &__search,
+    &__footer {
+      grid-column: span 1;
+    }
+
+    &__footer {
       flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-
-      h1 {
-        font-size: 24px;
-      }
+      align-items: stretch;
 
       button {
         width: 100%;
       }
     }
+  }
 
-    .filter-card {
-      .filter-form {
-        grid-template-columns: 1fr;
+  .table-card__header,
+  .table-footer {
+    padding-left: 1.15rem;
+    padding-right: 1.15rem;
+  }
 
-        .clear-btn {
-          width: 100%;
-        }
-      }
-    }
+  .table-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 
-    .table-card {
-      .table-container {
-        .transactions-table {
-          font-size: 12px;
+  .table-container {
+    padding: 0 0.75rem;
 
-          td,
-          th {
-            padding: 8px;
-          }
-        }
-      }
+    .transactions-table {
+      min-width: 760px;
     }
   }
 }

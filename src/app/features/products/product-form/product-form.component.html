@@ -1,325 +1,384 @@
-<div class="product-form">
-  <div class="header">
-    <div class="header-left">
-      <button mat-icon-button routerLink="/products" matTooltip="Back to Products">
+<section class="product-form">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/products" matTooltip="Back to products" class="ghost-button">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
-    </div>
-  </div>
-
-  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
-    <div class="form-content">
-      <!-- Left Column - Main Information -->
-      <div class="left-column">
-        <!-- Basic Information Card -->
-        <mat-card class="form-card">
-          <mat-card-header>
-            <mat-card-title>Basic Information</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="form-grid">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Product Name</mat-label>
-                <input matInput formControlName="name" placeholder="Enter product name">
-                <mat-error *ngIf="hasError('name', 'required')">Product name is required</mat-error>
-                <mat-error *ngIf="hasError('name', 'minlength')">Minimum 3 characters</mat-error>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Description</mat-label>
-                <textarea matInput formControlName="description" rows="3"
-                  placeholder="Enter product description"></textarea>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>SKU</mat-label>
-                <input matInput formControlName="sku" placeholder="AUTO-GENERATED">
-                <button mat-icon-button matSuffix (click)="generateSKU()" type="button" matTooltip="Generate SKU">
-                  <mat-icon>refresh</mat-icon>
-                </button>
-                <mat-error>{{ getErrorMessage('sku') }}</mat-error>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Barcode</mat-label>
-                <input matInput formControlName="barcode" placeholder="Optional">
-                <button mat-icon-button matSuffix (click)="generateBarcode()" type="button"
-                  matTooltip="Generate Barcode">
-                  <mat-icon>qr_code</mat-icon>
-                </button>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Category</mat-label>
-                <mat-select formControlName="category">
-                  <mat-option *ngFor="let category of categories" [value]="category.id">
-                    {{ category.name }}
-                  </mat-option>
-                </mat-select>
-                <mat-error>Category is required</mat-error>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Brand</mat-label>
-                <input matInput formControlName="brand" placeholder="Optional">
-              </mat-form-field>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Pricing Card -->
-        <mat-card class="form-card">
-          <mat-card-header>
-            <mat-card-title>Pricing & Tax</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="form-grid">
-              <mat-form-field appearance="outline">
-                <mat-label>Sale Price</mat-label>
-                <input matInput type="number" formControlName="price" placeholder="0.00" step="0.01">
-                <span matPrefix>LKR&nbsp;</span>
-                <mat-error>{{ getErrorMessage('price') }}</mat-error>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Cost Price</mat-label>
-                <input matInput type="number" formControlName="costPrice" placeholder="0.00" step="0.01">
-                <span matPrefix>LKR&nbsp;</span>
-                <mat-hint>Your purchase cost</mat-hint>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tax Class</mat-label>
-                <mat-select formControlName="taxClass">
-                  <mat-option *ngFor="let tax of taxClasses" [value]="tax.id">
-                    {{ tax.name }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <div class="price-summary full-width" *ngIf="productForm.get('price')?.value > 0">
-                <div class="summary-row">
-                  <span>Base Price:</span>
-                  <span>LKR {{ productForm.get('price')?.value | number:'1.2-2' }}</span>
-                </div>
-                <div class="summary-row">
-                  <span>Profit Margin:</span>
-                  <span class="profit">
-                    LKR {{ (productForm.get('price')?.value - productForm.get('costPrice')?.value) | number:'1.2-2' }}
-                    ({{ ((productForm.get('price')?.value - productForm.get('costPrice')?.value) /
-                    productForm.get('costPrice')?.value * 100) | number:'1.0-0' }}%)
-                  </span>
-                </div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Inventory Card -->
-        <mat-card class="form-card">
-          <mat-card-header>
-            <mat-card-title>Inventory Management</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="track-inventory-toggle">
-              <mat-slide-toggle formControlName="trackInventory">
-                Track Inventory
-              </mat-slide-toggle>
-              <span class="toggle-hint">Enable stock tracking for this product</span>
-            </div>
-
-            <div class="form-grid" *ngIf="productForm.get('trackInventory')?.value">
-              <mat-form-field appearance="outline">
-                <mat-label>Current Stock</mat-label>
-                <input matInput type="number" formControlName="stockQuantity" placeholder="0">
-                <mat-icon matSuffix>inventory</mat-icon>
-                <mat-error>{{ getErrorMessage('stockQuantity') }}</mat-error>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Reorder Level</mat-label>
-                <input matInput type="number" formControlName="reorderLevel" placeholder="10">
-                <mat-icon matSuffix>warning</mat-icon>
-                <mat-hint>Alert when stock falls below this level</mat-hint>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Maximum Stock Level</mat-label>
-                <input matInput type="number" formControlName="maxStockLevel" placeholder="1000">
-                <mat-icon matSuffix>inventory_2</mat-icon>
-              </mat-form-field>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Additional Information Card -->
-        <mat-card class="form-card">
-          <mat-card-header>
-            <mat-card-title>Additional Information</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="form-grid">
-              <mat-form-field appearance="outline">
-                <mat-label>Weight (kg)</mat-label>
-                <input matInput type="number" formControlName="weight" placeholder="0.00" step="0.01">
-                <span matSuffix>kg</span>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tags</mat-label>
-                <mat-chip-grid #chipGrid>
-                  <mat-chip-row *ngFor="let tag of productForm.get('tags')?.value" (removed)="removeTag(tag)">
-                    {{tag}}
-                    <button matChipRemove>
-                      <mat-icon>cancel</mat-icon>
-                    </button>
-                  </mat-chip-row>
-                </mat-chip-grid>
-                <input placeholder="Add tags..." [matChipInputFor]="chipGrid" (matChipInputTokenEnd)="addTag($event)">
-                <mat-hint>Press Enter to add tags</mat-hint>
-              </mat-form-field>
-            </div>
-
-            <!-- Dynamic Attributes -->
-            <div class="attributes-section">
-              <div class="section-header">
-                <h3>Custom Attributes</h3>
-                <button mat-stroked-button type="button" (click)="addAttribute()">
-                  <mat-icon>add</mat-icon>
-                  Add Attribute
-                </button>
-              </div>
-
-              <div formArrayName="attributes" class="attributes-list">
-                <div *ngFor="let attr of attributes.controls; let i = index" [formGroupName]="i" class="attribute-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Name</mat-label>
-                    <input matInput formControlName="name" placeholder="e.g., Color">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Value</mat-label>
-                    <input matInput formControlName="value" placeholder="e.g., Blue">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Type</mat-label>
-                    <mat-select formControlName="type">
-                      <mat-option *ngFor="let type of attributeTypes" [value]="type">
-                        {{ type | titlecase }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <button mat-icon-button type="button" (click)="removeAttribute(i)" color="warn">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
+      <div>
+        <p class="eyebrow">Inventory</p>
+        <h1>{{ isEditMode ? 'Edit Product' : 'Create Product' }}</h1>
+        <p class="subtitle">
+          {{ isEditMode ? 'Refresh catalog data, pricing, and stock controls for this item.' : 'Add a new product with
+          clear pricing, inventory rules, and presentation.' }}
+        </p>
       </div>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="cancel()" [disabled]="isSaving">
+        <mat-icon>close</mat-icon>
+        Cancel
+      </button>
+      <button mat-flat-button color="primary" type="button" class="action-primary" (click)="onSubmit()"
+        [disabled]="isSaving || productForm.invalid">
+        <mat-icon>{{ isEditMode ? 'save' : 'check_circle' }}</mat-icon>
+        {{ isEditMode ? 'Save Changes' : 'Create Product' }}
+      </button>
+    </div>
+  </header>
 
-      <!-- Right Column - Images & Status -->
-      <div class="right-column">
-        <!-- Product Images Card -->
-        <mat-card class="form-card">
-          <mat-card-header>
-            <mat-card-title>Product Images</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="image-upload-section">
-              <input #fileInput type="file" accept="image/*" multiple (change)="onImageSelect($event)"
-                style="display: none">
+  <ng-container *ngIf="!isLoading; else loadingState">
+    <app-card variant="elevated" padding="large" class="form-summary">
+      <div class="form-summary__grid">
+        <div class="form-summary__item">
+          <mat-icon>qr_code</mat-icon>
+          <div>
+            <span class="label">SKU</span>
+            <span class="value">{{ productForm.get('sku')?.value || 'Pending generation' }}</span>
+          </div>
+        </div>
+        <div class="form-summary__item">
+          <mat-icon>category</mat-icon>
+          <div>
+            <span class="label">Category</span>
+            <span class="value">{{ getSelectedCategoryName() }}</span>
+          </div>
+        </div>
+        <div class="form-summary__item">
+          <mat-icon>inventory</mat-icon>
+          <div>
+            <span class="label">Inventory Tracking</span>
+            <span class="value">{{ productForm.get('trackInventory')?.value ? 'Enabled' : 'Disabled' }}</span>
+          </div>
+        </div>
+        <div class="form-summary__item">
+          <mat-icon>toggle_on</mat-icon>
+          <div>
+            <span class="label">Status</span>
+            <span class="value">{{ productForm.get('isActive')?.value ? 'Active' : 'Inactive' }}</span>
+          </div>
+        </div>
+      </div>
+    </app-card>
 
-              <button mat-raised-button type="button" (click)="fileInput.click()" class="upload-btn">
-                <mat-icon>cloud_upload</mat-icon>
-                Upload Images
+    <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="form-shell">
+      <div class="form-grid">
+        <app-card variant="default" padding="large" class="form-section">
+          <div class="form-section__header">
+            <div>
+              <h2>Product Details</h2>
+              <p>Define the core product information that appears across POS and customer touchpoints.</p>
+            </div>
+            <mat-icon color="primary">inventory_2</mat-icon>
+          </div>
+
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline">
+              <mat-label>Product Name</mat-label>
+              <input matInput formControlName="name" placeholder="Enter product name">
+              <mat-error *ngIf="hasError('name', 'required')">Product name is required</mat-error>
+              <mat-error *ngIf="hasError('name', 'minlength')">Minimum 3 characters</mat-error>
+              <mat-error *ngIf="hasError('name', 'maxlength')">Maximum 200 characters</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="category">
+                <mat-option *ngFor="let category of categories" [value]="category.id">
+                  {{ category.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error>Category is required</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline">
+              <mat-label>SKU</mat-label>
+              <input matInput formControlName="sku" placeholder="AUTO-GENERATED">
+              <button mat-icon-button matSuffix type="button" (click)="generateSKU()" matTooltip="Generate SKU">
+                <mat-icon>refresh</mat-icon>
               </button>
+              <mat-error>{{ getErrorMessage('sku') }}</mat-error>
+            </mat-form-field>
 
-              <div class="image-grid" *ngIf="selectedImages.length > 0">
+            <mat-form-field appearance="outline">
+              <mat-label>Barcode</mat-label>
+              <input matInput formControlName="barcode" placeholder="Optional barcode">
+              <button mat-icon-button matSuffix type="button" (click)="generateBarcode()" matTooltip="Generate barcode">
+                <mat-icon>qr_code</mat-icon>
+              </button>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline">
+              <mat-label>Brand</mat-label>
+              <input matInput formControlName="brand" placeholder="Optional brand">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Weight (kg)</mat-label>
+              <input matInput type="number" formControlName="weight" placeholder="0.00" step="0.01">
+              <span matSuffix>kg</span>
+              <mat-error>{{ getErrorMessage('weight') }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline" class="textarea-field">
+              <mat-label>Description</mat-label>
+              <textarea matInput rows="4" formControlName="description"
+                placeholder="Describe materials, variants, or key selling points."></textarea>
+            </mat-form-field>
+          </div>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="form-section">
+          <div class="form-section__header">
+            <div>
+              <h2>Pricing &amp; Tax</h2>
+              <p>Keep selling and purchasing prices aligned with tax configuration.</p>
+            </div>
+            <mat-icon color="primary">sell</mat-icon>
+          </div>
+
+          <div class="field-grid field-grid--three">
+            <mat-form-field appearance="outline">
+              <mat-label>Sale Price</mat-label>
+              <input matInput type="number" formControlName="price" placeholder="0.00" step="0.01">
+              <span matPrefix>LKR&nbsp;</span>
+              <mat-error>{{ getErrorMessage('price') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Cost Price</mat-label>
+              <input matInput type="number" formControlName="costPrice" placeholder="0.00" step="0.01">
+              <span matPrefix>LKR&nbsp;</span>
+              <mat-hint>Helps calculate margin</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Tax Class</mat-label>
+              <mat-select formControlName="taxClass">
+                <mat-option *ngFor="let tax of taxClasses" [value]="tax.id">
+                  {{ tax.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="price-summary" *ngIf="productForm.get('price')?.value > 0">
+            <div class="price-summary__row">
+              <span>Base price</span>
+              <span>LKR {{ productForm.get('price')?.value | number:'1.2-2' }}</span>
+            </div>
+            <div class="price-summary__row" *ngIf="productForm.get('costPrice')?.value">
+              <span>Margin</span>
+              <span>
+                LKR {{ (productForm.get('price')?.value - productForm.get('costPrice')?.value) | number:'1.2-2' }}
+                ({{ ((productForm.get('price')?.value - productForm.get('costPrice')?.value) /
+                productForm.get('costPrice')?.value * 100) | number:'1.0-0' }}%)
+              </span>
+            </div>
+            <div class="price-summary__row" *ngIf="!productForm.get('costPrice')?.value">
+              <span>Margin</span>
+              <span class="muted">Set a cost price to calculate margin</span>
+            </div>
+          </div>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="form-section">
+          <div class="form-section__header">
+            <div>
+              <h2>Inventory Controls</h2>
+              <p>Choose how Paradise POS tracks stock, reorder points, and alerts.</p>
+            </div>
+            <mat-icon color="primary">inventory_4</mat-icon>
+          </div>
+
+          <div class="inventory-toggle">
+            <mat-slide-toggle formControlName="trackInventory" color="primary">
+              Track inventory for this product
+            </mat-slide-toggle>
+            <p>Enable to manage stock levels, low-stock alerts, and replenishment targets.</p>
+          </div>
+
+          <div class="field-grid field-grid--three" *ngIf="productForm.get('trackInventory')?.value">
+            <mat-form-field appearance="outline">
+              <mat-label>Current Stock</mat-label>
+              <input matInput type="number" formControlName="stockQuantity" placeholder="0">
+              <mat-icon matSuffix>inventory</mat-icon>
+              <mat-error>{{ getErrorMessage('stockQuantity') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Reorder Level</mat-label>
+              <input matInput type="number" formControlName="reorderLevel" placeholder="10">
+              <mat-icon matSuffix>warning</mat-icon>
+              <mat-hint>Alert when stock drops to this point</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Max Stock Level</mat-label>
+              <input matInput type="number" formControlName="maxStockLevel" placeholder="1000">
+              <mat-icon matSuffix>inventory_2</mat-icon>
+            </mat-form-field>
+          </div>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="form-section media-section">
+          <div class="form-section__header">
+            <div>
+              <h2>Media &amp; Visibility</h2>
+              <p>Upload imagery and control how the product appears at the till.</p>
+            </div>
+            <mat-icon color="primary">image</mat-icon>
+          </div>
+
+          <div class="media-layout">
+            <div class="media-layout__images">
+              <input #fileInput type="file" accept="image/*" multiple (change)="onImageSelect($event)" hidden>
+
+              <button mat-stroked-button type="button" (click)="fileInput.click()" class="upload-btn">
+                <mat-icon>cloud_upload</mat-icon>
+                Upload images
+              </button>
+              <p class="hint">First image becomes the primary thumbnail.</p>
+
+              <div class="image-grid" *ngIf="selectedImages.length > 0; else emptyImages">
                 <div *ngFor="let image of selectedImages; let i = index" class="image-item">
-                  <img [src]="image" alt="Product image">
-                  <button mat-icon-button class="remove-btn" type="button" (click)="removeImage(i)">
+                  <img [src]="image" alt="Product image {{ i + 1 }}">
+                  <button mat-icon-button type="button" class="remove-btn" (click)="removeImage(i)">
                     <mat-icon>close</mat-icon>
                   </button>
                   <span class="primary-badge" *ngIf="i === 0">Primary</span>
                 </div>
               </div>
-
-              <div class="no-images" *ngIf="selectedImages.length === 0">
-                <mat-icon>image</mat-icon>
-                <p>No images uploaded</p>
-              </div>
+              <ng-template #emptyImages>
+                <div class="image-empty">
+                  <mat-icon>image</mat-icon>
+                  <p>No images uploaded yet</p>
+                </div>
+              </ng-template>
             </div>
-          </mat-card-content>
-        </mat-card>
 
-        <!-- Product Status Card -->
-        <mat-card class="form-card">
-          <mat-card-header>
-            <mat-card-title>Product Status</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="status-toggle">
+            <div class="media-layout__status">
+              <h3>Availability</h3>
               <mat-slide-toggle formControlName="isActive" color="primary">
-                <span class="toggle-label">
-                  {{ productForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
-                </span>
+                {{ productForm.get('isActive')?.value ? 'Product is active' : 'Product is inactive' }}
               </mat-slide-toggle>
               <p class="status-hint">
                 {{ productForm.get('isActive')?.value
-                ? 'Product is visible and available for sale'
-                : 'Product is hidden and not available for sale' }}
+                ? 'Visible to staff and available for sale.'
+                : 'Hidden from the catalog until reactivated.' }}
               </p>
-            </div>
-          </mat-card-content>
-        </mat-card>
 
-        <!-- Quick Stats Card (Edit Mode) -->
-        <mat-card class="form-card" *ngIf="isEditMode">
-          <mat-card-header>
-            <mat-card-title>Quick Stats</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <mat-icon>shopping_cart</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-label">Total Sales</span>
-                  <span class="stat-value">0</span>
+              <div class="quick-stats" *ngIf="isEditMode">
+                <div class="quick-stats__item">
+                  <mat-icon>shopping_cart</mat-icon>
+                  <div>
+                    <span class="label">Total Sales</span>
+                    <span class="value">0</span>
+                  </div>
                 </div>
-              </div>
-              <div class="stat-item">
-                <mat-icon>trending_up</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-label">Revenue</span>
-                  <span class="stat-value">LKR 0.00</span>
+                <div class="quick-stats__item">
+                  <mat-icon>trending_up</mat-icon>
+                  <div>
+                    <span class="label">Revenue</span>
+                    <span class="value">LKR 0.00</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="form-section">
+          <div class="form-section__header">
+            <div>
+              <h2>Tags &amp; Attributes</h2>
+              <p>Enrich search and reporting with structured metadata.</p>
+            </div>
+            <mat-icon color="primary">tune</mat-icon>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline" class="chip-field">
+              <mat-label>Tags</mat-label>
+              <mat-chip-grid #chipGrid>
+                <mat-chip-row *ngFor="let tag of productForm.get('tags')?.value" (removed)="removeTag(tag)">
+                  {{ tag }}
+                  <button matChipRemove type="button">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+              </mat-chip-grid>
+              <input placeholder="Press enter to add tags" [matChipInputFor]="chipGrid"
+                (matChipInputTokenEnd)="addTag($event)">
+            </mat-form-field>
+          </div>
+
+          <div class="attributes-section" formArrayName="attributes">
+            <div class="attributes-section__header">
+              <h3>Custom attributes</h3>
+              <button mat-stroked-button type="button" (click)="addAttribute()">
+                <mat-icon>add</mat-icon>
+                Add attribute
+              </button>
+            </div>
+
+            <div class="attributes-list" *ngIf="attributes.length > 0; else emptyAttributes">
+              <div class="attribute-row" *ngFor="let attr of attributes.controls; let i = index" [formGroupName]="i">
+                <mat-form-field appearance="outline">
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" placeholder="e.g., Color">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Value</mat-label>
+                  <input matInput formControlName="value" placeholder="e.g., Blue">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Type</mat-label>
+                  <mat-select formControlName="type">
+                    <mat-option *ngFor="let type of attributeTypes" [value]="type">
+                      {{ type | titlecase }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <button mat-icon-button type="button" color="warn" (click)="removeAttribute(i)" matTooltip="Remove">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <ng-template #emptyAttributes>
+              <p class="empty-placeholder">No custom attributes yet. Add one to capture extra product details.</p>
+            </ng-template>
+          </div>
+        </app-card>
       </div>
-    </div>
 
-    <!-- Form Actions -->
-    <div class="form-actions">
-      <button mat-button type="button" (click)="cancel()" [disabled]="isSaving">
-        Cancel
-      </button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="isSaving || productForm.invalid">
-        <mat-spinner diameter="20" *ngIf="isSaving"></mat-spinner>
-        <span *ngIf="!isSaving">{{ isEditMode ? 'Update Product' : 'Create Product' }}</span>
-      </button>
-    </div>
-  </form>
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="cancel()" [disabled]="isSaving">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving || productForm.invalid"
+          class="action-primary">
+          <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
+          <span *ngIf="!isSaving">{{ isEditMode ? 'Save Product' : 'Create Product' }}</span>
+        </button>
+      </div>
+    </form>
+  </ng-container>
 
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading product...</p>
-  </div>
-</div>
+  <ng-template #loadingState>
+    <div class="loading-state">
+      <mat-spinner diameter="60"></mat-spinner>
+      <p>{{ isEditMode ? 'Loading product...' : 'Preparing product form...' }}</p>
+    </div>
+  </ng-template>
+</section>

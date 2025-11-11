@@ -1,253 +1,336 @@
-<div class="product-list">
-  <!-- Header with Statistics -->
-  <div class="header">
-    <div class="header-content">
-      <h1>Product Management</h1>
-      <div class="statistics" *ngIf="statistics">
-        <mat-chip class="stat-chip">
-          <mat-icon>inventory</mat-icon>
-          {{statistics.totalProducts}} Products
-        </mat-chip>
-        <mat-chip class="stat-chip warn" *ngIf="statistics.lowStockProducts > 0">
-          <mat-icon>warning</mat-icon>
-          {{statistics.lowStockProducts}} Low Stock
-        </mat-chip>
-        <mat-chip class="stat-chip error" *ngIf="statistics.outOfStockProducts > 0">
-          <mat-icon>remove_circle</mat-icon>
-          {{statistics.outOfStockProducts}} Out of Stock
-        </mat-chip>
+<section class="product-management">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Inventory</p>
+        <h1>Product Management</h1>
+        <p class="subtitle">Monitor catalog health, keep pricing accurate, and stay ahead of stockouts.</p>
       </div>
     </div>
-    <div class="header-actions">
-      <button mat-raised-button (click)="manageCategories()">
-        <mat-icon>category</mat-icon>
-        Categories
-      </button>
-      <button mat-raised-button (click)="importProducts()">
-        <mat-icon>upload</mat-icon>
-        Import
-      </button>
-      <button mat-raised-button (click)="exportProducts()">
-        <mat-icon>download</mat-icon>
-        Export
-      </button>
-      <button mat-raised-button color="primary" (click)="addProduct()">
+    <div class="page-header__actions">
+      <button mat-flat-button color="primary" type="button" class="action-primary" (click)="addProduct()">
         <mat-icon>add</mat-icon>
         Add Product
       </button>
+      <button mat-stroked-button type="button" (click)="manageCategories()">
+        <mat-icon>category</mat-icon>
+        Categories
+      </button>
+      <button mat-stroked-button type="button" (click)="importProducts()">
+        <mat-icon>upload</mat-icon>
+        Import
+      </button>
+      <button mat-stroked-button type="button" (click)="exportProducts()">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Filters -->
-  <mat-card class="filter-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filter-form">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search</mat-label>
-          <input matInput formControlName="search" placeholder="Product name, SKU, barcode...">
-          <mat-icon matPrefix>search</mat-icon>
-        </mat-form-field>
+  <app-card variant="elevated" padding="large" class="insights-panel" *ngIf="statistics as stats">
+    <div class="insights-panel__header">
+      <h2>Catalog Insights</h2>
+      <p>Stay on top of stock levels, product availability, and revenue impact.</p>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--primary">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Total Products</span>
+          <span class="value">{{ stats.totalProducts | number }}</span>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Active Catalog</span>
+          <span class="value">{{ stats.activeProducts | number }}</span>
+          <span class="meta">{{ stats.inactiveProducts | number }} inactive</span>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--warn">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Low Stock Alerts</span>
+          <span class="value">{{ stats.lowStockProducts | number }}</span>
+          <span class="meta">Products near reorder level</span>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--error">
+          <mat-icon>remove_shopping_cart</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Out of Stock</span>
+          <span class="value">{{ stats.outOfStockProducts | number }}</span>
+          <span class="meta">Restock required</span>
+        </div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--info">
+          <mat-icon>sell</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Avg. Sale Price</span>
+          <span class="value">{{ stats.averageProductPrice | currency:'LKR':'symbol':'1.2-2' }}</span>
+          <span class="meta">Total inventory value
+            {{ stats.totalStockValue | currency:'LKR':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+  </app-card>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Category</mat-label>
-          <mat-select formControlName="categoryId">
-            <mat-option value="">All Categories</mat-option>
-            <mat-option *ngFor="let category of categories" [value]="category.id">
-              {{ category.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+  <app-card variant="elevated" padding="large" class="filter-panel">
+    <div class="filter-panel__header">
+      <div>
+        <h2>Filter Products</h2>
+        <p>Refine by category, availability, pricing, or brand attributes.</p>
+      </div>
+      <div class="filter-panel__meta">
+        <mat-icon color="primary">inventory</mat-icon>
+        <span>{{ totalProducts | number }} products</span>
+      </div>
+    </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Brand</mat-label>
-          <mat-select formControlName="brand">
-            <mat-option value="">All Brands</mat-option>
-            <mat-option *ngFor="let brand of brands" [value]="brand">
-              {{ brand }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Min Price</mat-label>
-          <input matInput type="number" formControlName="minPrice" placeholder="0.00">
-          <span matPrefix>LKR&nbsp;</span>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Max Price</mat-label>
-          <input matInput type="number" formControlName="maxPrice" placeholder="0.00">
-          <span matPrefix>LKR&nbsp;</span>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="isActive">
-            <mat-option value="">All Status</mat-option>
-            <mat-option value="true">Active</mat-option>
-            <mat-option value="false">Inactive</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Stock Status</mat-label>
-          <mat-select formControlName="inStock">
-            <mat-option value="">All Stock</mat-option>
-            <mat-option value="true">In Stock</mat-option>
-            <mat-option value="false">Out of Stock</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <button mat-raised-button type="button" (click)="clearFilters()" class="clear-btn">
-          <mat-icon>clear</mat-icon>
-          Clear
+    <form [formGroup]="filterForm" class="filter-grid">
+      <mat-form-field appearance="outline" class="filter-grid__field filter-grid__search">
+        <mat-label>Search catalog</mat-label>
+        <input matInput formControlName="search" placeholder="Product name, SKU, or barcode">
+        <mat-icon matPrefix>search</mat-icon>
+        <button *ngIf="filterForm.get('search')?.value" mat-icon-button matSuffix type="button"
+          (click)="filterForm.get('search')?.reset('')">
+          <mat-icon>close</mat-icon>
         </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+      </mat-form-field>
 
-  <!-- Bulk Actions -->
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Category</mat-label>
+        <mat-select formControlName="categoryId">
+          <mat-option value="">All categories</mat-option>
+          <mat-option *ngFor="let category of categories" [value]="category.id">
+            {{ category.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Brand</mat-label>
+        <mat-select formControlName="brand">
+          <mat-option value="">All brands</mat-option>
+          <mat-option *ngFor="let brand of brands" [value]="brand">
+            {{ brand }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Min price</mat-label>
+        <input matInput type="number" formControlName="minPrice" placeholder="0.00">
+        <span matPrefix>LKR&nbsp;</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Max price</mat-label>
+        <input matInput type="number" formControlName="maxPrice" placeholder="0.00">
+        <span matPrefix>LKR&nbsp;</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="isActive">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option value="true">Active</mat-option>
+          <mat-option value="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Stock status</mat-label>
+        <mat-select formControlName="inStock">
+          <mat-option value="">All stock states</mat-option>
+          <mat-option value="true">In stock</mat-option>
+          <mat-option value="false">Out of stock</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="filter-grid__footer">
+        <button mat-stroked-button type="button" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Reset Filters
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="loadProducts()">
+          <mat-icon>refresh</mat-icon>
+          Apply Filters
+        </button>
+      </div>
+    </form>
+  </app-card>
+
   <div class="bulk-actions" *ngIf="selectedProducts.size > 0">
-    <span class="selection-count">{{selectedProducts.size}} selected</span>
-    <button mat-button color="warn" (click)="bulkDelete()">
+    <div class="bulk-actions__info">
+      <mat-icon>checklist</mat-icon>
+      <span>{{ selectedProducts.size }} product(s) selected</span>
+    </div>
+    <button mat-stroked-button color="warn" type="button" (click)="bulkDelete()">
       <mat-icon>delete</mat-icon>
       Delete Selected
     </button>
   </div>
 
-  <!-- Products Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="products" matSort (matSortChange)="onSortChange($event)" class="products-table">
-          <!-- Checkbox Column -->
-          <ng-container matColumnDef="select">
-            <th mat-header-cell *matHeaderCellDef>
-              <mat-checkbox [checked]="isAllSelected()" [indeterminate]="isSomeSelected()" (change)="toggleSelectAll()">
-              </mat-checkbox>
-            </th>
-            <td mat-cell *matCellDef="let product">
-              <mat-checkbox [checked]="selectedProducts.has(product.id)" (change)="toggleSelection(product.id)">
-              </mat-checkbox>
-            </td>
-          </ng-container>
+  <app-card variant="default" padding="none" class="table-card mt-4">
+    <div class="table-card__header">
+      <div>
+        <h2>Catalog</h2>
+        <p>Browse products with rich context on pricing, inventory, and status.</p>
+      </div>
+      <div class="table-card__meta" *ngIf="!isLoading">
+        <mat-icon color="primary">insights</mat-icon>
+        <span>{{ products.length | number }} shown · {{ totalProducts | number }} total</span>
+      </div>
+    </div>
 
-          <!-- Image Column -->
-          <ng-container matColumnDef="image">
-            <th mat-header-cell *matHeaderCellDef>Image</th>
-            <td mat-cell *matCellDef="let product">
-              <img [src]="product.images[0] || 'assets/placeholder.png'" alt="{{product.name}}" class="product-image">
-            </td>
-          </ng-container>
+    <div class="table-container">
+      <table mat-table [dataSource]="products" matSort (matSortChange)="onSortChange($event)" class="products-table">
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox (change)="toggleSelectAll()" [checked]="isAllSelected()" [indeterminate]="isSomeSelected()">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let product">
+            <mat-checkbox (change)="toggleSelection(product.id)" [checked]="selectedProducts.has(product.id)">
+            </mat-checkbox>
+          </td>
+        </ng-container>
 
-          <!-- SKU Column -->
-          <ng-container matColumnDef="sku">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
-            <td mat-cell *matCellDef="let product">
-              <span class="sku">{{product.sku}}</span>
-            </td>
-          </ng-container>
+        <ng-container matColumnDef="image">
+          <th mat-header-cell *matHeaderCellDef>Image</th>
+          <td mat-cell *matCellDef="let product" class="image-cell">
+            <div class="product-thumb">
+              <img [src]="product.images[0] || 'assets/placeholder.png'" [alt]="product.name" loading="lazy" />
+            </div>
+          </td>
+        </ng-container>
 
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Product Name</th>
-            <td mat-cell *matCellDef="let product">
-              <div class="product-name">
-                <span class="name">{{product.name}}</span>
-                <span class="brand" *ngIf="product.brand">{{product.brand}}</span>
-              </div>
-            </td>
-          </ng-container>
+        <ng-container matColumnDef="sku">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>SKU</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="sku-badge">{{ product.sku }}</span>
+          </td>
+        </ng-container>
 
-          <!-- Category Column -->
-          <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef>Category</th>
-            <td mat-cell *matCellDef="let product">
-              {{product.category.name}}
-            </td>
-          </ng-container>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+          <td mat-cell *matCellDef="let product">
+            <div class="product-name">
+              <span class="product-name__title">{{ product.name }}</span>
+              <span class="product-name__brand" *ngIf="product.brand">{{ product.brand }}</span>
+            </div>
+          </td>
+        </ng-container>
 
-          <!-- Price Column -->
-          <ng-container matColumnDef="price">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Price</th>
-            <td mat-cell *matCellDef="let product" class="price">
-              LKR {{product.price | number:'1.2-2'}}
-            </td>
-          </ng-container>
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="category-pill">{{ product.category?.name || 'Unassigned' }}</span>
+          </td>
+        </ng-container>
 
-          <!-- Stock Column -->
-          <ng-container matColumnDef="stock">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
-            <td mat-cell *matCellDef="let product">
-              <mat-chip [color]="getStockStatusColor(product)">
-                <mat-icon>{{getStockStatusIcon(product)}}</mat-icon>
-                {{product.trackInventory ? product.stockQuantity : 'N/A'}}
-              </mat-chip>
-            </td>
-          </ng-container>
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Price</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="price-value">LKR {{ product.price | number:'1.2-2' }}</span>
+          </td>
+        </ng-container>
 
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let product">
-              <mat-slide-toggle [checked]="product.isActive" (change)="toggleProductStatus(product)">
-                {{product.isActive ? 'Active' : 'Inactive'}}
+        <ng-container matColumnDef="stock">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="stock-chip" [class.stock-chip--not-tracked]="!product.trackInventory"
+              [class.stock-chip--out]="product.trackInventory && product.stockQuantity === 0"
+              [class.stock-chip--low]="product.trackInventory && product.reorderLevel && product.stockQuantity <= product.reorderLevel && product.stockQuantity > 0"
+              [class.stock-chip--ok]="product.trackInventory && product.stockQuantity > 0 && (!product.reorderLevel || product.stockQuantity > product.reorderLevel)">
+              <mat-icon>{{ getStockStatusIcon(product) }}</mat-icon>
+              <span>
+                {{ product.trackInventory ? (product.stockQuantity + ' units') : 'Not tracked' }}
+              </span>
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let product">
+            <div class="status-toggle">
+              <mat-slide-toggle [checked]="product.isActive" (change)="toggleProductStatus(product)" color="primary">
+                {{ product.isActive ? 'Active' : 'Inactive' }}
               </mat-slide-toggle>
-            </td>
-          </ng-container>
+            </div>
+          </td>
+        </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let product">
-              <button mat-icon-button [matMenuTriggerFor]="menu">
-                <mat-icon>more_vert</mat-icon>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let product" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="actionsMenu" (click)="$event.stopPropagation()">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #actionsMenu="matMenu">
+              <button mat-menu-item (click)="viewProduct(product)">
+                <mat-icon>visibility</mat-icon>
+                <span>View</span>
               </button>
-              <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="viewProduct(product)">
-                  <mat-icon>visibility</mat-icon>
-                  <span>View Details</span>
-                </button>
-                <button mat-menu-item (click)="editProduct(product)">
-                  <mat-icon>edit</mat-icon>
-                  <span>Edit</span>
-                </button>
-                <button mat-menu-item (click)="deleteProduct(product)">
-                  <mat-icon>delete</mat-icon>
-                  <span>Delete</span>
-                </button>
-              </mat-menu>
-            </td>
-          </ng-container>
+              <button mat-menu-item (click)="editProduct(product)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+              </button>
+              <button mat-menu-item class="danger" (click)="deleteProduct(product)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="data-row"></tr>
 
-          <!-- No Data Row -->
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
-              <div class="no-data-message">
-                <mat-icon>inventory_2</mat-icon>
-                <p>No products found</p>
-                <button mat-raised-button color="primary" (click)="addProduct()">
-                  <mat-icon>add</mat-icon>
-                  Add Your First Product
-                </button>
-              </div>
-            </td>
-          </tr>
-        </table>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state">
+              <mat-icon>inventory_2</mat-icon>
+              <h3>No products found</h3>
+              <p>Adjust your filters or add a new product to the catalog.</p>
+              <button mat-stroked-button color="primary" type="button" (click)="addProduct()">
+                Add your first product
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="table-loading" *ngIf="isLoading">
+        <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
       </div>
+    </div>
 
-      <!-- Loading Spinner -->
-      <div class="loading-container" *ngIf="isLoading">
-        <mat-spinner diameter="50"></mat-spinner>
+    <div class="table-footer">
+      <div class="table-footer__summary">
+        <mat-icon>info</mat-icon>
+        <span>Showing page {{ currentPage }} · {{ products.length | number }} of {{ totalProducts | number }}
+          products</span>
       </div>
-
-      <!-- Paginator -->
       <mat-paginator [length]="totalProducts" [pageSize]="pageSize" [pageSizeOptions]="[10, 20, 50, 100]"
         (page)="onPageChange($event)" showFirstLastButtons>
       </mat-paginator>
-    </mat-card-content>
-  </mat-card>
-</div>
+    </div>
+  </app-card>
+</section>

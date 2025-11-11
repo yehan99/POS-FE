@@ -1,119 +1,229 @@
-<div class="category-management">
-  <div class="header">
-    <div class="header-left">
-      <button mat-icon-button routerLink="/products" matTooltip="Back to Products">
+<section class="category-management">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/products" matTooltip="Back to products" class="ghost-button">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h1>Category Management</h1>
+      <div>
+        <p class="eyebrow">Inventory</p>
+        <h1>Category Management</h1>
+        <p class="subtitle">Curate product groupings to keep your catalog structured and easy to browse.</p>
+      </div>
     </div>
-  </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="refreshCategories()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-stroked-button type="button" (click)="resetForm()" *ngIf="isEditing" [disabled]="isSaving">
+        <mat-icon>close</mat-icon>
+        Cancel edit
+      </button>
+    </div>
+  </header>
 
-  <div class="content">
-    <!-- Category Form -->
-    <mat-card class="form-card">
-      <mat-card-header>
-        <mat-card-title>{{ isEditing ? 'Edit Category' : 'Add New Category' }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
-          <div class="form-grid">
-            <mat-form-field appearance="outline">
-              <mat-label>Category Name</mat-label>
-              <input matInput formControlName="name" placeholder="e.g., Electronics">
+  <app-card variant="elevated" padding="large" class="insights-panel">
+    <div class="insights-panel__header">
+      <div>
+        <h2>Category Insights</h2>
+        <p>Monitor catalog coverage and keep an eye on active groupings.</p>
+      </div>
+      <div class="insights-panel__meta">
+        <mat-icon color="primary">update</mat-icon>
+        <span>
+          {{ lastUpdated ? (lastUpdated | date:'MMM d, y · h:mm a') : 'Waiting for sync' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="insights-grid">
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--primary">
+          <mat-icon>category</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Total categories</span>
+          <span class="value">{{ categoryMetrics.total | number }}</span>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Active</span>
+          <span class="value">{{ categoryMetrics.active | number }}</span>
+          <span class="meta">Ready for product assignment</span>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--warning">
+          <mat-icon>pause_circle</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Inactive</span>
+          <span class="value">{{ categoryMetrics.inactive | number }}</span>
+          <span class="meta">Hidden from catalogs</span>
+        </div>
+      </div>
+
+      <div class="insight-card">
+        <div class="insight-card__icon insight-card__icon--info">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">Next sort order</span>
+          <span class="value">{{ categoryMetrics.nextSortOrder | number }}</span>
+          <span class="meta">Suggested position for the next category</span>
+        </div>
+      </div>
+    </div>
+  </app-card>
+
+  <div class="content-grid">
+    <div class="content-grid__primary">
+      <app-card variant="default" padding="large" class="list-card">
+        <div class="list-card__header">
+          <div>
+            <h2>Categories</h2>
+            <p>Organize your products into meaningful collections for the team.</p>
+          </div>
+          <div class="list-card__meta" *ngIf="!isLoading">
+            <mat-icon color="primary">inventory</mat-icon>
+            <span>{{ categoryMetrics.total | number }} total</span>
+          </div>
+        </div>
+
+        <div class="list-loading" *ngIf="isLoading">
+          <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+        </div>
+
+        <div class="category-list" *ngIf="!isLoading && categories.length > 0; else emptyState">
+          <article class="category-card" *ngFor="let category of categories; trackBy: trackByCategory">
+            <div class="category-card__body">
+              <div class="category-card__title">
+                <h3>{{ category.name }}</h3>
+                <span class="status-chip" [class.status-chip--inactive]="!category.isActive">
+                  {{ category.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+
+              <p *ngIf="category.description" class="category-card__description">
+                {{ category.description }}
+              </p>
+
+              <div class="category-card__meta">
+                <span>
+                  <mat-icon>sort</mat-icon>
+                  Sort order {{ category.sortOrder }}
+                </span>
+              </div>
+            </div>
+
+            <div class="category-card__actions">
+              <button mat-icon-button type="button" (click)="toggleStatus(category)"
+                [matTooltip]="category.isActive ? 'Deactivate category' : 'Activate category'">
+                <mat-icon>{{ category.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+              </button>
+              <button mat-icon-button type="button" (click)="editCategory(category)" matTooltip="Edit category">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button type="button" (click)="deleteCategory(category)" matTooltip="Delete category"
+                color="warn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #emptyState>
+          <div class="empty-state">
+            <mat-icon>category</mat-icon>
+            <h3>No categories yet</h3>
+            <p>Create your first category to begin organizing your catalog.</p>
+          </div>
+        </ng-template>
+      </app-card>
+    </div>
+
+    <div class="content-grid__aside">
+      <app-card variant="default" padding="large" class="form-card">
+        <div class="form-card__header">
+          <div>
+            <h2>{{ isEditing ? 'Edit category' : 'Create category' }}</h2>
+            <p>
+              {{ isEditing
+              ? 'Update details, status, or display order for this category.'
+              : 'Add a new product grouping with optional descriptions and ordering.' }}
+            </p>
+          </div>
+          <mat-chip color="primary" selected *ngIf="isEditing">Editing</mat-chip>
+        </div>
+
+        <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="form-shell" novalidate>
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline" class="field-grid__span">
+              <mat-label>Category name</mat-label>
+              <input matInput formControlName="name" placeholder="e.g., Accessories" required>
               <mat-error *ngIf="categoryForm.get('name')?.hasError('required')">
                 Category name is required
               </mat-error>
               <mat-error *ngIf="categoryForm.get('name')?.hasError('minlength')">
                 Minimum 2 characters required
               </mat-error>
+              <mat-error *ngIf="categoryForm.get('name')?.hasError('maxlength')">
+                Maximum 100 characters allowed
+              </mat-error>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Sort Order</mat-label>
-              <input matInput type="number" formControlName="sortOrder" placeholder="0">
-              <mat-hint>Lower numbers appear first</mat-hint>
+              <mat-label>Sort order</mat-label>
+              <input matInput type="number" formControlName="sortOrder" placeholder="0" min="0">
+              <mat-hint align="end">Lower number appears first</mat-hint>
+              <mat-error *ngIf="categoryForm.get('sortOrder')?.hasError('min')">
+                Sort order cannot be negative
+              </mat-error>
             </mat-form-field>
+          </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" rows="2" placeholder="Optional description"></textarea>
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline" class="textarea-field">
+              <mat-label>Description (optional)</mat-label>
+              <textarea matInput formControlName="description" rows="3"
+                placeholder="Provide context to help cashiers pick the right category."></textarea>
+              <mat-hint align="end">Optional</mat-hint>
             </mat-form-field>
+          </div>
 
-            <div class="status-toggle full-width">
+          <div class="field-grid field-grid--one">
+            <div class="toggle-field">
               <mat-slide-toggle formControlName="isActive" color="primary">
-                Active
+                {{ categoryForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
               </mat-slide-toggle>
+              <p>
+                {{ categoryForm.get('isActive')?.value
+                ? 'Category is visible and can be assigned to products.'
+                : 'Category is hidden until reactivated.' }}
+              </p>
             </div>
           </div>
 
           <div class="form-actions">
-            <button mat-button type="button" *ngIf="isEditing" (click)="resetForm()">
-              Cancel
+            <button mat-stroked-button type="button" (click)="resetForm()" [disabled]="isSaving">
+              <mat-icon>refresh</mat-icon>
+              Reset
             </button>
-            <button mat-raised-button color="primary" type="submit" [disabled]="categoryForm.invalid">
-              <mat-icon>{{ isEditing ? 'save' : 'add' }}</mat-icon>
-              {{ isEditing ? 'Update' : 'Add' }} Category
+            <button mat-flat-button color="primary" type="submit" [disabled]="categoryForm.invalid || isSaving"
+              class="action-primary">
+              <mat-spinner diameter="18" *ngIf="isSaving"></mat-spinner>
+              <mat-icon *ngIf="!isSaving">{{ isEditing ? 'save' : 'add' }}</mat-icon>
+              <span *ngIf="!isSaving">{{ isEditing ? 'Save changes' : 'Create category' }}</span>
             </button>
           </div>
         </form>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Categories List -->
-    <mat-card class="list-card">
-      <mat-card-header>
-        <mat-card-title>
-          <span>Categories</span>
-          <mat-chip>{{ categories.length }}</mat-chip>
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="categories-list" *ngIf="!isLoading && categories.length > 0">
-          <div *ngFor="let category of categories" class="category-item">
-            <div class="category-info">
-              <div class="category-header">
-                <h3>{{ category.name }}</h3>
-                <mat-chip [class.inactive]="!category.isActive">
-                  {{ category.isActive ? 'Active' : 'Inactive' }}
-                </mat-chip>
-              </div>
-              <p *ngIf="category.description" class="category-description">
-                {{ category.description }}
-              </p>
-              <div class="category-meta">
-                <span class="sort-order">
-                  <mat-icon>sort</mat-icon>
-                  Order: {{ category.sortOrder }}
-                </span>
-              </div>
-            </div>
-
-            <div class="category-actions">
-              <button mat-icon-button (click)="toggleStatus(category)"
-                [matTooltip]="category.isActive ? 'Deactivate' : 'Activate'">
-                <mat-icon>{{ category.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-              </button>
-              <button mat-icon-button (click)="editCategory(category)" matTooltip="Edit">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button (click)="deleteCategory(category)" matTooltip="Delete" color="warn">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="empty-state" *ngIf="!isLoading && categories.length === 0">
-          <mat-icon>category</mat-icon>
-          <p>No categories yet</p>
-          <span>Create your first category using the form above</span>
-        </div>
-
-        <div class="loading-container" *ngIf="isLoading">
-          <mat-spinner diameter="40"></mat-spinner>
-          <p>Loading categories...</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
+      </app-card>
+    </div>
   </div>
-</div>
+</section>

@@ -1,171 +1,208 @@
-<p>
-<div class="layout-container">
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
-                <mat-icon>menu</mat-icon>
-            </button>
-            <div class="logo">
-                <mat-icon class="logo-icon">storefront</mat-icon>
-                <span class="logo-text">Paradise POS</span>
-            </div>
+<div class="layout-container" [class.sidebar-collapsed]="sidebarCollapsed">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar"
+        [attr.aria-pressed]="sidebarCollapsed">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <div class="logo">
+        <mat-icon class="logo-icon">storefront</mat-icon>
+        <span class="logo-text">Paradise POS</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="icon-button" aria-label="Search" (click)="openSearch()">
+        <mat-icon>search</mat-icon>
+      </button>
+      <button class="icon-button" aria-label="Notifications" (click)="openNotifications()">
+        <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" matBadgeSize="small">
+          notifications
+        </mat-icon>
+      </button>
+      <button class="user-menu" [matMenuTriggerFor]="userMenu">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <span class="user-name">{{ userName }}</span>
+          <span class="user-role">{{ userRole }}</span>
         </div>
+        <mat-icon>arrow_drop_down</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu" class="user-dropdown">
+        <button mat-menu-item>
+          <mat-icon>person</mat-icon>
+          <span>Profile</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>settings</mat-icon>
+          <span>Settings</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </div>
+  </header>
 
-        <nav class="header-nav">
-            <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-                <mat-icon>dashboard</mat-icon>
-                <span>Dashboard</span>
-            </a>
-            <a routerLink="/pos" routerLinkActive="active" class="nav-link">
-                <mat-icon>point_of_sale</mat-icon>
-                <span>POS</span>
-            </a>
-            <a routerLink="/products" routerLinkActive="active" class="nav-link">
-                <mat-icon>inventory_2</mat-icon>
-                <span>Products</span>
-            </a>
-            <a routerLink="/customers" routerLinkActive="active" class="nav-link">
-                <mat-icon>people</mat-icon>
-                <span>Customers</span>
-            </a>
-            <a routerLink="/reports" routerLinkActive="active" class="nav-link">
-                <mat-icon>analytics</mat-icon>
-                <span>Reports</span>
-            </a>
-        </nav>
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <nav class="sidebar-nav">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        class="sidebar-link" title="Dashboard">
+        <mat-icon>dashboard</mat-icon>
+        <span class="link-text">Dashboard Overview</span>
+      </a>
 
-        <div class="header-right">
-            <button class="icon-button" aria-label="Search" (click)="openSearch()">
-                <mat-icon>search</mat-icon>
-            </button>
-            <button class="icon-button" aria-label="Notifications" (click)="openNotifications()">
-                <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" matBadgeSize="small">
-                    notifications
-                </mat-icon>
-            </button>
-            <button class="user-menu" [matMenuTriggerFor]="userMenu">
-                <div class="user-avatar">{{ userInitials }}</div>
-                <div class="user-info">
-                    <span class="user-name">{{ userName }}</span>
-                    <span class="user-role">{{ userRole }}</span>
-                </div>
-                <mat-icon>arrow_drop_down</mat-icon>
-            </button>
-            <mat-menu #userMenu="matMenu" class="user-dropdown">
-                <button mat-menu-item>
-                    <mat-icon>person</mat-icon>
-                    <span>Profile</span>
-                </button>
-                <button mat-menu-item>
-                    <mat-icon>settings</mat-icon>
-                    <span>Settings</span>
-                </button>
-                <mat-divider></mat-divider>
-                <button mat-menu-item (click)="logout()">
-                    <mat-icon>logout</mat-icon>
-                    <span>Logout</span>
-                </button>
-            </mat-menu>
+      <div class="sidebar-section">
+        <div class="section-title">
+          <span>Sales &amp; CRM</span>
         </div>
-    </header>
+        <a routerLink="/pos" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="sidebar-link"
+          title="POS Checkout">
+          <mat-icon>point_of_sale</mat-icon>
+          <span class="link-text">POS Checkout</span>
+        </a>
+        <a routerLink="/pos/transactions" routerLinkActive="active" class="sidebar-link" title="Transactions">
+          <mat-icon>receipt_long</mat-icon>
+          <span class="link-text">Transactions</span>
+        </a>
+        <a routerLink="/customers" routerLinkActive="active" class="sidebar-link" title="Customer Directory">
+          <mat-icon>people</mat-icon>
+          <span class="link-text">Customers</span>
+        </a>
+      </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
-        <nav class="sidebar-nav">
-            <a routerLink="/dashboard" routerLinkActive="active" class="sidebar-link" title="Dashboard">
-                <mat-icon>dashboard</mat-icon>
-                <span class="link-text">Dashboard</span>
-            </a>
-            <a routerLink="/pos" routerLinkActive="active" class="sidebar-link" title="Point of Sale">
-                <mat-icon>point_of_sale</mat-icon>
-                <span class="link-text">Point of Sale</span>
-            </a>
-
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <span>Inventory</span>
-                </div>
-                <a routerLink="/products" routerLinkActive="active" class="sidebar-link" title="Products">
-                    <mat-icon>inventory_2</mat-icon>
-                    <span class="link-text">Products</span>
-                </a>
-                <a routerLink="/categories" routerLinkActive="active" class="sidebar-link" title="Categories">
-                    <mat-icon>category</mat-icon>
-                    <span class="link-text">Categories</span>
-                </a>
-                <a routerLink="/inventory" routerLinkActive="active" class="sidebar-link" title="Stock">
-                    <mat-icon>store</mat-icon>
-                    <span class="link-text">Stock</span>
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <span>Sales</span>
-                </div>
-                <a routerLink="/sales" routerLinkActive="active" class="sidebar-link" title="Sales">
-                    <mat-icon>shopping_cart</mat-icon>
-                    <span class="link-text">Sales</span>
-                </a>
-                <a routerLink="/customers" routerLinkActive="active" class="sidebar-link" title="Customers">
-                    <mat-icon>people</mat-icon>
-                    <span class="link-text">Customers</span>
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <span>Management</span>
-                </div>
-                <a routerLink="/reports" routerLinkActive="active" class="sidebar-link" title="Reports">
-                    <mat-icon>analytics</mat-icon>
-                    <span class="link-text">Reports</span>
-                </a>
-                <a routerLink="/settings" routerLinkActive="active" class="sidebar-link" title="Settings">
-                    <mat-icon>settings</mat-icon>
-                    <span class="link-text">Settings</span>
-                </a>
-                <a routerLink="/users" routerLinkActive="active" class="sidebar-link" title="Users">
-                    <mat-icon>admin_panel_settings</mat-icon>
-                    <span class="link-text">Users</span>
-                </a>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Breadcrumbs -->
-        <div class="breadcrumbs" *ngIf="breadcrumbs.length > 0">
-            <a *ngFor="let crumb of breadcrumbs; let last = last" [routerLink]="crumb.url" [class.active]="last"
-                class="breadcrumb-item">
-                {{ crumb.label }}
-                <mat-icon *ngIf="!last" class="breadcrumb-separator">chevron_right</mat-icon>
-            </a>
+      <div class="sidebar-section">
+        <div class="section-title">
+          <span>Catalog</span>
         </div>
+        <a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          class="sidebar-link" title="Products">
+          <mat-icon>inventory_2</mat-icon>
+          <span class="link-text">Products</span>
+        </a>
+        <a routerLink="/products/categories" routerLinkActive="active" class="sidebar-link" title="Categories">
+          <mat-icon>category</mat-icon>
+          <span class="link-text">Categories</span>
+        </a>
+      </div>
 
-        <!-- Content -->
-        <div class="content">
-            <router-outlet></router-outlet>
+      <div class="sidebar-section">
+        <div class="section-title">
+          <span>Inventory</span>
         </div>
-    </main>
+        <a routerLink="/inventory" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          class="sidebar-link" title="Inventory Dashboard">
+          <mat-icon>inventory</mat-icon>
+          <span class="link-text">Inventory Dashboard</span>
+        </a>
+        <a routerLink="/inventory/adjustments" routerLinkActive="active" class="sidebar-link" title="Stock Adjustments">
+          <mat-icon>tune</mat-icon>
+          <span class="link-text">Stock Adjustments</span>
+        </a>
+        <a routerLink="/inventory/transfers" routerLinkActive="active" class="sidebar-link" title="Stock Transfers">
+          <mat-icon>compare_arrows</mat-icon>
+          <span class="link-text">Stock Transfers</span>
+        </a>
+        <a routerLink="/inventory/suppliers" routerLinkActive="active" class="sidebar-link" title="Suppliers">
+          <mat-icon>local_shipping</mat-icon>
+          <span class="link-text">Suppliers</span>
+        </a>
+        <a routerLink="/inventory/purchase-orders" routerLinkActive="active" class="sidebar-link"
+          title="Purchase Orders">
+          <mat-icon>assignment</mat-icon>
+          <span class="link-text">Purchase Orders</span>
+        </a>
+        <a routerLink="/inventory/alerts" routerLinkActive="active" class="sidebar-link" title="Stock Alerts">
+          <mat-icon>warning_amber</mat-icon>
+          <span class="link-text">Stock Alerts</span>
+        </a>
+      </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-left">
-                <span class="version">Paradise POS v{{ version }}</span>
-                <span class="separator">•</span>
-                <span class="copyright">© 2025 Paradise POS. All rights reserved.</span>
-            </div>
-            <div class="footer-right">
-                <a href="#" class="footer-link">Privacy Policy</a>
-                <span class="separator">•</span>
-                <a href="#" class="footer-link">Terms of Service</a>
-                <span class="separator">•</span>
-                <a href="#" class="footer-link">Support</a>
-            </div>
+      <div class="sidebar-section">
+        <div class="section-title">
+          <span>Hardware</span>
         </div>
-    </footer>
+        <a routerLink="/hardware" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          class="sidebar-link" title="Hardware Configuration">
+          <mat-icon>settings_input_component</mat-icon>
+          <span class="link-text">Hardware Configuration</span>
+        </a>
+        <a routerLink="/hardware/status" routerLinkActive="active" class="sidebar-link" title="Device Status">
+          <mat-icon>memory</mat-icon>
+          <span class="link-text">Device Status</span>
+        </a>
+        <a routerLink="/hardware/receipt-designer" routerLinkActive="active" class="sidebar-link"
+          title="Receipt Designer">
+          <mat-icon>receipt_long</mat-icon>
+          <span class="link-text">Receipt Designer</span>
+        </a>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">
+          <span>Reports &amp; Analytics</span>
+        </div>
+        <a routerLink="/reports" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          class="sidebar-link" title="Reports Hub">
+          <mat-icon>analytics</mat-icon>
+          <span class="link-text">Reports Hub</span>
+        </a>
+        <a routerLink="/reports/sales" routerLinkActive="active" class="sidebar-link" title="Sales Reports">
+          <mat-icon>trending_up</mat-icon>
+          <span class="link-text">Sales Reports</span>
+        </a>
+        <a routerLink="/reports/inventory" routerLinkActive="active" class="sidebar-link" title="Inventory Reports">
+          <mat-icon>fact_check</mat-icon>
+          <span class="link-text">Inventory Reports</span>
+        </a>
+        <a routerLink="/reports/customers" routerLinkActive="active" class="sidebar-link" title="Customer Reports">
+          <mat-icon>groups</mat-icon>
+          <span class="link-text">Customer Reports</span>
+        </a>
+        <a routerLink="/reports/products" routerLinkActive="active" class="sidebar-link" title="Product Performance">
+          <mat-icon>insights</mat-icon>
+          <span class="link-text">Product Performance</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs" *ngIf="breadcrumbs.length > 0">
+      <a *ngFor="let crumb of breadcrumbs; let last = last" [routerLink]="crumb.url" [class.active]="last"
+        class="breadcrumb-item">
+        {{ crumb.label }}
+        <mat-icon *ngIf="!last" class="breadcrumb-separator">chevron_right</mat-icon>
+      </a>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <span class="version">Paradise POS v{{ version }}</span>
+        <span class="separator">•</span>
+        <span class="copyright">© 2025 Paradise POS. All rights reserved.</span>
+      </div>
+      <div class="footer-right">
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <span class="separator">•</span>
+        <a href="#" class="footer-link">Terms of Service</a>
+        <span class="separator">•</span>
+        <a href="#" class="footer-link">Support</a>
+      </div>
+    </div>
+  </footer>
 </div>

@@ -1,189 +1,262 @@
-<div class="checkout-container">
-  <!-- Left Panel - Product Search & Selection -->
-  <div class="products-panel">
-    <!-- Header -->
-    <div class="panel-header">
-      <h2 class="panel-title">
-        <mat-icon>point_of_sale</mat-icon>
-        POS Checkout
-      </h2>
-      <div class="header-actions">
-        <button mat-icon-button routerLink="/products" matTooltip="Product Management">
+<div class="checkout-shell">
+  <section class="checkout-hero">
+    <div class="hero-header">
+      <div class="hero-title">
+        <div class="hero-icon">
+          <mat-icon>point_of_sale</mat-icon>
+        </div>
+        <div class="hero-text">
+          <h1>POS Checkout</h1>
+          <p>Deliver frictionless sales with a refined, real-time workspace.</p>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button mat-stroked-button class="hero-action" routerLink="/products" matTooltip="Product Management">
           <mat-icon>inventory_2</mat-icon>
+          <span>Products</span>
         </button>
-        <button mat-icon-button routerLink="/customers" matTooltip="Customer Management">
+        <button mat-stroked-button class="hero-action" routerLink="/customers" matTooltip="Customer Management">
           <mat-icon>people</mat-icon>
+          <span>Customers</span>
         </button>
-        <button mat-icon-button routerLink="/inventory" matTooltip="Inventory Management">
+        <button mat-stroked-button class="hero-action" routerLink="/inventory" matTooltip="Inventory Management">
           <mat-icon>warehouse</mat-icon>
+          <span>Inventory</span>
         </button>
-        <button mat-icon-button routerLink="/reports" matTooltip="Reports & Analytics">
+        <button mat-stroked-button class="hero-action" routerLink="/reports" matTooltip="Reports &amp; Analytics">
           <mat-icon>assessment</mat-icon>
+          <span>Reports</span>
         </button>
-        <button mat-icon-button routerLink="/pos/transactions" matTooltip="View Transactions">
+        <button mat-stroked-button class="hero-action" routerLink="/pos/transactions" matTooltip="View Transactions">
           <mat-icon>history</mat-icon>
+          <span>Transactions</span>
         </button>
-        <button mat-icon-button (click)="clearCart()" [disabled]="(itemCount$ | async) === 0" matTooltip="Clear Cart">
+        <button mat-flat-button color="warn" class="hero-action" (click)="clearCart()"
+          [disabled]="(itemCount$ | async) === 0" matTooltip="Clear Cart">
           <mat-icon>delete_sweep</mat-icon>
+          <span>Clear Cart</span>
         </button>
       </div>
     </div>
 
-    <!-- Product Search -->
-    <div class="search-section">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search Products (Name, SKU, Barcode)</mat-label>
-        <input matInput type="text" [(ngModel)]="searchTerm" (input)="onSearchChange(searchTerm)"
-          placeholder="Type to search or scan barcode..." autocomplete="off" />
-        <mat-icon matPrefix>search</mat-icon>
-        <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="searchTerm = ''; isSearching = false">
-          <mat-icon>close</mat-icon>
-        </button>
-      </mat-form-field>
-
-      <!-- Search Results Dropdown -->
-      <div class="search-results" *ngIf="isSearching && searchTerm.length >= 2">
-        <mat-card *ngFor="let product of searchResults$ | async" class="product-result"
-          (click)="selectProduct(product)">
-          <div class="product-info">
-            <div class="product-name">{{ product.name }}</div>
-            <div class="product-details">
-              <span class="product-sku">SKU: {{ product.sku }}</span>
-              <span class="product-stock"
-                [class.low-stock]="product.reorderLevel && product.stockQuantity < product.reorderLevel">
-                Stock: {{ product.stockQuantity }}
-              </span>
-            </div>
-          </div>
-          <div class="product-price">{{ formatCurrency(product.price) }}</div>
-        </mat-card>
-        <div class="no-results" *ngIf="(searchResults$ | async)?.length === 0">
-          <mat-icon>search_off</mat-icon>
-          <p>No products found</p>
+    <div class="hero-insights" *ngIf="cartSummary$ | async as summary">
+      <div class="insight-chip">
+        <div class="chip-icon">
+          <mat-icon>shopping_bag</mat-icon>
+        </div>
+        <div class="chip-content">
+          <span class="chip-label">Items in Cart</span>
+          <span class="chip-value">{{ (itemCount$ | async) || 0 }}</span>
+        </div>
+      </div>
+      <div class="insight-chip">
+        <div class="chip-icon">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="chip-content">
+          <span class="chip-label">Subtotal</span>
+          <span class="chip-value">{{ formatCurrency(summary.subtotal) }}</span>
+        </div>
+      </div>
+      <div class="insight-chip highlight">
+        <div class="chip-icon">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="chip-content">
+          <span class="chip-label">Payable</span>
+          <span class="chip-value">{{ formatCurrency(summary.total) }}</span>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Cart Items -->
-    <div class="cart-items-section">
-      <div class="section-title">Cart Items ({{ itemCount$ | async }})</div>
-
-      <div class="cart-items" *ngIf="(cartItems$ | async)?.length! > 0; else emptyCart">
-        <mat-card class="cart-item" *ngFor="let item of cartItems$ | async">
-          <div class="item-details">
-            <div class="item-header">
-              <span class="item-name">{{ item.product.name }}</span>
-              <button mat-icon-button color="warn" (click)="removeItem(item.product.id)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-            <div class="item-meta">
-              <span class="item-sku">SKU: {{ item.product.sku }}</span>
-              <span class="item-price">{{ formatCurrency(item.product.price) }} each</span>
+  <div class="checkout-body">
+    <section class="checkout-main">
+      <mat-card class="search-card">
+        <div class="card-content">
+          <div class="search-card__header">
+            <div class="search-title">
+              <mat-icon>travel_explore</mat-icon>
+              <div>
+                <h3>Product Finder</h3>
+                <p>Search by name, SKU or scan a barcode to add items instantly.</p>
+              </div>
             </div>
           </div>
 
-          <div class="item-actions">
-            <div class="quantity-controls">
-              <button mat-icon-button (click)="decreaseQuantity(item.product.id, item.quantity)">
-                <mat-icon>remove</mat-icon>
-              </button>
-              <input type="number" class="quantity-input" [value]="item.quantity"
-                (change)="updateQuantity(item.product.id, $any($event.target).value)" min="1" />
-              <button mat-icon-button (click)="increaseQuantity(item.product.id, item.quantity)">
-                <mat-icon>add</mat-icon>
-              </button>
-            </div>
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search products</mat-label>
+            <input matInput type="text" [(ngModel)]="searchTerm" (input)="onSearchChange(searchTerm)"
+              placeholder="Type to search or scan barcode" autocomplete="off" />
+            <mat-icon matPrefix>search</mat-icon>
+            <button mat-icon-button matSuffix *ngIf="searchTerm" (click)="searchTerm = ''; isSearching = false"
+              aria-label="Clear search">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
 
-            <div class="item-total">
-              <span class="total-label">Total:</span>
-              <span class="total-amount">{{ formatCurrency(item.total) }}</span>
+          <ng-container *ngIf="isSearching && searchTerm.length >= 2">
+            <div class="search-results" *ngIf="searchResults$ | async as results">
+              <ng-container *ngIf="results.length; else noResults">
+                <button type="button" class="product-result" *ngFor="let product of results"
+                  (click)="selectProduct(product)">
+                  <div class="product-info">
+                    <h4>{{ product.name }}</h4>
+                    <div class="product-meta">
+                      <span class="sku">SKU: {{ product.sku }}</span>
+                      <span class="stock"
+                        [class.low-stock]="product.reorderLevel && product.stockQuantity < product.reorderLevel">
+                        Stock: {{ product.stockQuantity }}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="product-price">{{ formatCurrency(product.price) }}</span>
+                </button>
+              </ng-container>
+            </div>
+            <ng-template #noResults>
+              <div class="no-results">
+                <mat-icon>search_off</mat-icon>
+                <p>No products found</p>
+                <span>Try refining your search terms</span>
+              </div>
+            </ng-template>
+          </ng-container>
+        </div>
+      </mat-card>
+
+      <mat-card class="cart-card">
+        <div class="card-content">
+          <div class="cart-card__header">
+            <div class="cart-header-text">
+              <h3>Active Cart</h3>
+              <p>Adjust quantities and manage line items before checkout.</p>
+            </div>
+            <div class="cart-header-meta" *ngIf="cartSummary$ | async as summary">
+              <span class="label">Current total</span>
+              <span class="value">{{ formatCurrency(summary.total) }}</span>
             </div>
           </div>
-        </mat-card>
-      </div>
 
-      <ng-template #emptyCart>
-        <div class="empty-cart">
-          <mat-icon>shopping_cart</mat-icon>
-          <p>Cart is empty</p>
-          <small>Search for products or scan barcodes to add items</small>
+          <div class="cart-items" *ngIf="(cartItems$ | async)?.length! > 0; else emptyCart">
+            <mat-card class="cart-item" *ngFor="let item of cartItems$ | async">
+              <div class="item-details">
+                <div class="item-header">
+                  <div class="item-title">
+                    <h4>{{ item.product.name }}</h4>
+                    <span class="code">SKU: {{ item.product.sku }}</span>
+                  </div>
+                  <button mat-icon-button color="warn" (click)="removeItem(item.product.id)" aria-label="Remove item">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                <div class="item-meta">
+                  <span class="price">{{ formatCurrency(item.product.price) }} each</span>
+                  <span class="line-total">Line total: {{ formatCurrency(item.total) }}</span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <div class="quantity-controls">
+                  <button mat-icon-button (click)="decreaseQuantity(item.product.id, item.quantity)"
+                    aria-label="Decrease quantity">
+                    <mat-icon>remove</mat-icon>
+                  </button>
+                  <input type="number" class="quantity-input" [value]="item.quantity"
+                    (change)="updateQuantity(item.product.id, $any($event.target).value)" min="1"
+                    aria-label="Item quantity" />
+                  <button mat-icon-button (click)="increaseQuantity(item.product.id, item.quantity)"
+                    aria-label="Increase quantity">
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
+                <div class="item-total">
+                  <span>{{ formatCurrency(item.total) }}</span>
+                </div>
+              </div>
+            </mat-card>
+          </div>
+
+          <ng-template #emptyCart>
+            <div class="empty-cart">
+              <mat-icon>shopping_cart</mat-icon>
+              <h4>Your cart is pristine</h4>
+              <p>Search products or scan a barcode to begin building the order.</p>
+            </div>
+          </ng-template>
         </div>
-      </ng-template>
-    </div>
-  </div>
+      </mat-card>
+    </section>
 
-  <!-- Right Panel - Cart Summary & Checkout -->
-  <div class="summary-panel">
-    <mat-card class="summary-card">
-      <div class="summary-header">
-        <h3>Order Summary</h3>
-      </div>
-
-      <div class="summary-details" *ngIf="cartSummary$ | async as summary">
-        <div class="summary-row">
-          <span>Subtotal:</span>
-          <span class="amount">{{ formatCurrency(summary.subtotal) }}</span>
+    <aside class="checkout-aside">
+      <mat-card class="summary-card">
+        <div class="summary-card__header">
+          <div>
+            <h3>Order Summary</h3>
+            <p>Review charges before proceeding to payment.</p>
+          </div>
         </div>
-
-        <div class="summary-row discount" *ngIf="summary.discountAmount > 0">
-          <span>Discount:</span>
-          <span class="amount">-{{ formatCurrency(summary.discountAmount) }}</span>
+        <div class="summary-card__body" *ngIf="cartSummary$ | async as summary">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>{{ formatCurrency(summary.subtotal) }}</span>
+          </div>
+          <div class="summary-row" *ngIf="summary.discountAmount > 0">
+            <span>Discount</span>
+            <span class="positive">-{{ formatCurrency(summary.discountAmount) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Tax (8%)</span>
+            <span>{{ formatCurrency(summary.taxAmount) }}</span>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="summary-total">
+            <span>Total Due</span>
+            <span>{{ formatCurrency(summary.total) }}</span>
+          </div>
         </div>
-
-        <div class="summary-row">
-          <span>Tax (8%):</span>
-          <span class="amount">{{ formatCurrency(summary.taxAmount) }}</span>
+        <div class="summary-card__actions">
+          <button mat-raised-button color="primary" class="checkout-btn" (click)="proceedToCheckout()"
+            [disabled]="!(canCheckout$ | async)">
+            <mat-icon>payment</mat-icon>
+            <span>Proceed to Payment</span>
+          </button>
+          <div class="secondary-actions">
+            <button mat-stroked-button>
+              <mat-icon>pause</mat-icon>
+              Hold Sale
+            </button>
+            <button mat-stroked-button>
+              <mat-icon>person_add</mat-icon>
+              Attach Customer
+            </button>
+          </div>
         </div>
+      </mat-card>
 
-        <mat-divider></mat-divider>
-
-        <div class="summary-row total">
-          <span>Total:</span>
-          <span class="amount">{{ formatCurrency(summary.total) }}</span>
+      <mat-card class="quick-actions-card">
+        <div class="card-header">
+          <h4>Quick Actions</h4>
+          <p>Enhance the experience with one-tap utilities.</p>
         </div>
-      </div>
-
-      <div class="checkout-actions">
-        <button mat-raised-button color="primary" class="checkout-btn" (click)="proceedToCheckout()"
-          [disabled]="!(canCheckout$ | async)">
-          <mat-icon>payment</mat-icon>
-          Proceed to Payment
-        </button>
-
-        <button mat-stroked-button class="action-btn">
-          <mat-icon>pause</mat-icon>
-          Hold
-        </button>
-
-        <button mat-stroked-button class="action-btn">
-          <mat-icon>person_add</mat-icon>
-          Customer
-        </button>
-      </div>
-    </mat-card>
-
-    <!-- Quick Actions -->
-    <mat-card class="quick-actions-card">
-      <h4>Quick Actions</h4>
-      <div class="quick-actions-grid">
-        <button mat-button>
-          <mat-icon>replay</mat-icon>
-          <span>Recall</span>
-        </button>
-        <button mat-button>
-          <mat-icon>local_offer</mat-icon>
-          <span>Discount</span>
-        </button>
-        <button mat-button>
-          <mat-icon>note_add</mat-icon>
-          <span>Notes</span>
-        </button>
-        <button mat-button>
-          <mat-icon>print</mat-icon>
-          <span>Print</span>
-        </button>
-      </div>
-    </mat-card>
+        <div class="quick-actions-grid">
+          <button type="button" class="quick-action-btn">
+            <mat-icon>replay</mat-icon>
+            <span>Recall Cart</span>
+          </button>
+          <button type="button" class="quick-action-btn accent">
+            <mat-icon>local_offer</mat-icon>
+            <span>Apply Discount</span>
+          </button>
+          <button type="button" class="quick-action-btn">
+            <mat-icon>note_add</mat-icon>
+            <span>Add Notes</span>
+          </button>
+          <button type="button" class="quick-action-btn">
+            <mat-icon>print</mat-icon>
+            <span>Print Quote</span>
+          </button>
+        </div>
+      </mat-card>
+    </aside>
   </div>
 </div>

@@ -28,17 +28,6 @@ select,
     opacity: 0.7;
   }
 
-  &:hover:not(:disabled):not(:focus) {
-    border-color: $input-border-hover;
-    background-color: $surface-hover;
-  }
-
-  &:focus {
-    border: $input-border-focus-width solid $input-border-focus;
-    box-shadow: 0 0 0 3px rgba($accent-500, 0.1);
-    background-color: $surface;
-  }
-
   &:disabled {
     background-color: $input-disabled-background;
     color: $text-disabled;

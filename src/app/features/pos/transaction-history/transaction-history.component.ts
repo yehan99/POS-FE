@@ -36,6 +36,10 @@ export class TransactionHistoryComponent implements OnInit {
   currentPage = 1;
   isLoading = false;
 
+  get totalPages(): number {
+    return this.calculateTotalPages();
+  }
+
   filterForm: FormGroup;
   paymentMethods = ['cash', 'card', 'mobile', 'split'];
   statuses = ['completed', 'refunded', 'cancelled'];
@@ -263,5 +267,13 @@ export class TransactionHistoryComponent implements OnInit {
       default:
         return 'payment';
     }
+  }
+
+  private calculateTotalPages(): number {
+    if (!this.totalTransactions || !this.pageSize) {
+      return 1;
+    }
+
+    return Math.max(1, Math.ceil(this.totalTransactions / this.pageSize));
   }
 }
