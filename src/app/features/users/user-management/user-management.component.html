@@ -1,23 +1,38 @@
-<div class="user-management">
-  <div class="page-header">
-    <div>
-      <h1>User Management</h1>
-      <p class="subtitle">
-        Provision users with roles and site assignments for Google single sign-on access.
-      </p>
+<section class="user-management">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Settings &amp; Admin</p>
+        <h1>User Management</h1>
+      </div>
     </div>
-    <button mat-stroked-button color="primary" type="button" (click)="refreshUsers()" [disabled]="isLoadingUsers">
-      <mat-icon>refresh</mat-icon>
-      <span>Refresh</span>
-    </button>
-  </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="refreshUsers()" [disabled]="isLoadingUsers">
+        <mat-icon>refresh</mat-icon>
+        Refresh Users
+      </button>
+      <button mat-flat-button color="primary" type="button" class="action-primary" (click)="scrollToInviteForm()">
+        <mat-icon>person_add</mat-icon>
+        Invite User
+      </button>
+    </div>
+  </header>
 
   <div class="content-grid">
-    <mat-card class="form-card">
-      <h2 class="card-title">Invite New User</h2>
-      <p class="card-caption">
-        Add a team member and the system will allow them to sign in with their Google account.
-      </p>
+    <app-card variant="elevated" padding="large" class="form-card" #inviteFormRef>
+      <div class="form-card__header">
+        <div>
+          <h2>Invite New User</h2>
+          <p>Provision access with Google SSO by assigning a role and site.</p>
+        </div>
+        <div class="form-card__meta" *ngIf="isLoadingOptions">
+          <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+          <span>Loading options…</span>
+        </div>
+      </div>
 
       <form [formGroup]="userForm" (ngSubmit)="submit()" class="user-form">
         <div class="form-row">
@@ -91,18 +106,32 @@
           <span *ngIf="!isSubmitting">Invite User</span>
         </button>
       </form>
-    </mat-card>
+    </app-card>
 
-    <mat-card class="table-card">
-      <div class="table-header">
-        <div>
-          <h2 class="card-title">Team Members</h2>
-          <p class="card-caption">Users listed here can access the system via Google login.</p>
+    <app-card variant="default" padding="none" class="table-card">
+      <div class="table-card__header">
+        <div class="table-card__heading">
+          <h2>Team Members</h2>
+          <p>Users listed here can access the system via Google login.</p>
+        </div>
+        <div class="table-card__controls">
+          <div class="table-card__meta" *ngIf="totalUsers">
+            <mat-icon color="primary">group</mat-icon>
+            <span>{{ totalUsers | number }} user{{ totalUsers === 1 ? '' : 's' }}</span>
+          </div>
+          <mat-form-field appearance="outline" class="table-card__search">
+            <mat-label>Search users</mat-label>
+            <input matInput [formControl]="searchControl" placeholder="Name or email" autocomplete="off" />
+            <button mat-icon-button matSuffix type="button" aria-label="Clear search" *ngIf="searchControl.value"
+              (click)="clearSearch()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
         </div>
       </div>
 
-      <ng-container *ngIf="!isLoadingUsers; else loadingBlock">
-        <table mat-table class="user-table" [dataSource]="users" *ngIf="users?.length; else emptyState">
+      <div class="table-container" *ngIf="!isLoadingUsers; else loadingBlock">
+        <table mat-table class="user-table" [dataSource]="users" *ngIf="users.length; else emptyState">
           <ng-container matColumnDef="user">
             <th mat-header-cell *matHeaderCellDef>User</th>
             <td mat-cell *matCellDef="let user">
@@ -148,7 +177,7 @@
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackByUser"></tr>
         </table>
-      </ng-container>
+      </div>
 
       <ng-template #loadingBlock>
         <div class="loading-block">
@@ -160,9 +189,19 @@
       <ng-template #emptyState>
         <div class="empty-state">
           <mat-icon>group_add</mat-icon>
-          <p>No users found. Invite your first team member to get started.</p>
+          <h3>No users found</h3>
+          <p>Invite your first team member to get started.</p>
+          <button mat-stroked-button color="primary" type="button" (click)="scrollToInviteForm()">
+            Add your first user
+          </button>
         </div>
       </ng-template>
-    </mat-card>
+
+      <div class="table-card__footer" *ngIf="totalUsers > 0">
+        <mat-paginator [length]="totalUsers" [pageSize]="pageSize" [pageIndex]="pageIndex"
+          [pageSizeOptions]="pageSizeOptions" [showFirstLastButtons]="true" aria-label="User pagination"
+          (page)="handlePageEvent($event)"></mat-paginator>
+      </div>
+    </app-card>
   </div>
-</div>
+</section>

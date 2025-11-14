@@ -1,14 +1,34 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { PageEvent } from '@angular/material/paginator';
 import { Subject } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  takeUntil,
+} from 'rxjs/operators';
 
 import {
   CreateUserRequest,
   RoleOption,
   SiteOption,
   UserListItem,
+  UserQueryParams,
 } from '../../../core/models/user-management.model';
 import { UserService } from '../../../core/services/user.service';
 
@@ -17,30 +37,39 @@ import { UserService } from '../../../core/services/user.service';
   standalone: false,
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserManagementComponent implements OnInit, OnDestroy {
+  @ViewChild('inviteFormRef') inviteFormRef?: ElementRef<HTMLDivElement>;
   userForm!: FormGroup;
   users: UserListItem[] = [];
   roles: RoleOption[] = [];
   sites: SiteOption[] = [];
+  searchControl = new FormControl<string>('', { nonNullable: true });
 
   displayedColumns = ['user', 'role', 'site', 'status', 'lastLogin'];
 
   isSubmitting = false;
   isLoadingUsers = false;
   isLoadingOptions = false;
+  totalUsers = 0;
+  pageSize = 25;
+  pageIndex = 0;
+  readonly pageSizeOptions = [10, 25, 50, 100];
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.observeUsers();
+    this.observeSearch();
     this.loadOptions();
     this.refreshUsers();
   }
@@ -51,10 +80,28 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   refreshUsers(): void {
+    const sanitizedSearch = this.sanitizeSearchTerm(this.searchControl.value);
+
+    if (sanitizedSearch !== this.searchControl.value) {
+      this.searchControl.setValue(sanitizedSearch, { emitEvent: false });
+    }
+
+    const query: UserQueryParams = {
+      page: this.pageIndex + 1,
+      perPage: this.pageSize,
+    };
+
+    if (sanitizedSearch) {
+      query.search = sanitizedSearch;
+    }
+
     this.isLoadingUsers = true;
-    this.userService.loadUsers().subscribe({
+    this.cdr.markForCheck();
+
+    this.userService.loadUsers(query).subscribe({
       next: () => {
         this.isLoadingUsers = false;
+        this.cdr.markForCheck();
       },
       error: (error) => {
         this.isLoadingUsers = false;
@@ -66,8 +113,23 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           verticalPosition: 'top',
           panelClass: ['error-snackbar'],
         });
+        this.cdr.markForCheck();
       },
     });
+  }
+
+  scrollToInviteForm(): void {
+    const hostElement = this.inviteFormRef?.nativeElement;
+    if (!hostElement) {
+      return;
+    }
+
+    hostElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const firstInput = hostElement.querySelector('input');
+    if (firstInput instanceof HTMLInputElement) {
+      setTimeout(() => firstInput.focus(), 200);
+    }
   }
 
   submit(): void {
@@ -87,6 +149,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     };
 
     this.isSubmitting = true;
+    this.cdr.markForCheck();
 
     this.userService.createUser(payload).subscribe({
       next: () => {
@@ -107,6 +170,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         });
         this.userForm.markAsPristine();
         this.userForm.markAsUntouched();
+        this.cdr.markForCheck();
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -118,8 +182,30 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           verticalPosition: 'top',
           panelClass: ['error-snackbar'],
         });
+        this.cdr.markForCheck();
       },
     });
+  }
+
+  handlePageEvent(event: PageEvent): void {
+    if (
+      this.pageSize === event.pageSize &&
+      this.pageIndex === event.pageIndex
+    ) {
+      return;
+    }
+
+    this.pageSize = event.pageSize;
+    this.pageIndex = event.pageIndex;
+    this.cdr.markForCheck();
+    this.refreshUsers();
+  }
+
+  clearSearch(): void {
+    if (!this.searchControl.value) {
+      return;
+    }
+    this.searchControl.setValue('', { emitEvent: true });
   }
 
   getRoleName(roleId: string): string {
@@ -181,10 +267,37 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   private observeUsers(): void {
-    this.userService.users$
+    this.userService.usersState$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((users) => {
-        this.users = users;
+      .subscribe((state) => {
+        this.users = state.items;
+        this.totalUsers = state.meta.total;
+
+        if (this.pageSize !== state.meta.perPage) {
+          this.pageSize = state.meta.perPage;
+        }
+
+        const nextPageIndex = Math.max(state.meta.currentPage - 1, 0);
+        if (this.pageIndex !== nextPageIndex) {
+          this.pageIndex = nextPageIndex;
+        }
+
+        this.cdr.markForCheck();
+      });
+  }
+
+  private observeSearch(): void {
+    this.searchControl.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((term) => {
+        const sanitized = this.sanitizeSearchTerm(term);
+
+        if (sanitized !== term) {
+          this.searchControl.setValue(sanitized, { emitEvent: false });
+        }
+
+        this.pageIndex = 0;
+        this.refreshUsers();
       });
   }
 
@@ -192,11 +305,17 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.isLoadingOptions = true;
     this.userService
       .loadUserOptions()
-      .pipe(finalize(() => (this.isLoadingOptions = false)))
+      .pipe(
+        finalize(() => {
+          this.isLoadingOptions = false;
+          this.cdr.markForCheck();
+        })
+      )
       .subscribe({
         next: ({ roles, sites }) => {
           this.roles = roles;
           this.sites = sites;
+          this.cdr.markForCheck();
         },
         error: (error) => {
           const message =
@@ -208,6 +327,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
             verticalPosition: 'top',
             panelClass: ['error-snackbar'],
           });
+          this.cdr.markForCheck();
         },
       });
   }
@@ -218,5 +338,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
     const site = this.sites.find((option) => option.id === id);
     return site?.name;
+  }
+
+  private sanitizeSearchTerm(value: string | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+
+    return value.trim().slice(0, 120);
   }
 }

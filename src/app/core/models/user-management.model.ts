@@ -35,3 +35,25 @@ export interface UserOptionsResponse {
   roles: RoleOption[];
   sites: SiteOption[];
 }
+
+export interface UserPaginationMeta {
+  total: number;
+  perPage: number;
+  currentPage: number;
+  lastPage: number;
+  from: number | null;
+  to: number | null;
+  hasNextPage: boolean;
+}
+
+export interface UserListState {
+  items: UserListItem[];
+  meta: UserPaginationMeta;
+}
+
+export interface UserQueryParams {
+  page?: number;
+  perPage?: number;
+  search?: string;
+  status?: 'active' | 'inactive' | 'invited';
+}
