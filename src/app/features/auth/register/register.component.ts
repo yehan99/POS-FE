@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
-import { BusinessType } from '../../../core/models';
+import { BusinessType, RegisterRequest } from '../../../core/models';
 
 @Component({
   selector: 'app-register',
@@ -80,15 +80,20 @@ export class RegisterComponent implements OnInit {
     this.isLoading = true;
     const formValue = this.registerForm.value;
 
-    const registerData = {
+    const registerData: RegisterRequest = {
       firstName: formValue.firstName,
       lastName: formValue.lastName,
       email: formValue.email,
-      phone: formValue.phone,
-      businessName: formValue.businessName,
-      businessType: formValue.businessType,
+      phone: formValue.phone || undefined,
       password: formValue.password,
-      country: 'LK', // Sri Lanka
+      deviceName: 'web',
+      roleSlug: 'admin',
+      tenant: {
+        name: formValue.businessName,
+        businessType: formValue.businessType,
+        country: 'LK',
+        phone: formValue.phone || undefined,
+      },
     };
 
     this.authService.register(registerData).subscribe({
@@ -107,8 +112,20 @@ export class RegisterComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        const errorMessage =
+        let errorMessage =
           error?.error?.message || 'Registration failed. Please try again.';
+
+        const validationErrors = error?.error?.errors;
+        if (validationErrors) {
+          const firstKey = Object.keys(validationErrors)[0];
+          const firstMessage =
+            firstKey && validationErrors[firstKey]?.length
+              ? validationErrors[firstKey][0]
+              : null;
+          if (firstMessage) {
+            errorMessage = firstMessage;
+          }
+        }
         this.snackBar.open(errorMessage, 'Close', {
           duration: 5000,
           horizontalPosition: 'end',

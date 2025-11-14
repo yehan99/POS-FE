@@ -72,7 +72,7 @@ export class AuthInterceptor implements HttpInterceptor {
           }),
           catchError((error) => {
             this.isRefreshing = false;
-            this.authService.logout();
+            this.authService.forceLogout();
             return throwError(() => error);
           })
         );
@@ -91,6 +91,7 @@ export class AuthInterceptor implements HttpInterceptor {
       url.includes('/auth/login') ||
       url.includes('/auth/register') ||
       url.includes('/auth/refresh') ||
+      url.includes('/auth/google') ||
       url.includes('/auth/password-reset')
     );
   }

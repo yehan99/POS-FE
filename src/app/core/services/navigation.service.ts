@@ -54,7 +54,7 @@ export class NavigationService {
     '/roles/create': { label: 'Create Role', icon: 'add' },
     '/roles/edit': { label: 'Edit Role', icon: 'edit' },
     '/auth/login': { label: 'Login', icon: 'login' },
-    '/auth/register': { label: 'Register', icon: 'person_add' },
+    '/users': { label: 'User Management', icon: 'group' },
   };
 
   constructor(

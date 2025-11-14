@@ -1,4 +1,5 @@
 ﻿<!-- Paradise POS System -->
-<app-main-layout>
+<app-main-layout *ngIf="showLayout">
   <router-outlet></router-outlet>
 </app-main-layout>
+<router-outlet *ngIf="!showLayout"></router-outlet>

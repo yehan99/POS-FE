@@ -24,4 +24,7 @@ export const environment = {
   stripe: {
     publicKey: 'pk_live_your_stripe_public_key',
   },
+  googleClientId: 'your-production-google-client-id.apps.googleusercontent.com',
+  googleClientScriptUrl: 'https://accounts.google.com/gsi/client',
+  googleClientScriptFallback: '/assets/google/gsi-client.js',
 };

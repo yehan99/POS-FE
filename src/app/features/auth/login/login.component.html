@@ -7,78 +7,45 @@
         <h1 class="brand-name">Paradise POS</h1>
       </div>
       <h2 class="auth-title">Welcome Back</h2>
-      <p class="auth-subtitle">Sign in to your account to continue</p>
+      <p class="auth-subtitle">
+        Sign in with your Google account associated with Paradise POS
+      </p>
     </div>
 
-    <!-- Login Form -->
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
-      <!-- Email Field -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email Address</mat-label>
-        <input matInput type="email" formControlName="email" placeholder="your@email.com" autocomplete="email">
-        <mat-icon matPrefix>email</mat-icon>
-        <mat-error *ngIf="loginForm.get('email')?.invalid">
-          {{ getErrorMessage('email') }}
-        </mat-error>
-      </mat-form-field>
-
-      <!-- Password Field -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Password</mat-label>
-        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
-          placeholder="Enter your password" autocomplete="current-password">
-        <mat-icon matPrefix>lock</mat-icon>
-        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword"
-          [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
-          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-        </button>
-        <mat-error *ngIf="loginForm.get('password')?.invalid">
-          {{ getErrorMessage('password') }}
-        </mat-error>
-      </mat-form-field>
-
-      <!-- Remember Me & Forgot Password -->
-      <div class="form-options">
-        <mat-checkbox formControlName="rememberMe" color="primary">
-          Remember me
-        </mat-checkbox>
-        <a routerLink="/auth/forgot-password" class="forgot-link">
-          Forgot Password?
-        </a>
-      </div>
-
-      <!-- Submit Button -->
-      <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="isLoading">
-        <mat-spinner *ngIf="isLoading" diameter="20" class="button-spinner"></mat-spinner>
-        <span *ngIf="!isLoading">Sign In</span>
-      </button>
-
-      <!-- Divider -->
-      <div class="divider">
-        <span>OR</span>
-      </div>
-
-      <!-- Register Link -->
-      <div class="auth-footer">
-        <p>Don't have an account?
-          <a routerLink="/auth/register" class="link-primary">Sign up for free</a>
+    <div class="auth-content">
+      <div class="google-login" *ngIf="!errorMessage; else authError">
+        <div #googleButton class="google-button"></div>
+        <div class="loading-message" *ngIf="!googleReady">
+          Loading Google sign-in…
+        </div>
+        <div class="spinner-overlay" *ngIf="isLoading">
+          <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+        </div>
+        <p class="support-message">
+          Need access or to revoke a user? Contact your administrator.
         </p>
       </div>
-    </form>
+      <ng-template #authError>
+        <div class="error-message">
+          <mat-icon color="warn">error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      </ng-template>
+    </div>
 
     <!-- Features -->
     <div class="auth-features">
       <div class="feature-item">
         <mat-icon>check_circle</mat-icon>
-        <span>14-day free trial</span>
+        <span>Secure single sign-on with Google</span>
       </div>
       <div class="feature-item">
         <mat-icon>check_circle</mat-icon>
-        <span>No credit card required</span>
+        <span>Access limited to approved team members</span>
       </div>
       <div class="feature-item">
         <mat-icon>check_circle</mat-icon>
-        <span>Cancel anytime</span>
+        <span>Centralized user provisioning</span>
       </div>
     </div>
   </div>

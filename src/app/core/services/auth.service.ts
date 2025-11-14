@@ -9,7 +9,7 @@ import {
   AuthTokens,
   LoginRequest,
   RegisterRequest,
-  ApiResponse,
+  AuthResponse,
 } from '../models';
 
 @Injectable({
@@ -49,25 +49,53 @@ export class AuthService {
    * Login user with email and password
    */
   login(credentials: LoginRequest): Observable<AuthTokens> {
+    const payload = {
+      ...credentials,
+      deviceName: credentials.deviceName ?? 'web',
+    };
+
     return this.http
-      .post<ApiResponse<AuthTokens & { user: User }>>(
-        `${environment.apiUrl}/auth/login`,
-        credentials
-      )
+      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, payload)
       .pipe(
-        map((response) => response.data),
-        tap((data) => {
-          this.setTokens(data);
-          this.setUser(data.user);
-          this.currentUserSubject.next(data.user);
+        tap((response) => {
+          this.setTokens(response);
+
+          if (response.user) {
+            const user = this.persistUser(response.user);
+            this.currentUserSubject.next(user);
+          } else {
+            this.persistUser(null);
+            this.currentUserSubject.next(null);
+          }
+
           this.isAuthenticatedSubject.next(true);
         }),
-        map((data) => ({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-          expiresIn: data.expiresIn,
-          tokenType: data.tokenType,
-        })),
+        map((response) => this.extractTokens(response)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Login user with Google credential
+   */
+  loginWithGoogle(idToken: string): Observable<AuthTokens> {
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/google`, { idToken })
+      .pipe(
+        tap((response) => {
+          this.setTokens(response);
+
+          if (response.user) {
+            const user = this.persistUser(response.user);
+            this.currentUserSubject.next(user);
+          } else {
+            this.persistUser(null);
+            this.currentUserSubject.next(null);
+          }
+
+          this.isAuthenticatedSubject.next(true);
+        }),
+        map((response) => this.extractTokens(response)),
         catchError(this.handleError)
       );
   }
@@ -76,25 +104,29 @@ export class AuthService {
    * Register new user and business
    */
   register(userData: RegisterRequest): Observable<AuthTokens> {
+    const payload: RegisterRequest = {
+      ...userData,
+      deviceName: userData.deviceName ?? 'web',
+      roleSlug: userData.roleSlug ?? 'admin',
+    };
+
     return this.http
-      .post<ApiResponse<AuthTokens & { user: User }>>(
-        `${environment.apiUrl}/auth/register`,
-        userData
-      )
+      .post<AuthResponse>(`${environment.apiUrl}/auth/register`, payload)
       .pipe(
-        map((response) => response.data),
-        tap((data) => {
-          this.setTokens(data);
-          this.setUser(data.user);
-          this.currentUserSubject.next(data.user);
+        tap((response) => {
+          this.setTokens(response);
+
+          if (response.user) {
+            const user = this.persistUser(response.user);
+            this.currentUserSubject.next(user);
+          } else {
+            this.persistUser(null);
+            this.currentUserSubject.next(null);
+          }
+
           this.isAuthenticatedSubject.next(true);
         }),
-        map((data) => ({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-          expiresIn: data.expiresIn,
-          tokenType: data.tokenType,
-        })),
+        map((response) => this.extractTokens(response)),
         catchError(this.handleError)
       );
   }
@@ -114,6 +146,14 @@ export class AuthService {
   }
 
   /**
+   * Immediately clear auth state and navigate to login
+   */
+  forceLogout(): void {
+    this.clearAuth();
+    this.router.navigate(['/auth/login']);
+  }
+
+  /**
    * Refresh access token
    */
   refreshToken(): Observable<AuthTokens> {
@@ -123,12 +163,12 @@ export class AuthService {
     }
 
     return this.http
-      .post<ApiResponse<AuthTokens>>(`${environment.apiUrl}/auth/refresh`, {
+      .post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, {
         refreshToken,
       })
       .pipe(
-        map((response) => response.data),
-        tap((tokens) => this.setTokens(tokens)),
+        tap((response) => this.setTokens(response)),
+        map((response) => this.extractTokens(response)),
         catchError((error) => {
           this.clearAuth();
           return throwError(() => error);
@@ -140,16 +180,20 @@ export class AuthService {
    * Get current user profile
    */
   getCurrentUser(): Observable<User> {
-    return this.http
-      .get<ApiResponse<User>>(`${environment.apiUrl}/auth/me`)
-      .pipe(
-        map((response) => response.data),
-        tap((user) => {
-          this.setUser(user);
-          this.currentUserSubject.next(user);
-        }),
-        catchError(this.handleError)
-      );
+    return this.http.get<{ user: User }>(`${environment.apiUrl}/auth/me`).pipe(
+      map((response) => {
+        const user = this.persistUser(response.user);
+        if (!user) {
+          throw new Error('Failed to load user profile');
+        }
+        return user;
+      }),
+      tap((user) => {
+        this.currentUserSubject.next(user);
+        this.isAuthenticatedSubject.next(true);
+      }),
+      catchError(this.handleError)
+    );
   }
 
   /**
@@ -157,14 +201,8 @@ export class AuthService {
    */
   requestPasswordReset(email: string): Observable<any> {
     return this.http
-      .post<ApiResponse<any>>(
-        `${environment.apiUrl}/auth/password-reset-request`,
-        { email }
-      )
-      .pipe(
-        map((response) => response.data),
-        catchError(this.handleError)
-      );
+      .post(`${environment.apiUrl}/auth/password-reset-request`, { email })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -172,14 +210,11 @@ export class AuthService {
    */
   resetPassword(token: string, password: string): Observable<any> {
     return this.http
-      .post<ApiResponse<any>>(`${environment.apiUrl}/auth/password-reset`, {
+      .post(`${environment.apiUrl}/auth/password-reset`, {
         token,
         password,
       })
-      .pipe(
-        map((response) => response.data),
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -187,7 +222,7 @@ export class AuthService {
    */
   hasPermission(permission: string): boolean {
     const user = this.currentUserSubject.value;
-    return user?.permissions?.includes(permission as any) || false;
+    return user?.permissions?.includes(permission) || false;
   }
 
   /**
@@ -195,10 +230,12 @@ export class AuthService {
    */
   hasRole(roles: string | string[]): boolean {
     const user = this.currentUserSubject.value;
-    if (!user) return false;
+    if (!user?.role?.slug) {
+      return false;
+    }
 
     const roleArray = Array.isArray(roles) ? roles : [roles];
-    return roleArray.includes(user.role);
+    return roleArray.some((role) => role === user.role?.slug);
   }
 
   /**
@@ -233,15 +270,17 @@ export class AuthService {
    * Store tokens in localStorage
    */
   private setTokens(tokens: AuthTokens): void {
-    localStorage.setItem(this.TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
-  }
+    if (tokens.accessToken) {
+      localStorage.setItem(this.TOKEN_KEY, tokens.accessToken);
+    } else {
+      localStorage.removeItem(this.TOKEN_KEY);
+    }
 
-  /**
-   * Store user data in localStorage
-   */
-  private setUser(user: User): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    if (tokens.refreshToken) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, tokens.refreshToken);
+    } else {
+      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    }
   }
 
   /**
@@ -250,8 +289,14 @@ export class AuthService {
   private getStoredUser(): User | null {
     try {
       const userStr = localStorage.getItem(this.USER_KEY);
-      return userStr ? JSON.parse(userStr) : null;
-    } catch {
+      if (!userStr) {
+        return null;
+      }
+
+      const parsed = JSON.parse(userStr);
+      return this.normalizeUser(parsed);
+    } catch (error) {
+      console.error('Failed to parse stored user', error);
       return null;
     }
   }
@@ -293,4 +338,168 @@ export class AuthService {
 
     return throwError(() => error);
   };
+
+  private persistUser(user: User | null): User | null {
+    if (!user) {
+      localStorage.removeItem(this.USER_KEY);
+      return null;
+    }
+
+    const normalized = this.normalizeUser(user);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  private normalizeUser(user: any): User {
+    if (!user) {
+      throw new Error('User payload is empty');
+    }
+
+    const tenant = user.tenant
+      ? {
+          id: String(user.tenant.id),
+          name: user.tenant.name,
+          businessType: user.tenant.businessType,
+          country: user.tenant.country,
+          phone: user.tenant.phone ?? undefined,
+          settings: user.tenant.settings ?? undefined,
+        }
+      : undefined;
+
+    const roleSource =
+      user.role ??
+      user.primaryRole ??
+      (user.roles && Array.isArray(user.roles) ? user.roles[0] : undefined);
+
+    const role = roleSource
+      ? {
+          id: String(
+            roleSource.id ??
+              roleSource.slug ??
+              roleSource.code ??
+              roleSource.name ??
+              ''
+          ),
+          name: roleSource.name ?? roleSource.label ?? roleSource.slug ?? '',
+          slug:
+            roleSource.slug ??
+            roleSource.code ??
+            roleSource.name ??
+            user.roleSlug ??
+            user.role_slug ??
+            '',
+        }
+      : user.roleSlug || user.role_slug
+      ? {
+          id: String(user.roleSlug ?? user.role_slug),
+          name:
+            user.roleName ??
+            user.role_name ??
+            String(user.roleSlug ?? user.role_slug),
+          slug: String(user.roleSlug ?? user.role_slug),
+        }
+      : undefined;
+
+    const siteSource =
+      user.site ?? user.branch ?? user.location ?? user.defaultSite;
+    const site = siteSource
+      ? {
+          id: String(
+            siteSource.id ??
+              siteSource.code ??
+              siteSource.slug ??
+              siteSource.name
+          ),
+          name:
+            siteSource.name ?? siteSource.displayName ?? siteSource.title ?? '',
+          code: String(
+            siteSource.code ??
+              siteSource.slug ??
+              siteSource.id ??
+              siteSource.name ??
+              ''
+          ),
+        }
+      : undefined;
+
+    let permissions: string[] = [];
+
+    if (Array.isArray(user.permissions)) {
+      permissions = user.permissions
+        .map((permission: any) => String(permission))
+        .filter(
+          (permission: string, index: number, self: string[]) =>
+            self.indexOf(permission) === index
+        );
+    }
+
+    const email =
+      user.email ?? user.primaryEmail ?? user.username ?? user.userName ?? '';
+
+    const derivedFirstName =
+      user.firstName ??
+      user.first_name ??
+      user.givenName ??
+      user.given_name ??
+      (user.fullName ?? user.full_name)?.split(' ')?.[0] ??
+      email.split('@')[0] ??
+      '';
+
+    const derivedLastName =
+      user.lastName ??
+      user.last_name ??
+      user.familyName ??
+      user.family_name ??
+      (user.fullName ?? user.full_name)?.split(' ')?.slice(1).join(' ') ??
+      '';
+
+    return {
+      id: String(user.id ?? user.userId ?? user.uid ?? email),
+      email,
+      firstName: derivedFirstName,
+      lastName: derivedLastName,
+      fullName: user.fullName ?? undefined,
+      phone: user.phone ?? undefined,
+      avatar: user.avatar ?? undefined,
+      isActive:
+        typeof user.isActive === 'boolean'
+          ? user.isActive
+          : Boolean(user.is_active),
+      permissions,
+      lastLoginAt: user.lastLoginAt ?? user.last_login_at ?? undefined,
+      createdAt: user.createdAt ?? user.created_at ?? undefined,
+      updatedAt: user.updatedAt ?? user.updated_at ?? undefined,
+      tenant,
+      role,
+      site,
+      status:
+        typeof user.status === 'string'
+          ? user.status
+          : (() => {
+              if (typeof user.isActive === 'boolean') {
+                return user.isActive ? 'active' : 'inactive';
+              }
+              if (typeof user.is_active === 'boolean') {
+                return user.is_active ? 'active' : 'inactive';
+              }
+              return undefined;
+            })(),
+      metadata: user.metadata ?? undefined,
+    };
+  }
+
+  private extractTokens(response: AuthResponse): AuthTokens {
+    return {
+      accessToken:
+        response.accessToken ??
+        (response as any).access_token ??
+        (response as any).token,
+      refreshToken:
+        response.refreshToken ?? (response as any).refresh_token ?? '',
+      expiresIn: response.expiresIn ?? (response as any).expires_in ?? 0,
+      tokenType: response.tokenType ?? (response as any).token_type ?? 'Bearer',
+      refreshExpiresIn:
+        response.refreshExpiresIn ?? (response as any).refresh_expires_in,
+    };
+  }
 }

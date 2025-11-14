@@ -7,6 +7,9 @@ export * from './product.model';
 // Sale models
 export * from './sale.model';
 
+// User management models
+export * from './user-management.model';
+
 // Import types for internal use
 import { User } from './auth.model';
 import { TaxClass } from './product.model';

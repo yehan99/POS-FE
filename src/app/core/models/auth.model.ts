@@ -1,16 +1,42 @@
+export interface TenantSummary {
+  id: string;
+  name: string;
+  businessType: string;
+  country: string;
+  phone?: string;
+  settings?: Record<string, any>;
+}
+
+export interface RoleSummary {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface SiteSummary {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
-  tenantId: string;
+  fullName?: string;
+  phone?: string;
   avatar?: string;
   isActive: boolean;
-  permissions: Permission[];
-  lastLogin?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  permissions: string[];
+  lastLoginAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  tenant?: TenantSummary;
+  role?: RoleSummary;
+  site?: SiteSummary;
+  status?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface AuthTokens {
@@ -18,12 +44,17 @@ export interface AuthTokens {
   refreshToken: string;
   expiresIn: number;
   tokenType: string;
+  refreshExpiresIn?: number;
+}
+
+export interface AuthResponse extends AuthTokens {
+  user?: User;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
-  tenantId?: string;
+  deviceName?: string;
 }
 
 export interface RegisterRequest {
@@ -31,10 +62,16 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
-  businessName: string;
-  businessType: BusinessType;
-  country: string;
   phone?: string;
+  deviceName?: string;
+  roleSlug?: string;
+  tenant: {
+    name: string;
+    businessType: BusinessType;
+    country: string;
+    phone?: string;
+    settings?: Record<string, any>;
+  };
 }
 
 export enum UserRole {
