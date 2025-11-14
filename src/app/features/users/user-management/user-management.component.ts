@@ -47,7 +47,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   sites: SiteOption[] = [];
   searchControl = new FormControl<string>('', { nonNullable: true });
 
-  displayedColumns = ['user', 'role', 'site', 'status', 'lastLogin'];
+  displayedColumns = ['user', 'role', 'site', 'status', 'lastLogin', 'actions'];
 
   isSubmitting = false;
   isLoadingUsers = false;
@@ -58,6 +58,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   readonly pageSizeOptions = [10, 25, 50, 100];
 
   private destroy$ = new Subject<void>();
+  private pendingActionIds = new Set<string>();
 
   constructor(
     private fb: FormBuilder,
@@ -208,6 +209,66 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.searchControl.setValue('', { emitEvent: true });
   }
 
+  isActionPending(userId: string): boolean {
+    return this.pendingActionIds.has(userId);
+  }
+
+  setUserStatus(user: UserListItem, isActive: boolean): void {
+    if (this.isActionPending(user.id) || user.isActive === isActive) {
+      return;
+    }
+
+    this.beginAction(user.id);
+    this.userService
+      .updateUserStatus(user.id, isActive)
+      .pipe(finalize(() => this.endAction(user.id)))
+      .subscribe({
+        next: () => {
+          const message = isActive
+            ? 'User activated successfully.'
+            : 'User deactivated successfully.';
+          this.snackBar.open(message, 'Close', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['success-snackbar'],
+          });
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.handleActionError(
+            error,
+            'Unable to update user status. Please try again.'
+          );
+        },
+      });
+  }
+
+  archiveUser(user: UserListItem): void {
+    if (this.isActionPending(user.id)) {
+      return;
+    }
+
+    this.beginAction(user.id);
+    this.userService
+      .archiveUser(user.id)
+      .pipe(finalize(() => this.endAction(user.id)))
+      .subscribe({
+        next: () => {
+          this.snackBar.open('User archived successfully.', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['success-snackbar'],
+          });
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.handleActionError(error, 'Unable to archive user right now.');
+        },
+      });
+  }
+
   getRoleName(roleId: string): string {
     const role = this.roles.find((r) => r.id === roleId);
     return role?.name ?? '—';
@@ -346,5 +407,31 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
 
     return value.trim().slice(0, 120);
+  }
+
+  private beginAction(userId: string): void {
+    this.pendingActionIds.add(userId);
+    this.cdr.markForCheck();
+  }
+
+  private endAction(userId: string): void {
+    this.pendingActionIds.delete(userId);
+    this.cdr.markForCheck();
+  }
+
+  private handleActionError(error: any, fallbackMessage: string): void {
+    const message =
+      error?.error?.message ??
+      error?.message ??
+      fallbackMessage ??
+      'Something went wrong. Please try again later.';
+
+    this.snackBar.open(message, 'Close', {
+      duration: 4000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: ['error-snackbar'],
+    });
+    this.cdr.markForCheck();
   }
 }

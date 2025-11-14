@@ -9,15 +9,17 @@ import {
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
+import { SessionTimeoutService } from '../services/session-timeout.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(
-    null
-  );
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private sessionTimeout: SessionTimeoutService
+  ) {}
 
   intercept(
     request: HttpRequest<unknown>,
@@ -28,12 +30,17 @@ export class AuthInterceptor implements HttpInterceptor {
 
     if (authToken && !this.isAuthUrl(request.url)) {
       request = this.addTokenToRequest(request, authToken);
+      this.sessionTimeout.touch();
     }
 
     return next.handle(request).pipe(
       catchError((error) => {
-        if (error instanceof HttpErrorResponse && error.status === 401) {
-          return this.handle401Error(request, next);
+        if (
+          error instanceof HttpErrorResponse &&
+          error.status === 401 &&
+          !this.isAuthUrl(request.url)
+        ) {
+          return this.handle401Error(request, next, error);
         }
         return throwError(() => error);
       })
@@ -53,7 +60,8 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private handle401Error(
     request: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
+    originalError: HttpErrorResponse
   ): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
@@ -61,28 +69,41 @@ export class AuthInterceptor implements HttpInterceptor {
 
       const refreshToken = this.authService.getRefreshToken();
 
-      if (refreshToken) {
-        return this.authService.refreshToken().pipe(
-          switchMap((tokens: any) => {
-            this.isRefreshing = false;
-            this.refreshTokenSubject.next(tokens.accessToken);
-            return next.handle(
-              this.addTokenToRequest(request, tokens.accessToken)
-            );
-          }),
-          catchError((error) => {
-            this.isRefreshing = false;
-            this.authService.forceLogout();
-            return throwError(() => error);
-          })
-        );
+      if (!refreshToken) {
+        this.isRefreshing = false;
+        this.authService.forceLogout();
+        return throwError(() => originalError);
       }
+
+      return this.authService.refreshToken().pipe(
+        switchMap((tokens) => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(tokens.accessToken);
+          this.sessionTimeout.touch();
+          return next.handle(
+            this.addTokenToRequest(request, tokens.accessToken)
+          );
+        }),
+        catchError((error) => {
+          this.isRefreshing = false;
+          this.authService.forceLogout();
+          return throwError(() => error);
+        })
+      );
     }
 
     return this.refreshTokenSubject.pipe(
       filter((token) => token !== null),
       take(1),
-      switchMap((token) => next.handle(this.addTokenToRequest(request, token)))
+      switchMap((token) => {
+        const accessToken = token as string;
+        this.sessionTimeout.touch();
+        return next.handle(this.addTokenToRequest(request, accessToken));
+      }),
+      catchError((error) => {
+        this.authService.forceLogout();
+        return throwError(() => error);
+      })
     );
   }
 

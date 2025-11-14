@@ -170,7 +170,7 @@ export class AuthService {
         tap((response) => this.setTokens(response)),
         map((response) => this.extractTokens(response)),
         catchError((error) => {
-          this.clearAuth();
+          this.forceLogout();
           return throwError(() => error);
         })
       );

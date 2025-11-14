@@ -96,6 +96,29 @@ export class UserService {
     );
   }
 
+  updateUserStatus(
+    userId: string,
+    isActive: boolean
+  ): Observable<UserListItem> {
+    return this.http
+      .patch<UserItemApiResponse>(`${this.baseUrl}/${userId}/status`, {
+        isActive,
+      })
+      .pipe(
+        map((response) => this.normalizeUserResponse(response)),
+        tap((user) => {
+          this.updateUserInState(user);
+          this.refreshUsersAfterMutation();
+        })
+      );
+  }
+
+  archiveUser(userId: string): Observable<void> {
+    return this.http
+      .delete<void>(`${this.baseUrl}/${userId}`)
+      .pipe(tap(() => this.refreshUsersAfterMutation()));
+  }
+
   loadUserOptions(): Observable<UserOptionsResponse> {
     return this.http
       .get<UserOptionsApiResponse>(`${this.baseUrl}/options`)
@@ -210,6 +233,18 @@ export class UserService {
     }));
 
     return { roles, sites };
+  }
+
+  private updateUserInState(user: UserListItem): void {
+    const current = this.usersStateSubject.value;
+    const items = current.items.map((existing) =>
+      existing.id === user.id ? { ...existing, ...user } : existing
+    );
+
+    this.usersStateSubject.next({
+      ...current,
+      items,
+    });
   }
 
   private normalizeQuery(query: UserQueryParams): UserQueryParams {
