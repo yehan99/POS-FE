@@ -17,6 +17,8 @@ export interface SiteSummary {
   id: string;
   name: string;
   code: string;
+  slug?: string;
+  description?: string | null;
 }
 
 export interface User {

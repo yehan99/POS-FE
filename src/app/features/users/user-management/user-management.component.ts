@@ -2,16 +2,14 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
 
-import { Role } from '../../../core/models/role.model';
 import {
   CreateUserRequest,
-  DEFAULT_SITE_OPTIONS,
+  RoleOption,
   SiteOption,
   UserListItem,
 } from '../../../core/models/user-management.model';
-import { RoleService } from '../../../core/services/role.service';
 import { UserService } from '../../../core/services/user.service';
 
 @Component({
@@ -23,27 +21,27 @@ import { UserService } from '../../../core/services/user.service';
 export class UserManagementComponent implements OnInit, OnDestroy {
   userForm!: FormGroup;
   users: UserListItem[] = [];
-  roles: Role[] = [];
-  sites: SiteOption[] = DEFAULT_SITE_OPTIONS;
+  roles: RoleOption[] = [];
+  sites: SiteOption[] = [];
 
   displayedColumns = ['user', 'role', 'site', 'status', 'lastLogin'];
 
   isSubmitting = false;
   isLoadingUsers = false;
+  isLoadingOptions = false;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private roleService: RoleService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.observeUsers();
-    this.observeRoles();
+    this.loadOptions();
     this.refreshUsers();
   }
 
@@ -84,7 +82,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       lastName: formValue.lastName.trim(),
       email: formValue.email.trim().toLowerCase(),
       roleId: formValue.roleId,
-      siteCode: formValue.siteCode,
+      siteId: formValue.siteId,
       phone: formValue.phone ? formValue.phone.trim() : undefined,
     };
 
@@ -105,7 +103,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           email: '',
           phone: '',
           roleId: '',
-          siteCode: '',
+          siteId: '',
         });
         this.userForm.markAsPristine();
         this.userForm.markAsUntouched();
@@ -145,10 +143,19 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   getSiteLabel(user: UserListItem): string {
-    const metadataSiteCode = user.metadata?.['siteCode'] as string | undefined;
-    const directSiteCode = user.siteCode ?? metadataSiteCode;
+    const metadataSiteId = user.metadata?.['siteId'] as string | undefined;
+    const directSiteId = user.siteId ?? metadataSiteId;
 
-    return user.site?.name ?? this.getSiteNameFromCode(directSiteCode);
+    if (user.site?.name) {
+      return user.site.name;
+    }
+
+    return (
+      this.getSiteNameFromId(directSiteId) ??
+      user.siteCode ??
+      (user.metadata?.['siteCode'] as string | undefined) ??
+      '—'
+    );
   }
 
   getStatus(user: UserListItem): string {
@@ -169,7 +176,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
       roleId: ['', Validators.required],
-      siteCode: ['', Validators.required],
+      siteId: ['', Validators.required],
     });
   }
 
@@ -181,20 +188,35 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       });
   }
 
-  private observeRoles(): void {
-    this.roleService
-      .getActiveRoles()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((roles) => {
-        this.roles = roles;
+  private loadOptions(): void {
+    this.isLoadingOptions = true;
+    this.userService
+      .loadUserOptions()
+      .pipe(finalize(() => (this.isLoadingOptions = false)))
+      .subscribe({
+        next: ({ roles, sites }) => {
+          this.roles = roles;
+          this.sites = sites;
+        },
+        error: (error) => {
+          const message =
+            error?.error?.message ||
+            'Failed to load user options. Please try again later.';
+          this.snackBar.open(message, 'Close', {
+            duration: 4000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar'],
+          });
+        },
       });
   }
 
-  private getSiteNameFromCode(code?: string): string {
-    if (!code) {
-      return '—';
+  private getSiteNameFromId(id?: string): string | undefined {
+    if (!id) {
+      return undefined;
     }
-    const site = this.sites.find((option) => option.code === code);
-    return site?.name ?? code;
+    const site = this.sites.find((option) => option.id === id);
+    return site?.name;
   }
 }
