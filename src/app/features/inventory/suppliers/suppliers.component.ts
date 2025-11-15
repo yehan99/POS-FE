@@ -7,7 +7,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { SelectionModel } from '@angular/cdk/collections';
 import { SupplierService } from '../services/supplier.service';
-import { Supplier, SupplierFilter } from '../models/inventory.model';
+import {
+  Supplier,
+  SupplierFilter,
+  SupplierDashboardMetrics,
+  SupplierPerformanceSummary,
+} from '../models/inventory.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -31,7 +36,18 @@ export class SuppliersComponent implements OnInit {
     'actions',
   ];
 
+  topSuppliersDisplayedColumns: string[] = [
+    'supplierName',
+    'totalSpend',
+    'totalOrders',
+    'onTimeDeliveryRate',
+    'averageLeadTimeDays',
+  ];
+
   dataSource = new MatTableDataSource<Supplier>([]);
+  topSuppliersDataSource = new MatTableDataSource<SupplierPerformanceSummary>(
+    []
+  );
   selection = new SelectionModel<Supplier>(true, []);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -39,6 +55,8 @@ export class SuppliersComponent implements OnInit {
 
   filterForm!: FormGroup;
   isLoading = false;
+  dashboardLoading = false;
+  dashboardMetrics?: SupplierDashboardMetrics;
 
   totalSuppliers = 0;
   pageSize = 10;
@@ -64,6 +82,7 @@ export class SuppliersComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeFilterForm();
+    this.loadDashboardMetrics();
     this.loadSuppliers();
   }
 
@@ -93,6 +112,109 @@ export class SuppliersComponent implements OnInit {
     });
   }
 
+  loadDashboardMetrics(): void {
+    this.dashboardLoading = true;
+    this.supplierService.getSupplierDashboardMetrics().subscribe({
+      next: (metrics) => {
+        this.dashboardMetrics = metrics;
+        this.topSuppliersDataSource.data = metrics.topSuppliers || [];
+        this.dashboardLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading supplier dashboard metrics:', error);
+        this.dashboardLoading = false;
+        this.loadMockDashboardMetrics();
+      },
+    });
+  }
+
+  loadMockDashboardMetrics(): void {
+    const mockMetrics: SupplierDashboardMetrics = {
+      totalSuppliers: 128,
+      activeSuppliers: 94,
+      newSuppliersThisMonth: 6,
+      preferredSuppliers: 18,
+      averageLeadTimeDays: 7.5,
+      onTimeDeliveryRate: 87.2,
+      totalSpend: 12500000,
+      spendThisMonth: 820000,
+      spendGrowthPercentage: 12.4,
+      categoryBreakdown: [
+        {
+          category: 'Food & Beverages',
+          supplierCount: 32,
+          percentage: 25.0,
+          totalSpend: 3200000,
+        },
+        {
+          category: 'Electronics',
+          supplierCount: 21,
+          percentage: 16.4,
+          totalSpend: 2100000,
+        },
+        {
+          category: 'Hardware',
+          supplierCount: 18,
+          percentage: 14.1,
+          totalSpend: 1760000,
+        },
+        {
+          category: 'Packaging',
+          supplierCount: 12,
+          percentage: 9.8,
+          totalSpend: 820000,
+        },
+      ],
+      trend: [
+        { label: 'May', totalSpend: 780000, purchaseOrders: 52 },
+        { label: 'Jun', totalSpend: 820000, purchaseOrders: 55 },
+        { label: 'Jul', totalSpend: 860000, purchaseOrders: 57 },
+        { label: 'Aug', totalSpend: 910000, purchaseOrders: 61 },
+      ],
+      topSuppliers: [
+        {
+          supplierId: '1',
+          supplierName: 'Sunrise Foods Ltd',
+          rating: 4.7,
+          totalOrders: 64,
+          totalSpend: 1850000,
+          onTimeDeliveryRate: 92.0,
+          averageLeadTimeDays: 5.5,
+        },
+        {
+          supplierId: '2',
+          supplierName: 'Global Electronics Co.',
+          rating: 4.5,
+          totalOrders: 58,
+          totalSpend: 1640000,
+          onTimeDeliveryRate: 88.5,
+          averageLeadTimeDays: 6.2,
+        },
+        {
+          supplierId: '3',
+          supplierName: 'Lanka Packaging Imports',
+          rating: 4.3,
+          totalOrders: 47,
+          totalSpend: 930000,
+          onTimeDeliveryRate: 90.1,
+          averageLeadTimeDays: 4.9,
+        },
+        {
+          supplierId: '4',
+          supplierName: 'Evergreen Hardware',
+          rating: 4.1,
+          totalOrders: 39,
+          totalSpend: 820000,
+          onTimeDeliveryRate: 84.0,
+          averageLeadTimeDays: 8.3,
+        },
+      ],
+    };
+
+    this.dashboardMetrics = mockMetrics;
+    this.topSuppliersDataSource.data = mockMetrics.topSuppliers;
+  }
+
   loadSuppliers(): void {
     this.isLoading = true;
     const formValue = this.filterForm.value;
@@ -111,6 +233,10 @@ export class SuppliersComponent implements OnInit {
         this.totalSuppliers = response.total;
         this.isLoading = false;
         this.selection.clear();
+        setTimeout(() => {
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
+        });
       },
       error: (error) => {
         console.error('Error loading suppliers:', error);
@@ -295,5 +421,38 @@ export class SuppliersComponent implements OnInit {
 
   getRatingStars(rating: number): string {
     return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  formatPercentage(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    return `${value.toFixed(1)}%`;
+  }
+
+  formatLeadTime(days: number | null | undefined): string {
+    if (days === null || days === undefined) {
+      return '—';
+    }
+
+    if (days < 1) {
+      return '<1 day';
+    }
+
+    return `${days.toFixed(1)} days`;
   }
 }

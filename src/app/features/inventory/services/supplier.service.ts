@@ -7,6 +7,7 @@ import {
   SupplierFormData,
   InventoryFilter,
   PaginatedResponse,
+  SupplierDashboardMetrics,
 } from '../models/inventory.model';
 
 @Injectable({
@@ -93,6 +94,16 @@ export class SupplierService {
     pendingOrders: number;
   }> {
     return this.http.get<any>(`${this.apiUrl}/${supplierId}/statistics`);
+  }
+
+  // Get supplier dashboard metrics
+  getSupplierDashboardMetrics(
+    period: string = 'this_month'
+  ): Observable<SupplierDashboardMetrics> {
+    const params = new HttpParams().set('period', period);
+    return this.http.get<SupplierDashboardMetrics>(`${this.apiUrl}/dashboard`, {
+      params,
+    });
   }
 
   // Get supplier purchase history

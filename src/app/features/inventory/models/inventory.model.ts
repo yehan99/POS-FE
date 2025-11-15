@@ -92,10 +92,12 @@ export interface StockTransferFormData {
 export interface Supplier {
   id: string;
   supplierCode: string;
+  code?: string;
   name: string;
   contactPerson: string;
   email: string;
   phone: string;
+  category?: string;
   address: Address;
   paymentTerms: string;
   creditLimit?: number;
@@ -103,9 +105,11 @@ export interface Supplier {
   website?: string;
   bankDetails?: BankDetails;
   isActive: boolean;
+  status?: string;
   rating?: number;
   totalPurchases: number;
   totalSpent: number;
+  totalOrders?: number;
   lastPurchaseDate?: Date;
   notes?: string;
   createdAt: Date;
@@ -141,6 +145,44 @@ export interface SupplierFormData {
   bankDetails?: BankDetails;
   notes?: string;
   isActive: boolean;
+}
+
+export interface SupplierDashboardMetrics {
+  totalSuppliers: number;
+  activeSuppliers: number;
+  newSuppliersThisMonth: number;
+  preferredSuppliers: number;
+  averageLeadTimeDays: number;
+  onTimeDeliveryRate: number;
+  totalSpend: number;
+  spendThisMonth: number;
+  spendGrowthPercentage: number;
+  categoryBreakdown: SupplierCategoryBreakdown[];
+  trend: SupplierTrendPoint[];
+  topSuppliers: SupplierPerformanceSummary[];
+}
+
+export interface SupplierCategoryBreakdown {
+  category: string;
+  supplierCount: number;
+  percentage: number;
+  totalSpend: number;
+}
+
+export interface SupplierTrendPoint {
+  label: string;
+  totalSpend: number;
+  purchaseOrders: number;
+}
+
+export interface SupplierPerformanceSummary {
+  supplierId: string;
+  supplierName: string;
+  rating?: number;
+  totalOrders: number;
+  totalSpend: number;
+  onTimeDeliveryRate: number;
+  averageLeadTimeDays: number;
 }
 
 // Purchase Order Models

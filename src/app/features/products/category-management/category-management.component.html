@@ -123,10 +123,14 @@
             </div>
 
             <div class="category-card__actions">
-              <button mat-icon-button type="button" (click)="toggleStatus(category)"
-                [matTooltip]="category.isActive ? 'Deactivate category' : 'Activate category'">
-                <mat-icon>{{ category.isActive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-              </button>
+              <mat-slide-toggle class="status-toggle" color="primary" [checked]="category.isActive"
+                [disabled]="isCategoryStatusUpdating(category.id) || isLoading"
+                (change)="onStatusToggle(category, $event)"
+                [matTooltip]="isCategoryStatusUpdating(category.id) ? 'Updating status...' : (category.isActive ? 'Deactivate category' : 'Activate category')"
+                [attr.aria-label]="category.isActive ? 'Deactivate category' : 'Activate category'">
+              </mat-slide-toggle>
+              <mat-progress-spinner *ngIf="isCategoryStatusUpdating(category.id)" class="status-spinner" diameter="18"
+                mode="indeterminate"></mat-progress-spinner>
               <button mat-icon-button type="button" (click)="editCategory(category)" matTooltip="Edit category">
                 <mat-icon>edit</mat-icon>
               </button>
@@ -136,6 +140,16 @@
               </button>
             </div>
           </article>
+        </div>
+
+        <div class="list-card__footer" *ngIf="
+            !isLoading &&
+            pagination &&
+            (pagination.totalPages > 1 || totalCategories > pageSizeOptions[0])
+          ">
+          <mat-paginator [length]="totalCategories" [pageSize]="pageSize" [pageIndex]="pageIndex"
+            [pageSizeOptions]="pageSizeOptions" [disabled]="isLoading" showFirstLastButtons
+            (page)="onPageChange($event)"></mat-paginator>
         </div>
 
         <ng-template #emptyState>

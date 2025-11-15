@@ -240,6 +240,18 @@
     color: $primary-700;
     font-weight: $font-weight-medium;
   }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba($text-primary, 0.08);
+
+    mat-paginator {
+      width: 100%;
+    }
+  }
 }
 
 .list-loading {
@@ -325,6 +337,16 @@
       mat-icon {
         font-size: 1.2rem;
       }
+    }
+
+    mat-slide-toggle.status-toggle {
+      margin-right: 0.5rem;
+      padding: 0 0.25rem;
+    }
+
+    .status-spinner {
+      width: 22px;
+      height: 22px;
     }
   }
 }
