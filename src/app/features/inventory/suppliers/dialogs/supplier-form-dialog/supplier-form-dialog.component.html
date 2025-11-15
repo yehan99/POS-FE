@@ -1,0 +1,238 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="supplier-form">
+  <h2 mat-dialog-title>
+    {{ mode === 'create' ? 'Add Supplier' : 'Edit Supplier' }}
+  </h2>
+
+  <mat-dialog-content>
+    <mat-progress-bar mode="indeterminate" *ngIf="isSaving"></mat-progress-bar>
+
+    <section class="section">
+      <header class="section__header">
+        <div>
+          <h3>Supplier Overview</h3>
+          <p>Capture the core identity and status of this supplier.</p>
+        </div>
+        <mat-chip-listbox class="status-chip-list">
+          <mat-chip-option selected color="primary">
+            {{ supplierCode ? ('Code: ' + supplierCode) : 'Code auto-generated' }}
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </header>
+
+      <div class="section__grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Supplier Name</mat-label>
+          <input matInput formControlName="name" required>
+          <mat-error *ngIf="form.get('name')?.hasError('required')">Name is required.</mat-error>
+          <mat-error *ngIf="form.get('name')?.hasError('maxlength')">Maximum 150 characters.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option *ngFor="let status of statuses" [value]="status">
+              {{ status | titlecase }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            <mat-option value="">Unassigned</mat-option>
+            <mat-option *ngFor="let category of categories" [value]="category">
+              {{ category }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-slide-toggle color="primary" formControlName="isPreferred">
+          Mark as preferred supplier
+        </mat-slide-toggle>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <section class="section">
+      <header class="section__header">
+        <div>
+          <h3>Contact Information</h3>
+          <p>How your team reaches this supplier for purchasing and support.</p>
+        </div>
+      </header>
+
+      <div class="section__grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Primary Contact</mat-label>
+          <input matInput formControlName="contactPerson">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email">
+          <mat-error *ngIf="form.get('email')?.hasError('email')">Please enter a valid email.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone">
+        </mat-form-field>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <section class="section">
+      <header class="section__header">
+        <div>
+          <h3>Financial Profile</h3>
+          <p>Payment expectations and performance benchmarks.</p>
+        </div>
+      </header>
+
+      <div class="section__grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Terms</mat-label>
+          <mat-select formControlName="paymentTerms">
+            <mat-option [value]="''">No preference</mat-option>
+            <mat-option *ngFor="let term of paymentTermsOptions" [value]="term">
+              {{ term }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Credit Limit (LKR)</mat-label>
+          <input matInput formControlName="creditLimit" type="number" min="0">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tax ID</mat-label>
+          <input matInput formControlName="taxId">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Website</mat-label>
+          <input matInput formControlName="website" type="url">
+        </mat-form-field>
+      </div>
+
+      <div class="section__grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Supplier Rating (0 - 5)</mat-label>
+          <input matInput formControlName="rating" type="number" min="0" max="5" step="0.1">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>On-time delivery (%)</mat-label>
+          <input matInput formControlName="onTimeDeliveryRate" type="number" min="0" max="100" step="0.1">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Average lead time (days)</mat-label>
+          <input matInput formControlName="averageLeadTimeDays" type="number" min="0" step="0.1">
+        </mat-form-field>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <section class="section">
+      <header class="section__header">
+        <div>
+          <h3>Address</h3>
+          <p>Where purchase orders and correspondence are sent.</p>
+        </div>
+      </header>
+
+      <div class="section__grid section__grid--two">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Street address</mat-label>
+          <input matInput formControlName="street">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>State / Province</mat-label>
+          <input matInput formControlName="state">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Postal code</mat-label>
+          <input matInput formControlName="postalCode">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Country</mat-label>
+          <input matInput formControlName="country">
+        </mat-form-field>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <section class="section">
+      <header class="section__header">
+        <div>
+          <h3>Banking Details</h3>
+          <p>Optional payment information kept for finance workflows.</p>
+        </div>
+      </header>
+
+      <div class="section__grid section__grid--two">
+        <mat-form-field appearance="outline">
+          <mat-label>Bank name</mat-label>
+          <input matInput formControlName="bankName">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Account name</mat-label>
+          <input matInput formControlName="accountName">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Account number</mat-label>
+          <input matInput formControlName="accountNumber">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Branch / Swift code</mat-label>
+          <div matPrefix class="dual-input">
+            <input matInput formControlName="branchCode" placeholder="Branch">
+            <span class="separator">/</span>
+            <input matInput formControlName="swiftCode" placeholder="SWIFT">
+          </div>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <section class="section">
+      <header class="section__header">
+        <div>
+          <h3>Internal notes</h3>
+          <p>Share context with your purchasing and finance teams.</p>
+        </div>
+      </header>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notes</mat-label>
+        <textarea matInput formControlName="notes" rows="3"></textarea>
+      </mat-form-field>
+    </section>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()" [disabled]="isSaving">
+      Cancel
+    </button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="isSaving || form.invalid">
+      {{ mode === 'create' ? 'Create Supplier' : 'Save Changes' }}
+    </button>
+  </mat-dialog-actions>
+</form>

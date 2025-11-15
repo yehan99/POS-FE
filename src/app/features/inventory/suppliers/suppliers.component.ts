@@ -14,6 +14,8 @@ import {
   SupplierPerformanceSummary,
 } from '../models/inventory.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { SupplierFormDialogComponent } from './dialogs/supplier-form-dialog/supplier-form-dialog.component';
+import { SupplierDetailDialogComponent } from './dialogs/supplier-detail-dialog/supplier-detail-dialog.component';
 
 @Component({
   selector: 'app-suppliers',
@@ -261,18 +263,44 @@ export class SuppliersComponent implements OnInit {
   }
 
   openSupplierDialog(supplier?: Supplier): void {
-    // TODO: Implement supplier dialog
-    console.log('Open supplier dialog', supplier);
+    const dialogRef = this.dialog.open(SupplierFormDialogComponent, {
+      width: '760px',
+      data: { supplier },
+      disableClose: true,
+      autoFocus: false,
+      panelClass: 'supplier-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result || result.action === 'cancelled') {
+        return;
+      }
+
+      this.loadSuppliers();
+      this.loadDashboardMetrics();
+    });
   }
 
   viewSupplierDetails(supplier: Supplier): void {
-    // TODO: Navigate to supplier detail page
-    console.log('View supplier details', supplier);
+    this.dialog.open(SupplierDetailDialogComponent, {
+      width: '780px',
+      data: {
+        supplierId: supplier.id,
+        initialTab: 'overview',
+      },
+      panelClass: 'supplier-dialog-panel',
+    });
   }
 
   viewPurchaseHistory(supplier: Supplier): void {
-    // TODO: Navigate to purchase history
-    console.log('View purchase history', supplier);
+    this.dialog.open(SupplierDetailDialogComponent, {
+      width: '780px',
+      data: {
+        supplierId: supplier.id,
+        initialTab: 'history',
+      },
+      panelClass: 'supplier-dialog-panel',
+    });
   }
 
   deleteSupplier(supplier: Supplier): void {

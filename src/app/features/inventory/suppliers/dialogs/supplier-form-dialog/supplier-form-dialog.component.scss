@@ -1,0 +1,82 @@
+.supplier-form {
+  min-width: 640px;
+  max-width: 840px;
+}
+
+.section {
+  margin-top: 16px;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+
+    &--two {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+  }
+}
+
+mat-dialog-content {
+  max-height: 70vh;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.status-chip-list {
+  mat-chip-option {
+    font-size: 0.85rem;
+  }
+}
+
+.dual-input {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.separator {
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}
+
+@media (max-width: 720px) {
+  .supplier-form {
+    min-width: auto;
+    width: 100%;
+  }
+
+  mat-dialog-content {
+    max-height: none;
+  }
+}

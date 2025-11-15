@@ -94,57 +94,82 @@ export interface Supplier {
   supplierCode: string;
   code?: string;
   name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  category?: string;
-  address: Address;
-  paymentTerms: string;
-  creditLimit?: number;
-  taxId?: string;
-  website?: string;
-  bankDetails?: BankDetails;
+  contactPerson?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  category?: string | null;
+  status?: string | null;
   isActive: boolean;
-  status?: string;
-  rating?: number;
-  totalPurchases: number;
-  totalSpent: number;
-  totalOrders?: number;
-  lastPurchaseDate?: Date;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  isPreferred?: boolean;
+  paymentTerms?: string | null;
+  creditLimit?: number | null;
+  taxId?: string | null;
+  website?: string | null;
+  address?: Address | null;
+  bankDetails?: BankDetails | null;
+  rating?: number | null;
+  totalPurchases?: number | null;
+  totalSpent?: number | null;
+  totalOrders?: number | null;
+  spendThisMonth?: number | null;
+  spendLastMonth?: number | null;
+  onTimeDeliveryRate?: number | null;
+  averageLeadTimeDays?: number | null;
+  lastPurchaseDate?: Date | null;
+  monthlySpendStats?: SupplierMonthlySpend[] | null;
+  notes?: string | null;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
 }
 
 export interface Address {
-  street?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country: string;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
 }
 
 export interface BankDetails {
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
-  branchCode?: string;
-  swiftCode?: string;
+  bankName?: string | null;
+  accountNumber?: string | null;
+  accountName?: string | null;
+  branchCode?: string | null;
+  swiftCode?: string | null;
 }
 
 export interface SupplierFormData {
+  supplierCode?: string | null;
   name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  address: Address;
-  paymentTerms: string;
-  creditLimit?: number;
-  taxId?: string;
-  website?: string;
-  bankDetails?: BankDetails;
-  notes?: string;
-  isActive: boolean;
+  contactPerson?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: Address | null;
+  paymentTerms?: string | null;
+  creditLimit?: number | null;
+  taxId?: string | null;
+  website?: string | null;
+  bankDetails?: BankDetails | null;
+  notes?: string | null;
+  isActive?: boolean;
+  status?: string | null;
+  category?: string | null;
+  isPreferred?: boolean;
+  rating?: number | null;
+  totalPurchases?: number | null;
+  totalSpent?: number | null;
+  totalOrders?: number | null;
+  spendThisMonth?: number | null;
+  spendLastMonth?: number | null;
+  onTimeDeliveryRate?: number | null;
+  averageLeadTimeDays?: number | null;
+}
+
+export interface SupplierMonthlySpend {
+  period: string;
+  totalSpend: number;
+  purchaseOrders: number;
+  averageLeadTimeDays?: number | null;
 }
 
 export interface SupplierDashboardMetrics {

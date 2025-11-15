@@ -1,0 +1,155 @@
+<h2 mat-dialog-title>Supplier Details</h2>
+
+<mat-dialog-content class="supplier-detail">
+  <div class="loading" *ngIf="isLoadingSupplier">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  </div>
+
+  <ng-container *ngIf="!isLoadingSupplier && supplier as supplierData">
+    <section class="overview">
+      <div class="overview__heading">
+        <div class="overview__title">
+          <h3>{{ supplierData.name }}</h3>
+          <div class="overview__meta">
+            <span class="code">{{ supplierData.supplierCode }}</span>
+            <span class="status"
+              [style.color]="getStatusColor(supplierData.status || (supplierData.isActive ? 'active' : 'inactive'))">
+              ● {{ supplierData.status ? (supplierData.status | titlecase) : supplierData.isActive ? 'Active' :
+              'Inactive' }}
+            </span>
+            <mat-chip-set *ngIf="supplierData.isPreferred">
+              <mat-chip color="primary" selected>Preferred</mat-chip>
+            </mat-chip-set>
+          </div>
+        </div>
+        <div class="overview__contact">
+          <div>
+            <span class="label">Contact</span>
+            <span>{{ supplierData.contactPerson || 'Not provided' }}</span>
+          </div>
+          <div>
+            <span class="label">Email</span>
+            <span>{{ supplierData.email || 'Not provided' }}</span>
+          </div>
+          <div>
+            <span class="label">Phone</span>
+            <span>{{ supplierData.phone || 'Not provided' }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <mat-tab-group [(selectedIndex)]="activeTabIndex">
+      <mat-tab label="Overview">
+        <div class="tab-content">
+          <section class="stat-grid">
+            <div class="stat-card">
+              <span class="label">Total Spend</span>
+              <span class="value">{{ formatCurrency(stats?.totalSpent ?? supplierData.totalSpent ?? 0) }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">Orders</span>
+              <span class="value">{{ stats?.totalPurchaseOrders ?? supplierData.totalOrders ??
+                supplierData.totalPurchases ?? 0 }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">On-time Delivery</span>
+              <span class="value">{{ formatPercentage(stats?.onTimeDeliveryRate ?? supplierData.onTimeDeliveryRate)
+                }}</span>
+            </div>
+            <div class="stat-card">
+              <span class="label">Avg. Lead Time</span>
+              <span class="value">{{ formatLeadTime(supplierData.averageLeadTimeDays) }}</span>
+            </div>
+          </section>
+
+          <mat-divider></mat-divider>
+
+          <section class="info-grid">
+            <article>
+              <h4>Business Details</h4>
+              <p><strong>Category:</strong> {{ supplierData.category || 'Unassigned' }}</p>
+              <p><strong>Payment Terms:</strong> {{ supplierData.paymentTerms || 'Not specified' }}</p>
+              <p><strong>Credit Limit:</strong> {{ formatCurrency(supplierData.creditLimit) }}</p>
+              <p><strong>Tax ID:</strong> {{ supplierData.taxId || 'Not provided' }}</p>
+              <p><strong>Website:</strong> {{ supplierData.website || 'Not provided' }}</p>
+            </article>
+
+            <article>
+              <h4>Address</h4>
+              <p *ngIf="supplierData.address as addr; else noAddress">
+                {{ addr.street || '' }}<br *ngIf="addr.street">
+                {{ addr.city || '' }}<span *ngIf="addr.city && addr.state">, </span>{{ addr.state || '' }}
+                <span *ngIf="addr.postalCode">{{ addr.postalCode }}</span><br>
+                {{ addr.country || '' }}
+              </p>
+              <ng-template #noAddress>
+                <p>Not provided</p>
+              </ng-template>
+            </article>
+
+            <article>
+              <h4>Bank Details</h4>
+              <p *ngIf="supplierData.bankDetails as bank; else noBank">
+                <strong>{{ bank.bankName || '—' }}</strong><br>
+                Account: {{ bank.accountNumber || '—' }}<br>
+                Name: {{ bank.accountName || '—' }}<br>
+                Branch: {{ bank.branchCode || '—' }}<br>
+                SWIFT: {{ bank.swiftCode || '—' }}
+              </p>
+              <ng-template #noBank>
+                <p>Not provided</p>
+              </ng-template>
+            </article>
+          </section>
+
+          <mat-divider></mat-divider>
+
+          <section class="notes">
+            <h4>Internal Notes</h4>
+            <p>{{ supplierData.notes || 'No notes recorded for this supplier.' }}</p>
+          </section>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Purchase history">
+        <div class="tab-content">
+          <div class="history-header">
+            <h4>Recent Purchase Periods</h4>
+            <mat-progress-bar *ngIf="isLoadingHistory" mode="indeterminate"></mat-progress-bar>
+          </div>
+
+          <div *ngIf="!isLoadingHistory && history.length === 0" class="empty-history">
+            <mat-icon>history_toggle_off</mat-icon>
+            <p>No purchase history recorded yet.</p>
+          </div>
+
+          <table *ngIf="history.length > 0" class="history-table">
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>Total Spend</th>
+                <th>Orders</th>
+                <th>Average Lead Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of history">
+                <td>{{ item.period }}</td>
+                <td>{{ formatCurrency(item.totalSpend) }}</td>
+                <td>{{ item.purchaseOrders }}</td>
+                <td>{{ formatLeadTime(item.averageLeadTimeDays) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()">
+    Close
+  </button>
+</mat-dialog-actions>

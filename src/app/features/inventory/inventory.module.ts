@@ -10,6 +10,8 @@ import { SuppliersComponent } from './suppliers/suppliers.component';
 import { PurchaseOrdersComponent } from './purchase-orders/purchase-orders.component';
 import { StockAlertsComponent } from './stock-alerts/stock-alerts.component';
 import { InventoryDashboardComponent } from './inventory-dashboard/inventory-dashboard.component';
+import { SupplierFormDialogComponent } from './suppliers/dialogs/supplier-form-dialog/supplier-form-dialog.component';
+import { SupplierDetailDialogComponent } from './suppliers/dialogs/supplier-detail-dialog/supplier-detail-dialog.component';
 
 @NgModule({
   declarations: [
@@ -19,6 +21,8 @@ import { InventoryDashboardComponent } from './inventory-dashboard/inventory-das
     PurchaseOrdersComponent,
     StockAlertsComponent,
     InventoryDashboardComponent,
+    SupplierFormDialogComponent,
+    SupplierDetailDialogComponent,
   ],
   imports: [
     CommonModule,
