@@ -8,8 +8,8 @@
         <p class="eyebrow">Sales &amp; CRM</p>
         <h1>{{ isEditMode ? 'Edit Customer' : 'Create Customer' }}</h1>
         <p class="subtitle">
-          {{ isEditMode ? 'Update profile details, loyalty settings, and contact preferences.' : 'Capture key customer
-          details to begin building loyalty.' }}
+          {{ isEditMode ? 'Update profile, loyalty settings, and communication preferences.' : 'Capture customer details
+          to begin building loyalty.' }}
         </p>
       </div>
     </div>
@@ -26,23 +26,23 @@
     </div>
   </header>
 
-  <app-card variant="elevated" padding="large" class="form-summary">
-    <div class="form-summary__grid">
-      <div class="form-summary__item">
+  <app-card variant="elevated" padding="large" class="summary-card">
+    <div class="summary-card__grid">
+      <div class="summary-card__item">
         <mat-icon>badge</mat-icon>
         <div>
           <span class="label">Customer Code</span>
           <span class="value">{{ customerCode || 'Will be generated automatically' }}</span>
         </div>
       </div>
-      <div class="form-summary__item">
+      <div class="summary-card__item">
         <mat-icon>timeline</mat-icon>
         <div>
           <span class="label">Status</span>
           <span class="value">{{ customerForm.get('isActive')?.value ? 'Active' : 'Inactive' }}</span>
         </div>
       </div>
-      <div class="form-summary__item">
+      <div class="summary-card__item">
         <mat-icon>loyalty</mat-icon>
         <div>
           <span class="label">Loyalty Tier</span>
@@ -55,196 +55,203 @@
     </div>
   </app-card>
 
-  <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading" class="form-shell mt-4">
-    <div class="form-grid">
-      <app-card variant="default" padding="large" class="form-section">
-        <div class="form-section__header">
-          <div>
-            <h2>Personal Information</h2>
-            <p>Core identity details used across receipts, loyalty, and engagement.</p>
-          </div>
-          <mat-icon color="primary">person</mat-icon>
-        </div>
-
-        <div class="field-grid field-grid--two">
-          <mat-form-field appearance="outline">
-            <mat-label>First Name</mat-label>
-            <input matInput formControlName="firstName" placeholder="Enter first name" required>
-            <mat-error *ngIf="hasError('firstName', 'required')">First name is required</mat-error>
-            <mat-error *ngIf="hasError('firstName', 'minlength')">{{ getErrorMessage('firstName') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Last Name</mat-label>
-            <input matInput formControlName="lastName" placeholder="Enter last name" required>
-            <mat-error *ngIf="hasError('lastName', 'required')">Last name is required</mat-error>
-            <mat-error *ngIf="hasError('lastName', 'minlength')">{{ getErrorMessage('lastName') }}</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="field-grid field-grid--two">
-          <mat-form-field appearance="outline">
-            <mat-label>Phone Number</mat-label>
-            <mat-icon matPrefix>phone</mat-icon>
-            <input matInput formControlName="phone" placeholder="0771234567" required maxlength="10">
-            <mat-hint>10 digit phone number</mat-hint>
-            <mat-error>{{ getErrorMessage('phone') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Email (Optional)</mat-label>
-            <mat-icon matPrefix>email</mat-icon>
-            <input matInput formControlName="email" type="email" placeholder="customer@example.com">
-            <mat-error>{{ getErrorMessage('email') }}</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="field-grid field-grid--two">
-          <mat-form-field appearance="outline">
-            <mat-label>Date of Birth (Optional)</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="dateOfBirth">
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Gender (Optional)</mat-label>
-            <mat-select formControlName="gender">
-              <mat-option value="">Not specified</mat-option>
-              <mat-option *ngFor="let gender of genders" [value]="gender">
-                {{ gender | titlecase }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </app-card>
-
-      <app-card variant="default" padding="large" class="form-section">
-        <div class="form-section__header">
-          <div>
-            <h2>Address Details</h2>
-            <p>Optional address information for delivery, invoices, and reports.</p>
-          </div>
-          <mat-icon color="primary">location_on</mat-icon>
-        </div>
-
-        <div class="field-grid field-grid--one">
-          <mat-form-field appearance="outline">
-            <mat-label>Street Address</mat-label>
-            <input matInput formControlName="street" placeholder="123 Main Street">
-          </mat-form-field>
-        </div>
-
-        <div class="field-grid field-grid--three">
-          <mat-form-field appearance="outline">
-            <mat-label>City</mat-label>
-            <input matInput formControlName="city" placeholder="Colombo">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>State / Province</mat-label>
-            <input matInput formControlName="state" placeholder="Western Province">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Postal Code</mat-label>
-            <input matInput formControlName="postalCode" placeholder="10100">
-          </mat-form-field>
-        </div>
-
-        <div class="field-grid field-grid--one">
-          <mat-form-field appearance="outline">
-            <mat-label>Country</mat-label>
-            <input matInput formControlName="country" placeholder="Sri Lanka">
-          </mat-form-field>
-        </div>
-      </app-card>
-
-      <app-card variant="default" padding="large" class="form-section">
-        <div class="form-section__header">
-          <div>
-            <h2>Loyalty Program</h2>
-            <p>Assign loyalty tiers and view benefits aligned with Paradise POS rewards.</p>
-          </div>
-          <mat-icon color="primary">stars</mat-icon>
-        </div>
-
-        <div class="field-grid field-grid--two">
-          <mat-form-field appearance="outline">
-            <mat-label>Loyalty Points</mat-label>
-            <mat-icon matPrefix>star</mat-icon>
-            <input matInput formControlName="loyaltyPoints" type="number" readonly>
-            <mat-hint>Points update automatically from sales activity.</mat-hint>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Loyalty Tier</mat-label>
-            <mat-select formControlName="loyaltyTier">
-              <mat-option *ngFor="let tier of loyaltyTiers" [value]="tier">
-                <span class="tier-option" [style.color]="getTierColor(tier)">
-                  {{ tier | titlecase }}
-                </span>
-              </mat-option>
-            </mat-select>
-            <mat-hint *ngIf="customerForm.get('loyaltyTier')?.value">
-              {{ getTierDescription(customerForm.get('loyaltyTier')?.value) }}
-            </mat-hint>
-          </mat-form-field>
-        </div>
-
-        <div class="tier-grid">
-          <div class="tier-card" *ngFor="let tier of loyaltyTiers">
-            <div class="tier-card__icon" [style.backgroundColor]="getTierColor(tier)">
-              <mat-icon>{{ tier === 'platinum' ? 'star' : 'workspace_premium' }}</mat-icon>
+  <ng-container *ngIf="!isLoading; else formLoading">
+    <form [formGroup]="customerForm" (ngSubmit)="onSubmit()" class="form-shell detail-layout">
+      <div class="detail-layout__main">
+        <app-card variant="default" padding="large" class="form-card">
+          <div class="form-card__header">
+            <div>
+              <h2>Identity &amp; Contact</h2>
+              <p>Core information visible on receipts, loyalty, and outreach.</p>
             </div>
-            <div class="tier-card__details">
-              <strong>{{ tier | titlecase }}</strong>
-              <p>{{ getTierDescription(tier) }}</p>
+            <mat-icon color="primary">person</mat-icon>
+          </div>
+
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="firstName" placeholder="Enter first name" required>
+              <mat-error *ngIf="hasError('firstName', 'required')">First name is required</mat-error>
+              <mat-error *ngIf="hasError('firstName', 'minlength')">{{ getErrorMessage('firstName') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="lastName" placeholder="Enter last name" required>
+              <mat-error *ngIf="hasError('lastName', 'required')">Last name is required</mat-error>
+              <mat-error *ngIf="hasError('lastName', 'minlength')">{{ getErrorMessage('lastName') }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline">
+              <mat-label>Phone Number</mat-label>
+              <mat-icon matPrefix>phone</mat-icon>
+              <input matInput formControlName="phone" placeholder="0771234567" required maxlength="10">
+              <mat-hint>10 digit phone number</mat-hint>
+              <mat-error>{{ getErrorMessage('phone') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Email (Optional)</mat-label>
+              <mat-icon matPrefix>email</mat-icon>
+              <input matInput formControlName="email" type="email" placeholder="customer@example.com">
+              <mat-error>{{ getErrorMessage('email') }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--two">
+            <mat-form-field appearance="outline">
+              <mat-label>Date of Birth (Optional)</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="dateOfBirth">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Gender (Optional)</mat-label>
+              <mat-select formControlName="gender">
+                <mat-option value="">Not specified</mat-option>
+                <mat-option *ngFor="let gender of genders" [value]="gender">
+                  {{ gender | titlecase }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="form-card">
+          <div class="form-card__header">
+            <div>
+              <h2>Address Details</h2>
+              <p>Optional address data for deliveries, invoices, and analysis.</p>
+            </div>
+            <mat-icon color="primary">location_on</mat-icon>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline">
+              <mat-label>Street Address</mat-label>
+              <input matInput formControlName="street" placeholder="123 Main Street">
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--three">
+            <mat-form-field appearance="outline">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="city" placeholder="Colombo">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>State / Province</mat-label>
+              <input matInput formControlName="state" placeholder="Western Province">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Postal Code</mat-label>
+              <input matInput formControlName="postalCode" placeholder="10100">
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline">
+              <mat-label>Country</mat-label>
+              <input matInput formControlName="country" placeholder="Sri Lanka">
+            </mat-form-field>
+          </div>
+        </app-card>
+      </div>
+
+      <aside class="detail-layout__aside">
+        <app-card variant="default" padding="large" class="form-card">
+          <div class="form-card__header">
+            <div>
+              <h2>Account &amp; Loyalty</h2>
+              <p>Control engagement settings and loyalty tiering.</p>
+            </div>
+            <mat-icon color="primary">stars</mat-icon>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-slide-toggle formControlName="isActive" color="primary">
+              Customer is Active
+            </mat-slide-toggle>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline">
+              <mat-label>Loyalty Points</mat-label>
+              <mat-icon matPrefix>star</mat-icon>
+              <input matInput formControlName="loyaltyPoints" type="number" readonly>
+              <mat-hint>Points update automatically from sales activity.</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--one">
+            <mat-form-field appearance="outline">
+              <mat-label>Loyalty Tier</mat-label>
+              <mat-select formControlName="loyaltyTier">
+                <mat-option *ngFor="let tier of loyaltyTiers" [value]="tier">
+                  <span class="tier-option" [style.color]="getTierColor(tier)">
+                    {{ tier | titlecase }}
+                  </span>
+                </mat-option>
+              </mat-select>
+              <mat-hint *ngIf="customerForm.get('loyaltyTier')?.value">
+                {{ getTierDescription(customerForm.get('loyaltyTier')?.value) }}
+              </mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="tier-grid">
+            <div class="tier-card" *ngFor="let tier of loyaltyTiers">
+              <div class="tier-card__icon" [style.backgroundColor]="getTierColor(tier)">
+                <mat-icon>{{ tier === 'platinum' ? 'star' : 'workspace_premium' }}</mat-icon>
+              </div>
+              <div class="tier-card__details">
+                <strong>{{ tier | titlecase }}</strong>
+                <p>{{ getTierDescription(tier) }}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </app-card>
+        </app-card>
 
-      <app-card variant="default" padding="large" class="form-section">
-        <div class="form-section__header">
-          <div>
-            <h2>Additional Notes</h2>
-            <p>Record insights, preferences, or special handling instructions.</p>
+        <app-card variant="default" padding="large" class="form-card">
+          <div class="form-card__header">
+            <div>
+              <h2>Notes</h2>
+              <p>Capture preferences, requests, or follow-up reminders.</p>
+            </div>
+            <mat-icon color="primary">notes</mat-icon>
           </div>
-          <mat-icon color="primary">notes</mat-icon>
-        </div>
 
-        <div class="field-grid field-grid--one">
           <mat-form-field appearance="outline" class="textarea-field">
-            <mat-label>Notes</mat-label>
-            <textarea matInput formControlName="notes" rows="4"
+            <mat-label>Internal Notes</mat-label>
+            <textarea matInput formControlName="notes" rows="6"
               placeholder="Add any additional notes about this customer..."></textarea>
             <mat-hint align="end">{{ customerForm.get('notes')?.value?.length || 0 }}/500</mat-hint>
           </mat-form-field>
-        </div>
+        </app-card>
+      </aside>
 
-        <div class="field-grid field-grid--one">
-          <mat-slide-toggle formControlName="isActive" color="primary">
-            Customer is Active
-          </mat-slide-toggle>
-        </div>
-      </app-card>
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="onCancel()" [disabled]="isLoading || isSaving">
+          Cancel
+        </button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isLoading || isSaving || customerForm.invalid"
+          class="action-primary">
+          <mat-icon>{{ isEditMode ? 'save' : 'check_circle' }}</mat-icon>
+          {{ isEditMode ? 'Save Changes' : 'Create Customer' }}
+        </button>
+      </div>
+    </form>
+  </ng-container>
+
+  <ng-template #formLoading>
+    <div class="loading-container loading-container--custom form-skeleton">
+      <div class="form-skeleton__card" *ngFor="let _ of formSkeletonSlots">
+        <div class="form-skeleton__field skeleton"></div>
+      </div>
     </div>
-
-    <div class="form-actions">
-      <button mat-stroked-button type="button" (click)="onCancel()" [disabled]="isLoading">
-        Cancel
-      </button>
-      <button mat-flat-button color="primary" type="submit" [disabled]="isLoading || customerForm.invalid"
-        class="action-primary">
-        <mat-icon>{{ isEditMode ? 'save' : 'check_circle' }}</mat-icon>
-        {{ isEditMode ? 'Save Changes' : 'Create Customer' }}
-      </button>
-    </div>
-  </form>
-
-  <div class="loading-state" *ngIf="isLoading">
-    <mat-spinner diameter="64" color="primary"></mat-spinner>
-    <p>{{ isEditMode ? 'Loading customer...' : 'Saving customer...' }}</p>
-  </div>
+  </ng-template>
 </section>

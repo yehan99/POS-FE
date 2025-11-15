@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { finalize } from 'rxjs/operators';
 import { CustomerService } from '../services/customer.service';
 import {
   Customer,
@@ -19,8 +20,11 @@ export class CustomerFormComponent implements OnInit {
   customerForm!: FormGroup;
   isEditMode = false;
   isLoading = false;
+  isSaving = false;
   customerId: string | null = null;
   customerCode: string = '';
+
+  readonly formSkeletonSlots = Array.from({ length: 8 });
 
   loyaltyTiers: LoyaltyTier[] = ['bronze', 'silver', 'gold', 'platinum'];
   genders = ['male', 'female', 'other'];
@@ -144,10 +148,11 @@ export class CustomerFormComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
+    this.isSaving = true;
     const formValue = this.customerForm.getRawValue();
 
     const customerData: CustomerFormData = {
+      customerCode: this.customerCode || undefined,
       firstName: formValue.firstName,
       lastName: formValue.lastName,
       email: formValue.email || undefined,
@@ -172,7 +177,7 @@ export class CustomerFormComponent implements OnInit {
         ? this.customerService.updateCustomer(this.customerId, customerData)
         : this.customerService.createCustomer(customerData);
 
-    operation.subscribe({
+    operation.pipe(finalize(() => (this.isSaving = false))).subscribe({
       next: (customer) => {
         this.snackBar.open(
           `Customer ${this.isEditMode ? 'updated' : 'created'} successfully`,
@@ -188,7 +193,6 @@ export class CustomerFormComponent implements OnInit {
           'Close',
           { duration: 3000 }
         );
-        this.isLoading = false;
       },
     });
   }

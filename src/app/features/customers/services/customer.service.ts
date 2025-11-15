@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import {
   Customer,
   CustomerFilter,
   CustomerStatistics,
   CustomerFormData,
-  CustomerPurchaseHistory,
-  LoyaltyTransaction,
-  LoyaltyProgram,
+  LoyaltyTier,
   PaginatedCustomers,
 } from '../models/customer.model';
 
@@ -17,9 +16,95 @@ import {
   providedIn: 'root',
 })
 export class CustomerService {
-  private apiUrl = '/api/customers';
+  private apiUrl = `${environment.apiUrl}/customers`;
   private customersSubject = new BehaviorSubject<Customer[]>([]);
   public customers$ = this.customersSubject.asObservable();
+
+  private normalizeBoolean(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      return ['true', '1', 'yes'].includes(value.toLowerCase());
+    }
+
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+
+    return Boolean(value);
+  }
+
+  private parseDate(value?: string | null | Date): Date | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    if (value instanceof Date) {
+      return value;
+    }
+
+    const raw = `${value}`;
+    const normalised = raw.includes('T') ? raw : raw.replace(' ', 'T');
+    const parsed = new Date(normalised);
+
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+
+  private mapCustomer = (customer: any): Customer => {
+    const nonEmpty = (value: unknown): string | undefined => {
+      if (value === null || value === undefined) return undefined;
+      const str = String(value).trim();
+      return str.length > 0 ? str : undefined;
+    };
+
+    // The backend sends camelCase, but handle snake_case fallback
+    const data: Customer = {
+      id: nonEmpty(customer.id) ?? '',
+      customerCode:
+        nonEmpty(customer.customerCode ?? customer.customer_code) ?? '',
+      firstName: nonEmpty(customer.firstName ?? customer.first_name) ?? '',
+      lastName: nonEmpty(customer.lastName ?? customer.last_name) ?? '',
+      email: nonEmpty(customer.email),
+      phone: nonEmpty(customer.phone) ?? '',
+      dateOfBirth: this.parseDate(
+        customer.dateOfBirth ?? customer.date_of_birth
+      ),
+      gender: customer.gender ?? undefined,
+      address: customer.address ?? {
+        street: undefined,
+        city: undefined,
+        state: undefined,
+        postalCode: undefined,
+        country: undefined,
+      },
+      loyaltyPoints: Number(customer.loyaltyPoints ?? 0),
+      loyaltyTier: customer.loyaltyTier ?? 'bronze',
+      totalPurchases: Number(customer.totalPurchases ?? 0),
+      totalSpent: Number(customer.totalSpent ?? 0),
+      lastPurchaseDate: this.parseDate(customer.lastPurchaseDate),
+      notes: nonEmpty(customer.notes),
+      isActive: this.normalizeBoolean(customer.isActive ?? true),
+      createdAt: this.parseDate(customer.createdAt) ?? new Date(),
+      updatedAt: this.parseDate(customer.updatedAt) ?? new Date(),
+    };
+
+    return data;
+  };
+
+  private mapCustomers = (customers: any[]): Customer[] =>
+    customers.map((customer) => this.mapCustomer(customer));
+
+  private mapPaginatedResponse(response: any): PaginatedCustomers {
+    return {
+      customers: this.mapCustomers(response.customers ?? []),
+      total: Number(response.total ?? 0),
+      page: Number(response.page ?? 1),
+      pageSize: Number(response.pageSize ?? 10),
+      totalPages: Number(response.totalPages ?? 1),
+    };
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -67,23 +152,39 @@ export class CustomerService {
       params = params.set('sortOrder', filters.sortOrder);
     }
 
-    return this.http.get<PaginatedCustomers>(this.apiUrl, { params });
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map((response) => this.mapPaginatedResponse(response)),
+      tap((response) => this.customersSubject.next(response.customers))
+    );
   }
 
   // Get customer by ID
   getCustomerById(id: string): Observable<Customer> {
-    return this.http.get<Customer>(`${this.apiUrl}/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map((response) => {
+        // Handle if response is wrapped in 'data' property
+        const customer = response.data ?? response;
+        return this.mapCustomer(customer);
+      })
+    );
   }
 
   // Search customers by phone or code (for POS quick lookup)
   searchCustomers(query: string): Observable<Customer[]> {
-    const params = new HttpParams().set('quickSearch', query);
-    return this.http.get<Customer[]>(`${this.apiUrl}/search`, { params });
+    const params = new HttpParams()
+      .set('search', query)
+      .set('page', '1')
+      .set('pageSize', '10');
+
+    return this.http
+      .get<any>(this.apiUrl, { params })
+      .pipe(map((response) => this.mapCustomers(response.customers ?? [])));
   }
 
   // Create new customer
   createCustomer(customerData: CustomerFormData): Observable<Customer> {
     return this.http.post<Customer>(this.apiUrl, customerData).pipe(
+      map((customer) => this.mapCustomer(customer)),
       tap((customer) => {
         const current = this.customersSubject.value;
         this.customersSubject.next([...current, customer]);
@@ -97,6 +198,7 @@ export class CustomerService {
     customerData: Partial<CustomerFormData>
   ): Observable<Customer> {
     return this.http.put<Customer>(`${this.apiUrl}/${id}`, customerData).pipe(
+      map((customer) => this.mapCustomer(customer)),
       tap((updatedCustomer) => {
         const current = this.customersSubject.value;
         const index = current.findIndex((c) => c.id === id);
@@ -119,91 +221,22 @@ export class CustomerService {
   }
 
   // Bulk delete customers
-  bulkDeleteCustomers(ids: string[]): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/bulk-delete`, { ids }).pipe(
-      tap(() => {
-        const current = this.customersSubject.value;
-        this.customersSubject.next(current.filter((c) => !ids.includes(c.id)));
-      })
-    );
+  bulkDeleteCustomers(ids: string[]): Observable<{ deleted: number }> {
+    return this.http
+      .post<{ deleted: number }>(`${this.apiUrl}/bulk-delete`, { ids })
+      .pipe(
+        tap(() => {
+          const current = this.customersSubject.value;
+          this.customersSubject.next(
+            current.filter((customer) => !ids.includes(customer.id))
+          );
+        })
+      );
   }
 
   // Generate unique customer code
   generateCustomerCode(): Observable<string> {
     return this.http.get<string>(`${this.apiUrl}/generate-code`);
-  }
-
-  // Get customer purchase history
-  getCustomerPurchaseHistory(
-    customerId: string,
-    page: number = 1,
-    pageSize: number = 10
-  ): Observable<{
-    history: CustomerPurchaseHistory[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('pageSize', pageSize.toString());
-    return this.http.get<any>(`${this.apiUrl}/${customerId}/purchase-history`, {
-      params,
-    });
-  }
-
-  // Get customer loyalty transactions
-  getLoyaltyTransactions(customerId: string): Observable<LoyaltyTransaction[]> {
-    return this.http.get<LoyaltyTransaction[]>(
-      `${this.apiUrl}/${customerId}/loyalty-transactions`
-    );
-  }
-
-  // Add loyalty points
-  addLoyaltyPoints(
-    customerId: string,
-    points: number,
-    description: string,
-    transactionId?: string
-  ): Observable<Customer> {
-    return this.http.post<Customer>(
-      `${this.apiUrl}/${customerId}/loyalty/add`,
-      {
-        points,
-        description,
-        transactionId,
-      }
-    );
-  }
-
-  // Redeem loyalty points
-  redeemLoyaltyPoints(
-    customerId: string,
-    points: number,
-    description: string
-  ): Observable<Customer> {
-    return this.http.post<Customer>(
-      `${this.apiUrl}/${customerId}/loyalty/redeem`,
-      {
-        points,
-        description,
-      }
-    );
-  }
-
-  // Adjust loyalty points (admin only)
-  adjustLoyaltyPoints(
-    customerId: string,
-    points: number,
-    description: string
-  ): Observable<Customer> {
-    return this.http.post<Customer>(
-      `${this.apiUrl}/${customerId}/loyalty/adjust`,
-      {
-        points,
-        description,
-      }
-    );
   }
 
   // Calculate loyalty tier based on total spent
@@ -216,75 +249,20 @@ export class CustomerService {
 
   // Get customer statistics
   getCustomerStatistics(): Observable<CustomerStatistics> {
-    return this.http.get<CustomerStatistics>(`${this.apiUrl}/statistics`);
-  }
-
-  // Get loyalty program settings
-  getLoyaltyProgram(): Observable<LoyaltyProgram> {
-    return this.http.get<LoyaltyProgram>('/api/loyalty-program');
-  }
-
-  // Update loyalty program settings
-  updateLoyaltyProgram(
-    program: Partial<LoyaltyProgram>
-  ): Observable<LoyaltyProgram> {
-    return this.http.put<LoyaltyProgram>('/api/loyalty-program', program);
-  }
-
-  // Export customers to CSV
-  exportCustomers(filters: CustomerFilter = {}): Observable<Blob> {
-    let params = new HttpParams();
-    if (filters.search) params = params.set('search', filters.search);
-    if (filters.loyaltyTier)
-      params = params.set('loyaltyTier', filters.loyaltyTier);
-    if (filters.isActive !== undefined)
-      params = params.set('isActive', filters.isActive.toString());
-
-    return this.http.get(`${this.apiUrl}/export`, {
-      params,
-      responseType: 'blob',
-    });
-  }
-
-  // Import customers from CSV
-  importCustomers(
-    file: File
-  ): Observable<{ success: number; errors: string[] }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<{ success: number; errors: string[] }>(
-      `${this.apiUrl}/import`,
-      formData
+    return this.http.get<CustomerStatistics>(`${this.apiUrl}/statistics`).pipe(
+      map((stats) => ({
+        ...stats,
+        totalCustomers: Number(stats.totalCustomers ?? 0),
+        activeCustomers: Number(stats.activeCustomers ?? 0),
+        newCustomersThisMonth: Number(stats.newCustomersThisMonth ?? 0),
+        totalLoyaltyPoints: Number(stats.totalLoyaltyPoints ?? 0),
+        averageSpent: Number(stats.averageSpent ?? 0),
+        tierDistribution: (stats.tierDistribution ?? []).map((tier) => ({
+          ...tier,
+          count: Number((tier as any).count ?? 0),
+          percentage: Number((tier as any).percentage ?? 0),
+        })),
+      }))
     );
-  }
-
-  // Merge duplicate customers
-  mergeCustomers(
-    primaryId: string,
-    secondaryIds: string[]
-  ): Observable<Customer> {
-    return this.http.post<Customer>(`${this.apiUrl}/merge`, {
-      primaryId,
-      secondaryIds,
-    });
-  }
-
-  // Get customers with birthdays in current month (for marketing)
-  getBirthdayCustomers(): Observable<Customer[]> {
-    return this.http.get<Customer[]>(`${this.apiUrl}/birthdays`);
-  }
-
-  // Send SMS or email to customer
-  sendMessage(
-    customerId: string,
-    type: 'sms' | 'email',
-    subject: string,
-    message: string
-  ): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${customerId}/send-message`, {
-      type,
-      subject,
-      message,
-    });
   }
 }

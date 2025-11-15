@@ -77,6 +77,7 @@ export interface LoyaltyTransaction {
 }
 
 export interface CustomerFormData {
+  customerCode?: string;
   firstName: string;
   lastName: string;
   email?: string;

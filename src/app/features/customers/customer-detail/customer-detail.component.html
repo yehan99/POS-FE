@@ -1,302 +1,237 @@
-<div class="customer-detail-container" *ngIf="customer && !isLoading">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <button mat-icon-button (click)="goBack()" class="back-button">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <div class="title-info">
-        <h1>{{ customer.firstName }} {{ customer.lastName }}</h1>
-        <p class="subtitle">Customer Code: <strong>{{ customer.customerCode }}</strong></p>
+<ng-container *ngIf="customer && !isLoading; else customerLoading">
+  <section class="customer-detail">
+    <header class="page-header">
+      <div class="page-header__title">
+        <button mat-icon-button (click)="goBack()" class="ghost-button" matTooltip="Back to customers">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div>
+          <p class="eyebrow">Sales &amp; CRM</p>
+          <h1>{{ customer.firstName }} {{ customer.lastName }}</h1>
+          <p class="subtitle">Customer code <strong>{{ customer.customerCode }}</strong></p>
+        </div>
+      </div>
+      <div class="page-header__actions">
+        <button mat-stroked-button type="button" (click)="editCustomer()">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-icon-button [matMenuTriggerFor]="menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="deleteCustomer()" class="danger">
+            <mat-icon>delete</mat-icon>
+            <span>Delete Customer</span>
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <app-card variant="elevated" padding="large" class="summary-card">
+      <div class="summary-card__grid">
+        <div class="summary-card__item">
+          <mat-icon>badge</mat-icon>
+          <div>
+            <span class="label">Name</span>
+            <span class="value">{{ customer.firstName }} {{ customer.lastName }}</span>
+          </div>
+        </div>
+        <div class="summary-card__item">
+          <mat-icon>alternate_email</mat-icon>
+          <div>
+            <span class="label">Email</span>
+            <span class="value value--truncate">{{ customer.email || 'Not provided' }}</span>
+          </div>
+        </div>
+        <div class="summary-card__item">
+          <mat-icon>call</mat-icon>
+          <div>
+            <span class="label">Phone</span>
+            <span class="value">{{ customer.phone || 'Not provided' }}</span>
+          </div>
+        </div>
+        <div class="summary-card__item summary-card__item--status" [class.inactive]="!customer.isActive">
+          <mat-icon>{{ customer.isActive ? 'verified' : 'pause_circle' }}</mat-icon>
+          <div>
+            <span class="label">Status</span>
+            <span class="value">{{ customer.isActive ? 'Active' : 'Inactive' }}</span>
+          </div>
+        </div>
+        <div class="summary-card__item">
+          <mat-icon>{{ getLoyaltyTierIcon(customer.loyaltyTier) }}</mat-icon>
+          <div>
+            <span class="label">Loyalty Tier</span>
+            <span class="value" [style.color]="getLoyaltyTierColor(customer.loyaltyTier)">
+              {{ customer.loyaltyTier | titlecase }}
+            </span>
+          </div>
+        </div>
+        <div class="summary-card__item">
+          <mat-icon>stars</mat-icon>
+          <div>
+            <span class="label">Loyalty Points</span>
+            <span class="value">{{ customer.loyaltyPoints | number }}</span>
+          </div>
+        </div>
+        <div class="summary-card__item">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <div>
+            <span class="label">Total Spent</span>
+            <span class="value">{{ formatCurrency(customer.totalSpent) }}</span>
+          </div>
+        </div>
+        <div class="summary-card__item">
+          <mat-icon>shopping_cart</mat-icon>
+          <div>
+            <span class="label">Total Purchases</span>
+            <span class="value">{{ customer.totalPurchases | number }}</span>
+          </div>
+        </div>
+      </div>
+    </app-card>
+
+    <div class="detail-layout">
+      <div class="detail-layout__main">
+        <app-card variant="default" padding="large" class="info-card">
+          <div class="info-card__header">
+            <div>
+              <h2>Profile &amp; Contact</h2>
+              <p>Essential information for communication and receipts.</p>
+            </div>
+            <mat-icon color="primary">contact_phone</mat-icon>
+          </div>
+
+          <dl class="info-list">
+            <div class="info-list__item">
+              <dt>Phone</dt>
+              <dd>{{ customer.phone }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Email</dt>
+              <dd>{{ customer.email || 'Not provided' }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Address</dt>
+              <dd>{{ getFullAddress() }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Date of Birth</dt>
+              <dd>{{ formatDateShort(customer.dateOfBirth) }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Gender</dt>
+              <dd>{{ customer.gender ? (customer.gender | titlecase) : 'Not specified' }}</dd>
+            </div>
+          </dl>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="info-card">
+          <div class="info-card__header">
+            <div>
+              <h2>Activity Snapshot</h2>
+              <p>Recent lifecycle milestones for this customer.</p>
+            </div>
+            <mat-icon color="primary">timeline</mat-icon>
+          </div>
+
+          <dl class="info-list">
+            <div class="info-list__item">
+              <dt>Member Since</dt>
+              <dd>{{ formatDateShort(customer.createdAt) }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Last Purchase</dt>
+              <dd>{{ formatDateShort(customer.lastPurchaseDate) }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Total Purchases</dt>
+              <dd>{{ customer.totalPurchases | number }}</dd>
+            </div>
+            <div class="info-list__item">
+              <dt>Total Spend</dt>
+              <dd>{{ formatCurrency(customer.totalSpent) }}</dd>
+            </div>
+          </dl>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="info-card" *ngIf="customer.notes">
+          <div class="info-card__header">
+            <div>
+              <h2>Notes</h2>
+              <p>Shared context for sales and support teams.</p>
+            </div>
+            <mat-icon color="primary">notes</mat-icon>
+          </div>
+
+          <p class="notes-text">{{ customer.notes }}</p>
+        </app-card>
+      </div>
+
+      <aside class="detail-layout__aside">
+        <app-card variant="default" padding="large" class="meta-card">
+          <div class="meta-card__header">
+            <div>
+              <h2>Account Overview</h2>
+              <p>Key attributes that drive loyalty experiences.</p>
+            </div>
+            <mat-icon color="primary">insights</mat-icon>
+          </div>
+
+          <div class="meta-grid">
+            <div class="meta-grid__item">
+              <span class="label">Status</span>
+              <span class="value" [class.inactive]="!customer.isActive">
+                {{ customer.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="meta-grid__item">
+              <span class="label">Loyalty Tier</span>
+              <span class="value">{{ customer.loyaltyTier | titlecase }}</span>
+            </div>
+            <div class="meta-grid__item">
+              <span class="label">Points Balance</span>
+              <span class="value">{{ customer.loyaltyPoints | number }}</span>
+            </div>
+            <div class="meta-grid__item">
+              <span class="label">Customer Code</span>
+              <span class="code-chip">{{ customer.customerCode }}</span>
+            </div>
+          </div>
+        </app-card>
+
+        <app-card variant="default" padding="large" class="meta-card">
+          <div class="meta-card__header">
+            <div>
+              <h2>Engagement Timeline</h2>
+              <p>Sales and loyalty history will appear here once connected.</p>
+            </div>
+            <mat-icon color="primary">hourglass_bottom</mat-icon>
+          </div>
+
+          <div class="placeholder">
+            <mat-icon>hourglass_empty</mat-icon>
+            <p>Integrate the sales module to surface purchase history and loyalty transactions.</p>
+          </div>
+        </app-card>
+      </aside>
+    </div>
+  </section>
+</ng-container>
+
+<ng-template #customerLoading>
+  <div class="loading-container loading-container--custom detail-skeleton">
+    <div class="detail-skeleton__header skeleton"></div>
+    <div class="detail-skeleton__summary">
+      <div class="detail-skeleton__summary-item skeleton" *ngFor="let _ of summarySkeletonSlots"></div>
+    </div>
+    <div class="detail-skeleton__content">
+      <div class="detail-skeleton__main">
+        <div class="detail-skeleton__card skeleton" *ngFor="let _ of mainSkeletonSlots"></div>
+      </div>
+      <div class="detail-skeleton__aside">
+        <div class="detail-skeleton__card skeleton" *ngFor="let _ of asideSkeletonSlots"></div>
       </div>
     </div>
-    <div class="action-buttons">
-      <button mat-stroked-button (click)="sendMessage()">
-        <mat-icon>message</mat-icon>
-        Send Message
-      </button>
-      <button mat-raised-button color="primary" (click)="editCustomer()">
-        <mat-icon>edit</mat-icon>
-        Edit
-      </button>
-      <button mat-icon-button [matMenuTriggerFor]="menu" color="primary">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="addLoyaltyPoints()">
-          <mat-icon>add</mat-icon>
-          <span>Add Loyalty Points</span>
-        </button>
-        <button mat-menu-item (click)="redeemLoyaltyPoints()">
-          <mat-icon>redeem</mat-icon>
-          <span>Redeem Points</span>
-        </button>
-        <mat-divider></mat-divider>
-        <button mat-menu-item (click)="deleteCustomer()" class="danger">
-          <mat-icon>delete</mat-icon>
-          <span>Delete Customer</span>
-        </button>
-      </mat-menu>
-    </div>
   </div>
-
-  <!-- Status Badge -->
-  <div class="status-container">
-    <span class="status-badge" [class.active]="customer.isActive" [class.inactive]="!customer.isActive">
-      {{ customer.isActive ? 'Active' : 'Inactive' }}
-    </span>
-  </div>
-
-  <!-- Overview Cards -->
-  <div class="overview-cards">
-    <mat-card class="overview-card">
-      <mat-card-content>
-        <div class="card-icon loyalty">
-          <mat-icon>{{ getLoyaltyTierIcon(customer.loyaltyTier) }}</mat-icon>
-        </div>
-        <div class="card-details">
-          <p class="label">Loyalty Tier</p>
-          <p class="value" [style.color]="getLoyaltyTierColor(customer.loyaltyTier)">
-            {{ customer.loyaltyTier | titlecase }}
-          </p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="overview-card">
-      <mat-card-content>
-        <div class="card-icon points">
-          <mat-icon>stars</mat-icon>
-        </div>
-        <div class="card-details">
-          <p class="label">Loyalty Points</p>
-          <p class="value">{{ customer.loyaltyPoints }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="overview-card">
-      <mat-card-content>
-        <div class="card-icon purchases">
-          <mat-icon>shopping_cart</mat-icon>
-        </div>
-        <div class="card-details">
-          <p class="label">Total Purchases</p>
-          <p class="value">{{ customer.totalPurchases }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="overview-card">
-      <mat-card-content>
-        <div class="card-icon spent">
-          <mat-icon>account_balance_wallet</mat-icon>
-        </div>
-        <div class="card-details">
-          <p class="label">Total Spent</p>
-          <p class="value">{{ formatCurrency(customer.totalSpent) }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-  <!-- Main Content Grid -->
-  <div class="content-grid">
-
-    <!-- Left Column -->
-    <div class="left-column">
-
-      <!-- Contact Information -->
-      <mat-card class="info-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>contact_phone</mat-icon>
-            Contact Information
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="info-row">
-            <mat-icon>phone</mat-icon>
-            <div class="info-content">
-              <p class="label">Phone</p>
-              <p class="value">{{ customer.phone }}</p>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <mat-icon>email</mat-icon>
-            <div class="info-content">
-              <p class="label">Email</p>
-              <p class="value">{{ customer.email || 'Not provided' }}</p>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <mat-icon>location_on</mat-icon>
-            <div class="info-content">
-              <p class="label">Address</p>
-              <p class="value">{{ getFullAddress() }}</p>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Personal Information -->
-      <mat-card class="info-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>person</mat-icon>
-            Personal Information
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="info-row">
-            <mat-icon>cake</mat-icon>
-            <div class="info-content">
-              <p class="label">Date of Birth</p>
-              <p class="value">{{ formatDateShort(customer.dateOfBirth) }}</p>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <mat-icon>wc</mat-icon>
-            <div class="info-content">
-              <p class="label">Gender</p>
-              <p class="value">{{ customer.gender ? (customer.gender | titlecase) : 'Not specified' }}</p>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <mat-icon>event</mat-icon>
-            <div class="info-content">
-              <p class="label">Member Since</p>
-              <p class="value">{{ formatDateShort(customer.createdAt) }}</p>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <mat-icon>shopping_bag</mat-icon>
-            <div class="info-content">
-              <p class="label">Last Purchase</p>
-              <p class="value">{{ formatDateShort(customer.lastPurchaseDate) }}</p>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Notes -->
-      <mat-card class="info-card" *ngIf="customer.notes">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>notes</mat-icon>
-            Notes
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="notes-text">{{ customer.notes }}</p>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Right Column -->
-    <div class="right-column">
-
-      <!-- Purchase History -->
-      <mat-card class="history-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>history</mat-icon>
-            Purchase History
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="table-container" *ngIf="purchaseHistory.length > 0">
-            <table mat-table [dataSource]="purchaseHistory">
-
-              <ng-container matColumnDef="date">
-                <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let purchase">{{ formatDate(purchase.date) }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="transactionId">
-                <th mat-header-cell *matHeaderCellDef>Transaction ID</th>
-                <td mat-cell *matCellDef="let purchase">
-                  <span class="transaction-id">{{ purchase.transactionId }}</span>
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="items">
-                <th mat-header-cell *matHeaderCellDef>Items</th>
-                <td mat-cell *matCellDef="let purchase">{{ purchase.items }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>Total</th>
-                <td mat-cell *matCellDef="let purchase">{{ formatCurrency(purchase.total) }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="paymentMethod">
-                <th mat-header-cell *matHeaderCellDef>Payment</th>
-                <td mat-cell *matCellDef="let purchase">{{ purchase.paymentMethod }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="pointsEarned">
-                <th mat-header-cell *matHeaderCellDef>Points</th>
-                <td mat-cell *matCellDef="let purchase">
-                  <span class="points-earned">+{{ purchase.pointsEarned }}</span>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedHistoryColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedHistoryColumns;"></tr>
-            </table>
-          </div>
-
-          <div class="no-data" *ngIf="purchaseHistory.length === 0">
-            <mat-icon>shopping_cart</mat-icon>
-            <p>No purchase history yet</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Loyalty Transactions -->
-      <mat-card class="history-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>loyalty</mat-icon>
-            Loyalty Transactions
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="loyalty-list" *ngIf="loyaltyTransactions.length > 0">
-            <div class="loyalty-transaction" *ngFor="let transaction of loyaltyTransactions">
-              <div class="transaction-icon" [style.backgroundColor]="getLoyaltyTypeColor(transaction.type)">
-                <mat-icon>{{ getLoyaltyTypeIcon(transaction.type) }}</mat-icon>
-              </div>
-              <div class="transaction-details">
-                <p class="transaction-type">{{ transaction.type | titlecase }}</p>
-                <p class="transaction-description">{{ transaction.description }}</p>
-                <p class="transaction-date">{{ formatDate(transaction.createdAt) }}</p>
-              </div>
-              <div class="transaction-points" [style.color]="getLoyaltyTypeColor(transaction.type)">
-                {{ transaction.type === 'redeemed' || transaction.type === 'expired' ? '-' : '+' }}{{ transaction.points
-                }}
-              </div>
-            </div>
-          </div>
-
-          <div class="no-data" *ngIf="loyaltyTransactions.length === 0">
-            <mat-icon>stars</mat-icon>
-            <p>No loyalty transactions yet</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  </div>
-</div>
-
-<!-- Loading State -->
-<div class="loading-container" *ngIf="isLoading">
-  <mat-spinner diameter="50"></mat-spinner>
-  <p>Loading customer details...</p>
-</div>
+</ng-template>

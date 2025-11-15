@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -56,7 +55,6 @@ export class CustomerListComponent implements OnInit {
   constructor(
     private customerService: CustomerService,
     private router: Router,
-    private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private fb: FormBuilder
   ) {}
@@ -258,60 +256,23 @@ export class CustomerListComponent implements OnInit {
 
   // Export/Import methods
   exportCustomers(): void {
-    const filters = this.buildFilters();
-    this.customerService.exportCustomers(filters).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `customers-${
-          new Date().toISOString().split('T')[0]
-        }.csv`;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        this.snackBar.open('Customers exported successfully', 'Close', {
-          duration: 3000,
-        });
-      },
-      error: (error) => {
-        console.error('Error exporting customers:', error);
-        this.snackBar.open('Failed to export customers', 'Close', {
-          duration: 3000,
-        });
-      },
-    });
+    this.snackBar.open(
+      'Customer export will be available once the reporting API is ready.',
+      'Close',
+      {
+        duration: 4000,
+      }
+    );
   }
 
   importCustomers(): void {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
-    input.onchange = (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        this.customerService.importCustomers(file).subscribe({
-          next: (result) => {
-            this.snackBar.open(
-              `Import completed: ${result.success} customers imported${
-                result.errors.length > 0
-                  ? `, ${result.errors.length} errors`
-                  : ''
-              }`,
-              'Close',
-              { duration: 5000 }
-            );
-            this.loadCustomers();
-          },
-          error: (error) => {
-            console.error('Error importing customers:', error);
-            this.snackBar.open('Failed to import customers', 'Close', {
-              duration: 3000,
-            });
-          },
-        });
+    this.snackBar.open(
+      'Customer import will be enabled after the bulk upload API is implemented.',
+      'Close',
+      {
+        duration: 4000,
       }
-    };
-    input.click();
+    );
   }
 
   // Utility methods

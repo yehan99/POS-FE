@@ -8,6 +8,7 @@
 .customer-form {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
 }
 
 .page-header {
@@ -44,9 +45,9 @@
 
     h1 {
       margin: 0;
-      font-size: 2.15rem;
+      font-size: 2.1rem;
       font-weight: $font-weight-semibold;
-      color: rgba($text-primary, 0.9);
+      color: rgba($text-primary, 0.92);
     }
 
     .subtitle {
@@ -77,7 +78,7 @@
   }
 }
 
-.form-summary {
+.summary-card {
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -91,7 +92,7 @@
     padding: 0.9rem 1.05rem;
     border-radius: $radius-xl;
     border: 1px solid rgba($text-primary, 0.08);
-    background: rgba($surface, 0.95);
+    background: rgba($surface, 0.96);
     box-shadow: $shadow-sm;
 
     mat-icon {
@@ -120,18 +121,20 @@
   }
 }
 
-.form-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.form-grid {
+.detail-layout {
   display: grid;
-  gap: 1.75rem;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 2rem;
+
+  &__main,
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
 }
 
-.form-section {
+.form-card {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -272,16 +275,87 @@
   }
 }
 
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 120px 0;
+  color: rgba(0, 0, 0, 0.6);
+
+  &--custom {
+    width: 100%;
+    padding: 48px 24px 64px;
+    align-items: stretch;
+    background: transparent;
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(230, 235, 244, 0.9),
+    rgba(245, 248, 255, 0.9)
+  );
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.65),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+.form-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  &__card {
+    height: 220px;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__field {
+    height: 48px;
+    border-radius: 8px;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (max-width: $breakpoint-lg) {
   .page-header {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .field-grid {
-    &--three {
-      grid-template-columns: repeat(2, minmax(200px, 1fr));
-    }
+  .detail-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -295,7 +369,7 @@
     }
   }
 
-  .form-summary__grid {
+  .summary-card__grid {
     grid-template-columns: 1fr;
   }
 
