@@ -1,185 +1,331 @@
-<div class="stock-transfers-container">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <h1 class="text-2xl font-bold">Stock Transfers</h1>
-      <p class="subtitle">Manage inter-location stock movements</p>
+<section class="stock-transfers-management">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Inventory Operations</p>
+        <h1>Stock Transfers</h1>
+        <p class="subtitle">
+          Orchestrate inter-location stock movement, approvals, and delivery confidence.
+        </p>
+      </div>
     </div>
-    <div class="action-buttons">
-      <button mat-raised-button color="primary" (click)="createTransfer()">
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="exportTransfers()">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="createTransfer()" class="action-primary">
         <mat-icon>add</mat-icon>
         Create Transfer
       </button>
-      <button mat-stroked-button (click)="exportTransfers()">
-        <mat-icon>file_download</mat-icon>
-        Export
-      </button>
     </div>
+  </header>
+
+  <app-card variant="elevated" padding="large" class="insights-panel" *ngIf="dashboardLoading || metricCards.length">
+    <div class="insights-panel__header">
+      <h2>Transfer Insights</h2>
+      <p>Snapshot of the transfer pipeline, value in motion, and completion momentum.</p>
+    </div>
+    <mat-progress-bar *ngIf="dashboardLoading" mode="indeterminate"></mat-progress-bar>
+    <div class="insights-grid">
+      <div class="insight-card" *ngFor="let card of metricCards">
+        <div class="insight-card__icon" [ngClass]="'insight-card__icon--' + card.accent">
+          <mat-icon>{{ card.icon }}</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">{{ card.label }}</span>
+          <span class="value">{{ formatNumber(card.value) }}</span>
+          <span class="description" *ngIf="card.description">{{ card.description }}</span>
+        </div>
+      </div>
+    </div>
+  </app-card>
+
+  <div class="dashboard-grid" *ngIf="dashboardMetrics as metrics">
+    <app-card variant="elevated" padding="large" class="status-card">
+      <div class="status-card__header">
+        <h3>Status Breakdown</h3>
+        <span class="meta">{{ metrics.statusBreakdown.length }} statuses</span>
+      </div>
+      <div class="status-list" *ngIf="statusBreakdown.length; else emptyStatus">
+        <div class="status-item" *ngFor="let status of statusBreakdown">
+          <div class="status-item__info">
+            <span class="status-dot" [style.backgroundColor]="getStatusColor(status.status)"></span>
+            <div>
+              <p class="status-label">{{ getStatusLabel(status.status) }}</p>
+              <p class="status-subtitle">{{ formatNumber(status.count) }} transfers</p>
+            </div>
+          </div>
+          <div class="status-item__metrics">
+            <span class="status-value">{{ formatCurrency(status.totalValue) }}</span>
+            <span class="status-percentage">{{ status.percentage | number: '1.0-1' }}%</span>
+          </div>
+        </div>
+      </div>
+      <ng-template #emptyStatus>
+        <div class="empty-state">
+          <mat-icon>donut_small</mat-icon>
+          <p>No transfer status analytics yet.</p>
+        </div>
+      </ng-template>
+    </app-card>
+
+    <app-card variant="elevated" padding="large" class="top-locations-card">
+      <div class="top-locations-card__header">
+        <h3>Top Outbound Locations</h3>
+        <span class="meta">By transfer value</span>
+      </div>
+      <div class="location-list" *ngIf="topLocations.length; else emptyLocations">
+        <div class="location-item" *ngFor="let location of topLocations">
+          <div class="location-item__info">
+            <p class="location-name">
+              {{ location.locationName || 'Unknown Location' }}
+            </p>
+            <span class="location-code" *ngIf="location.locationCode">{{ location.locationCode }}</span>
+          </div>
+          <div class="location-item__metrics">
+            <span class="metric-value">{{ formatCurrency(location.outboundValue) }}</span>
+            <span class="metric-subtext">{{ formatNumber(location.outboundTransfers) }} transfers</span>
+            <span class="metric-subtext">{{ formatNumber(location.outboundItems) }} items</span>
+          </div>
+        </div>
+      </div>
+      <ng-template #emptyLocations>
+        <div class="empty-state">
+          <mat-icon>warehouse</mat-icon>
+          <p>No outbound location insights yet.</p>
+        </div>
+      </ng-template>
+    </app-card>
   </div>
 
-  <!-- Filters -->
-  <mat-card class="filters-card">
-    <form [formGroup]="filterForm" class="filters-form">
-      <mat-form-field appearance="outline">
-        <mat-label>Search</mat-label>
-        <input matInput formControlName="search" placeholder="Transfer number, product...">
+  <app-card variant="elevated" padding="large" class="trend-card">
+    <div class="trend-card__header">
+      <h3>Movement Trend</h3>
+      <span class="meta">Recent periods</span>
+    </div>
+    <div *ngIf="trendData.length; else emptyTrend" class="trend-list">
+      <div class="trend-item" *ngFor="let point of trendData">
+        <div>
+          <p class="trend-label">{{ point.label || 'N/A' }}</p>
+          <p class="trend-subtitle">{{ formatNumber(point.transfers) }} transfers</p>
+        </div>
+        <div class="trend-metrics">
+          <span class="trend-value">{{ formatCurrency(point.totalValue) }}</span>
+          <span class="trend-items">{{ formatNumber(point.totalItems) }} items</span>
+        </div>
+      </div>
+    </div>
+    <ng-template #emptyTrend>
+      <div class="empty-state">
+        <mat-icon>timeline</mat-icon>
+        <p>Trend analytics will appear as transfers progress over time.</p>
+      </div>
+    </ng-template>
+  </app-card>
+
+  <app-card variant="elevated" padding="large" class="filter-panel">
+    <div class="filter-panel__header">
+      <div>
+        <h2>Smart Filters</h2>
+        <p>Refine transfers by status, location, and quick search.</p>
+      </div>
+      <div class="filter-panel__meta">
+        <mat-icon color="primary">compare_arrows</mat-icon>
+        <span>{{ totalTransfers | number }} total</span>
+      </div>
+    </div>
+
+    <form [formGroup]="filterForm" class="filter-grid">
+      <mat-form-field appearance="outline" class="filter-grid__field filter-grid__search">
+        <mat-label>Search transfers</mat-label>
+        <input matInput formControlName="search" placeholder="Transfer number, notes, product" />
         <mat-icon matPrefix>search</mat-icon>
+        <button mat-icon-button matSuffix type="button" *ngIf="filterForm.get('search')?.value"
+          (click)="filterForm.get('search')?.reset('')">
+          <mat-icon>close</mat-icon>
+        </button>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" class="filter-grid__field">
         <mat-label>Status</mat-label>
         <mat-select formControlName="status">
-          <mat-option [value]="null">All Statuses</mat-option>
-          <mat-option value="draft">Draft</mat-option>
-          <mat-option value="pending">Pending</mat-option>
-          <mat-option value="approved">Approved</mat-option>
-          <mat-option value="in_transit">In Transit</mat-option>
-          <mat-option value="completed">Completed</mat-option>
-          <mat-option value="cancelled">Cancelled</mat-option>
+          <mat-option value="">All statuses</mat-option>
+          <mat-option *ngFor="let status of transferStatuses" [value]="status">
+            {{ getStatusLabel(status) }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>From Location</mat-label>
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>From location</mat-label>
         <mat-select formControlName="fromLocationId">
-          <mat-option [value]="null">All Locations</mat-option>
+          <mat-option value="">All locations</mat-option>
           <mat-option *ngFor="let location of locations" [value]="location.id">
             {{ location.name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>To Location</mat-label>
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>To location</mat-label>
         <mat-select formControlName="toLocationId">
-          <mat-option [value]="null">All Locations</mat-option>
+          <mat-option value="">All locations</mat-option>
           <mat-option *ngFor="let location of locations" [value]="location.id">
             {{ location.name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <button mat-stroked-button type="button" (click)="clearFilters()" class="clear-button">
-        <mat-icon>clear</mat-icon>
-        Clear
-      </button>
+      <div class="filter-grid__footer">
+        <button mat-stroked-button type="button" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Reset Filters
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="loadTransfers()">
+          <mat-icon>refresh</mat-icon>
+          Apply Filters
+        </button>
+      </div>
     </form>
-  </mat-card>
+  </app-card>
 
-  <!-- Bulk Actions Bar -->
-  <div class="bulk-actions-bar" *ngIf="selection.hasValue()">
-    <span class="selection-count">{{ selection.selected.length }} selected</span>
-    <div class="bulk-action-buttons">
-      <button mat-raised-button color="primary" (click)="bulkApprove()">
-        <mat-icon>check</mat-icon>
-        Approve Selected
-      </button>
+  <div class="bulk-actions" *ngIf="selection.selected.length > 0">
+    <div class="bulk-actions__info">
+      <mat-icon>select_all</mat-icon>
+      <span>{{ selection.selected.length }} transfer(s) selected</span>
     </div>
+    <button mat-stroked-button color="primary" type="button" (click)="bulkApprove()">
+      <mat-icon>check_circle</mat-icon>
+      Approve Selected
+    </button>
   </div>
 
-  <!-- Table -->
-  <mat-card class="table-card">
+  <app-card variant="default" padding="none" class="table-card">
+    <div class="table-card__header">
+      <div>
+        <h2>Transfers</h2>
+        <p>Review transfer requests, track stage progression, and trigger next actions.</p>
+      </div>
+      <div class="table-card__meta" *ngIf="!isLoading">
+        <mat-icon color="primary">insights</mat-icon>
+        <span>{{ dataSource.data.length | number }} shown · {{ totalTransfers | number }} total</span>
+      </div>
+    </div>
+
     <div class="table-container">
-      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="loadTransfers()">
-        <!-- Checkbox Column -->
+      <table mat-table [dataSource]="dataSource" matSort class="stock-transfers-table">
         <ng-container matColumnDef="select">
           <th mat-header-cell *matHeaderCellDef>
             <mat-checkbox (change)="$event ? toggleAll() : null" [checked]="selection.hasValue() && isAllSelected()"
-              [indeterminate]="selection.hasValue() && !isAllSelected()">
-            </mat-checkbox>
+              [indeterminate]="selection.hasValue() && !isAllSelected()"></mat-checkbox>
           </th>
           <td mat-cell *matCellDef="let row">
             <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
-              [checked]="selection.isSelected(row)">
-            </mat-checkbox>
+              [checked]="selection.isSelected(row)"></mat-checkbox>
           </td>
         </ng-container>
 
-        <!-- Transfer Number Column -->
         <ng-container matColumnDef="transferNumber">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Transfer #</th>
           <td mat-cell *matCellDef="let transfer">
-            <span class="transfer-number">{{ transfer.transferNumber }}</span>
+            <span class="transfer-badge">{{ transfer.transferNumber }}</span>
+            <div class="transfer-meta">
+              <span>Requested by {{ transfer.requestedBy || 'System' }}</span>
+              <span>{{ formatDate(transfer.createdAt) }}</span>
+            </div>
           </td>
         </ng-container>
 
-        <!-- Product Column -->
         <ng-container matColumnDef="product">
-          <th mat-header-cell *matHeaderCellDef>Products</th>
+          <th mat-header-cell *matHeaderCellDef>Items</th>
           <td mat-cell *matCellDef="let transfer">
-            <div class="product-info">
-              <span class="product-name" *ngIf="transfer.items.length === 1">
+            <div class="items-cell">
+              <strong *ngIf="transfer.items.length === 1">
                 {{ transfer.items[0].productName }}
-              </span>
-              <span class="product-name" *ngIf="transfer.items.length > 1">
-                {{ transfer.items.length }} Products
-              </span>
-              <span class="product-sku" *ngIf="transfer.items.length === 1">
-                {{ transfer.items[0].productSku }}
+              </strong>
+              <strong *ngIf="transfer.items.length > 1">
+                {{ transfer.items.length }} products
+              </strong>
+              <span class="item-sku" *ngIf="transfer.items.length === 1">
+                {{ transfer.items[0].productSku || 'SKU N/A' }}
               </span>
             </div>
           </td>
         </ng-container>
 
-        <!-- Quantity Column -->
         <ng-container matColumnDef="quantity">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Items</th>
           <td mat-cell *matCellDef="let transfer">
-            <span class="quantity-badge">{{ transfer.totalItems }}</span>
+            <span class="quantity-chip">{{ formatNumber(transfer.totalItems) }}</span>
           </td>
         </ng-container>
 
-        <!-- From Location Column -->
         <ng-container matColumnDef="fromLocation">
-          <th mat-header-cell *matHeaderCellDef>From Location</th>
+          <th mat-header-cell *matHeaderCellDef>From</th>
           <td mat-cell *matCellDef="let transfer">
-            <div class="location-info">
-              <mat-icon class="location-icon">place</mat-icon>
-              <span>{{ transfer.fromLocationName }}</span>
+            <div class="location-cell">
+              <mat-icon>inventory_2</mat-icon>
+              <div>
+                <span class="location-name">{{ transfer.fromLocationName || 'Unknown' }}</span>
+                <span class="location-role">Source</span>
+              </div>
             </div>
           </td>
         </ng-container>
 
-        <!-- To Location Column -->
         <ng-container matColumnDef="toLocation">
-          <th mat-header-cell *matHeaderCellDef>To Location</th>
+          <th mat-header-cell *matHeaderCellDef>To</th>
           <td mat-cell *matCellDef="let transfer">
-            <div class="location-info">
-              <mat-icon class="location-icon">place</mat-icon>
-              <span>{{ transfer.toLocationName }}</span>
+            <div class="location-cell">
+              <mat-icon>local_shipping</mat-icon>
+              <div>
+                <span class="location-name">{{ transfer.toLocationName || 'Unknown' }}</span>
+                <span class="location-role">Destination</span>
+              </div>
             </div>
           </td>
         </ng-container>
 
-        <!-- Status Column -->
         <ng-container matColumnDef="status">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
           <td mat-cell *matCellDef="let transfer">
-            <span class="status-badge" [ngClass]="'status-' + transfer.status">
-              {{ transfer.status | titlecase }}
+            <span class="status-chip" [style.backgroundColor]="getStatusColor(transfer.status)">
+              {{ getStatusLabel(transfer.status) }}
             </span>
           </td>
         </ng-container>
 
-        <!-- Requested Date Column -->
         <ng-container matColumnDef="requestedDate">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Created Date</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Updated</th>
           <td mat-cell *matCellDef="let transfer">
-            {{ formatDate(transfer.createdAt) }}
+            <div class="timeline-meta">
+              <span *ngIf="transfer.receivedAt">
+                Completed {{ formatDate(transfer.receivedAt) }}
+              </span>
+              <span *ngIf="!transfer.receivedAt && transfer.shippedAt">
+                In transit since {{ formatDate(transfer.shippedAt) }}
+              </span>
+              <span *ngIf="!transfer.receivedAt && !transfer.shippedAt">
+                Created {{ formatDate(transfer.createdAt) }}
+              </span>
+            </div>
           </td>
         </ng-container>
 
-        <!-- Actions Column -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let transfer">
-            <button mat-icon-button [matMenuTriggerFor]="menu">
+          <td mat-cell *matCellDef="let transfer" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="actionsMenu" (click)="$event.stopPropagation()">
               <mat-icon>more_vert</mat-icon>
             </button>
-            <mat-menu #menu="matMenu">
+            <mat-menu #actionsMenu="matMenu">
               <button mat-menu-item (click)="viewDetails(transfer)">
                 <mat-icon>visibility</mat-icon>
-                <span>View Details</span>
+                <span>View details</span>
               </button>
               <button mat-menu-item *ngIf="canApprove(transfer)" (click)="approveTransfer(transfer.id)">
                 <mat-icon>check_circle</mat-icon>
@@ -187,12 +333,13 @@
               </button>
               <button mat-menu-item *ngIf="canShip(transfer)" (click)="shipTransfer(transfer.id)">
                 <mat-icon>local_shipping</mat-icon>
-                <span>Mark as Shipped</span>
+                <span>Mark as shipped</span>
               </button>
               <button mat-menu-item *ngIf="canReceive(transfer)" (click)="receiveTransfer(transfer.id)">
                 <mat-icon>done_all</mat-icon>
-                <span>Receive Transfer</span>
+                <span>Receive transfer</span>
               </button>
+              <mat-divider></mat-divider>
               <button mat-menu-item (click)="cancelTransfer(transfer.id)"
                 [disabled]="transfer.status === 'completed' || transfer.status === 'cancelled'">
                 <mat-icon>cancel</mat-icon>
@@ -202,33 +349,38 @@
           </td>
         </ng-container>
 
-        <!-- Header and Row Declarations -->
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
 
-        <!-- No Data Row -->
-        <tr class="mat-row no-data-row" *matNoDataRow>
+        <tr class="mat-row" *matNoDataRow>
           <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-            <div class="no-data">
+            <div class="empty-state">
               <mat-icon>inventory_2</mat-icon>
-              <p>No stock transfers found</p>
-              <button mat-raised-button color="primary" (click)="createTransfer()">
-                Create First Transfer
+              <h3>No stock transfers found</h3>
+              <p>Try adjusting the filters or create a new transfer.</p>
+              <button mat-stroked-button color="primary" type="button" (click)="createTransfer()">
+                Create transfer
               </button>
             </div>
           </td>
         </tr>
       </table>
 
-      <!-- Loading Spinner -->
-      <div class="loading-spinner" *ngIf="loading">
-        <mat-spinner diameter="50"></mat-spinner>
+      <div class="table-loading" *ngIf="isLoading">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       </div>
     </div>
 
-    <!-- Paginator -->
-    <mat-paginator [length]="totalItems" [pageSize]="pageSize" [pageSizeOptions]="[10, 25, 50, 100]"
-      (page)="onPageChange($event)" showFirstLastButtons>
-    </mat-paginator>
-  </mat-card>
-</div>
+    <div class="table-footer">
+      <div class="table-footer__summary">
+        <mat-icon>info</mat-icon>
+        <span>
+          Showing page {{ currentPage + 1 }} · {{ dataSource.data.length | number }} of
+          {{ totalTransfers | number }} transfers
+        </span>
+      </div>
+      <mat-paginator [length]="totalTransfers" [pageSize]="pageSize" [pageSizeOptions]="[10, 25, 50, 100]"
+        (page)="onPageChange($event)" showFirstLastButtons></mat-paginator>
+    </div>
+  </app-card>
+</section>

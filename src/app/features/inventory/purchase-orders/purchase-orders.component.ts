@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -20,6 +20,8 @@ import {
   PurchaseOrderStatusBreakdown,
 } from '../models/inventory.model';
 import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
+import { PurchaseOrderFormDialogComponent } from './dialogs/purchase-order-form-dialog/purchase-order-form-dialog.component';
+import { ReceivePurchaseOrderDialogComponent } from './dialogs/receive-purchase-order-dialog/receive-purchase-order-dialog.component';
 
 @Component({
   selector: 'app-purchase-orders',
@@ -27,7 +29,7 @@ import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
   templateUrl: './purchase-orders.component.html',
   styleUrl: './purchase-orders.component.scss',
 })
-export class PurchaseOrdersComponent implements OnInit {
+export class PurchaseOrdersComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
     'select',
     'poNumber',
@@ -89,6 +91,11 @@ export class PurchaseOrdersComponent implements OnInit {
     this.loadDashboardMetrics();
     this.loadSuppliers();
     this.loadPurchaseOrders();
+  }
+
+  ngAfterViewInit(): void {
+    this.attachSort();
+    this.syncPaginator();
   }
 
   initializeFilterForm(): void {
@@ -165,17 +172,15 @@ export class PurchaseOrdersComponent implements OnInit {
     this.poService.getPurchaseOrders(filters).subscribe({
       next: (response) => {
         this.dataSource.data = response.data;
-        this.totalPOs = response.total;
+        const pagination = response.pagination;
+
+        this.totalPOs = pagination.total;
+        this.pageSize = pagination.limit;
+        this.currentPage = Math.max(pagination.page - 1, 0);
         this.isLoading = false;
         this.selection.clear();
-        setTimeout(() => {
-          if (this.paginator) {
-            this.dataSource.paginator = this.paginator;
-          }
-          if (this.sort) {
-            this.dataSource.sort = this.sort;
-          }
-        });
+        this.syncPaginator();
+        this.attachSort();
       },
       error: (error) => {
         console.error('Error loading purchase orders:', error);
@@ -211,18 +216,57 @@ export class PurchaseOrdersComponent implements OnInit {
   }
 
   createPurchaseOrder(): void {
-    // TODO: Navigate to PO creation form
-    console.log('Create purchase order');
+    const dialogRef = this.dialog.open(PurchaseOrderFormDialogComponent, {
+      width: '920px',
+      disableClose: true,
+      autoFocus: false,
+      panelClass: 'purchase-order-dialog-panel',
+      data: {
+        mode: 'create',
+        suppliers: this.suppliers,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'saved') {
+        this.loadPurchaseOrders();
+        this.loadDashboardMetrics();
+      }
+    });
   }
 
   viewPODetails(po: PurchaseOrder): void {
-    // TODO: Navigate to PO detail page
-    console.log('View PO details', po);
+    this.dialog.open(PurchaseOrderFormDialogComponent, {
+      width: '920px',
+      autoFocus: false,
+      panelClass: 'purchase-order-dialog-panel',
+      data: {
+        mode: 'view',
+        purchaseOrder: po,
+        suppliers: this.suppliers,
+      },
+    });
   }
 
   editPO(po: PurchaseOrder): void {
-    // TODO: Navigate to PO edit form
-    console.log('Edit PO', po);
+    const dialogRef = this.dialog.open(PurchaseOrderFormDialogComponent, {
+      width: '920px',
+      disableClose: true,
+      autoFocus: false,
+      panelClass: 'purchase-order-dialog-panel',
+      data: {
+        mode: 'edit',
+        purchaseOrder: po,
+        suppliers: this.suppliers,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'saved') {
+        this.loadPurchaseOrders();
+        this.loadDashboardMetrics();
+      }
+    });
   }
 
   approvePO(po: PurchaseOrder): void {
@@ -272,8 +316,22 @@ export class PurchaseOrdersComponent implements OnInit {
   }
 
   receivePO(po: PurchaseOrder): void {
-    // TODO: Open receive items dialog
-    console.log('Receive PO', po);
+    const dialogRef = this.dialog.open(ReceivePurchaseOrderDialogComponent, {
+      width: '640px',
+      disableClose: true,
+      autoFocus: false,
+      panelClass: 'purchase-order-dialog-panel',
+      data: {
+        purchaseOrder: po,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'updated') {
+        this.loadPurchaseOrders();
+        this.loadDashboardMetrics();
+      }
+    });
   }
 
   cancelPO(po: PurchaseOrder): void {
@@ -681,5 +739,21 @@ export class PurchaseOrdersComponent implements OnInit {
     }
 
     return '#6b7280';
+  }
+
+  private syncPaginator(): void {
+    if (!this.paginator) {
+      return;
+    }
+
+    this.paginator.pageIndex = this.currentPage;
+    this.paginator.length = this.totalPOs;
+    this.paginator.pageSize = this.pageSize;
+  }
+
+  private attachSort(): void {
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
   }
 }

@@ -166,12 +166,22 @@ export class SupplierService {
         (pageSize > 0 ? Math.ceil(total / pageSize) : 1)
     );
 
+    const pagination = {
+      page,
+      limit: pageSize,
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    };
+
     return {
       data,
       total,
       page,
       pageSize,
       totalPages,
+      pagination,
     };
   }
 

@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>Receive Purchase Order</h2>
+
+<mat-dialog-content [formGroup]="form" class="receive-dialog">
+  <p class="description">
+    Update the received quantities for each line item. Ordered quantities are shown for reference.
+  </p>
+
+  <div class="item-list" formArrayName="items">
+    <div class="item-row" *ngFor="let group of items.controls; let i = index; trackBy: trackByIndex"
+      [formGroupName]="i">
+      <div class="details">
+        <h3>{{ group.get('productName')?.value }}</h3>
+        <p>Ordered: {{ group.get('orderedQuantity')?.value | number }}</p>
+      </div>
+      <mat-form-field appearance="outline" class="quantity-field">
+        <mat-label>Received quantity</mat-label>
+        <input matInput type="number" min="0" [max]="group.get('orderedQuantity')?.value"
+          formControlName="receivedQuantity" />
+        <mat-error *ngIf="group.get('receivedQuantity')?.hasError('max')">
+          Cannot exceed ordered quantity.
+        </mat-error>
+        <mat-error *ngIf="group.get('receivedQuantity')?.hasError('min')">
+          Quantity must be at least 0.
+        </mat-error>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <mat-progress-bar *ngIf="isSubmitting" mode="indeterminate"></mat-progress-bar>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="isSubmitting">
+    Save receipt
+  </button>
+</mat-dialog-actions>

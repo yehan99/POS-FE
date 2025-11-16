@@ -87,7 +87,10 @@ export class PurchaseOrderService {
   }
 
   // Receive items (partial or full)
-  receivePurchaseOrder(id: string, items: any[]): Observable<PurchaseOrder> {
+  receivePurchaseOrder(
+    id: string,
+    items: { id: string; receivedQuantity: number }[]
+  ): Observable<PurchaseOrder> {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/${id}/receive`, {
       items,
     });

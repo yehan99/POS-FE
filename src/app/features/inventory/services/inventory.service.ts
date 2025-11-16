@@ -2,10 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import {
   StockAdjustment,
   StockAdjustmentFormData,
   StockTransfer,
+  StockTransferDashboardMetrics,
   StockTransferFormData,
   StockAlert,
   Location,
@@ -22,7 +24,7 @@ import {
   providedIn: 'root',
 })
 export class InventoryService {
-  private apiUrl = '/api/inventory';
+  private readonly apiUrl = `${environment.apiUrl}/inventory`;
   private locationsSubject = new BehaviorSubject<Location[]>([]);
   public locations$ = this.locationsSubject.asObservable();
 
@@ -146,31 +148,34 @@ export class InventoryService {
       params = params.set('pageSize', filters.pageSize.toString());
 
     return this.http.get<PaginatedResponse<StockTransfer>>(
-      `${this.apiUrl}/transfers`,
+      `${this.apiUrl}/stock-transfers`,
       { params }
     );
   }
 
   getStockTransferById(id: string): Observable<StockTransfer> {
-    return this.http.get<StockTransfer>(`${this.apiUrl}/transfers/${id}`);
+    return this.http.get<StockTransfer>(`${this.apiUrl}/stock-transfers/${id}`);
   }
 
   createStockTransfer(
     transfer: StockTransferFormData
   ): Observable<StockTransfer> {
-    return this.http.post<StockTransfer>(`${this.apiUrl}/transfers`, transfer);
+    return this.http.post<StockTransfer>(
+      `${this.apiUrl}/stock-transfers`,
+      transfer
+    );
   }
 
   approveStockTransfer(id: string): Observable<StockTransfer> {
     return this.http.post<StockTransfer>(
-      `${this.apiUrl}/transfers/${id}/approve`,
+      `${this.apiUrl}/stock-transfers/${id}/approve`,
       {}
     );
   }
 
   shipStockTransfer(id: string): Observable<StockTransfer> {
     return this.http.post<StockTransfer>(
-      `${this.apiUrl}/transfers/${id}/ship`,
+      `${this.apiUrl}/stock-transfers/${id}/ship`,
       {}
     );
   }
@@ -180,20 +185,28 @@ export class InventoryService {
     receivedItems: any[]
   ): Observable<StockTransfer> {
     return this.http.post<StockTransfer>(
-      `${this.apiUrl}/transfers/${id}/receive`,
+      `${this.apiUrl}/stock-transfers/${id}/receive`,
       { receivedItems }
     );
   }
 
   cancelStockTransfer(id: string, reason: string): Observable<StockTransfer> {
     return this.http.post<StockTransfer>(
-      `${this.apiUrl}/transfers/${id}/cancel`,
+      `${this.apiUrl}/stock-transfers/${id}/cancel`,
       { reason }
     );
   }
 
-  generateTransferNumber(): Observable<string> {
-    return this.http.get<string>(`${this.apiUrl}/transfers/generate-number`);
+  generateTransferNumber(): Observable<{ transferNumber: string }> {
+    return this.http.get<{ transferNumber: string }>(
+      `${this.apiUrl}/stock-transfers/generate-number`
+    );
+  }
+
+  getStockTransferDashboardMetrics(): Observable<StockTransferDashboardMetrics> {
+    return this.http.get<StockTransferDashboardMetrics>(
+      `${this.apiUrl}/stock-transfers/dashboard`
+    );
   }
 
   // Stock Alerts
@@ -332,12 +345,17 @@ export class InventoryService {
 
   exportStockTransfers(filters: InventoryFilter = {}): Observable<Blob> {
     let params = new HttpParams();
+
+    if (filters.search) params = params.set('search', filters.search);
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.locationId)
+      params = params.set('locationId', filters.locationId);
     if (filters.dateFrom)
       params = params.set('dateFrom', filters.dateFrom.toISOString());
     if (filters.dateTo)
       params = params.set('dateTo', filters.dateTo.toISOString());
 
-    return this.http.get(`${this.apiUrl}/transfers/export`, {
+    return this.http.get(`${this.apiUrl}/stock-transfers/export`, {
       params,
       responseType: 'blob',
     });

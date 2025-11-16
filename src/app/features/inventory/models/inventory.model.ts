@@ -46,27 +46,31 @@ export interface StockTransfer {
   id: string;
   transferNumber: string;
   fromLocationId: string;
-  fromLocationName: string;
+  fromLocationName: string | null;
   toLocationId: string;
-  toLocationName: string;
+  toLocationName: string | null;
   items: StockTransferItem[];
   status: TransferStatus;
   totalItems: number;
   totalValue: number;
-  requestedBy: string;
-  approvedBy?: string;
-  receivedBy?: string;
-  notes?: string;
-  createdAt: Date;
-  approvedAt?: Date;
-  shippedAt?: Date;
-  receivedAt?: Date;
+  requestedBy: string | null;
+  approvedBy?: string | null;
+  shippedBy?: string | null;
+  receivedBy?: string | null;
+  notes?: string | null;
+  cancelReason?: string | null;
+  createdAt: string | Date;
+  approvedAt?: string | Date;
+  shippedAt?: string | Date;
+  receivedAt?: string | Date;
+  cancelledAt?: string | Date;
 }
 
 export interface StockTransferItem {
+  id?: string;
   productId: string;
   productName: string;
-  productSku: string;
+  productSku: string | null;
   quantity: number;
   receivedQuantity?: number;
   unitCost: number;
@@ -86,6 +90,43 @@ export interface StockTransferFormData {
   toLocationId: string;
   items: StockTransferItem[];
   notes?: string;
+}
+
+export interface StockTransferDashboardMetrics {
+  totalTransfers: number;
+  pendingApproval: number;
+  inTransit: number;
+  completed: number;
+  cancelled: number;
+  totalItemsMoved: number;
+  totalValueMoved: number;
+  statusBreakdown: StockTransferStatusBreakdown[];
+  trend: StockTransferTrendPoint[];
+  topLocations: StockTransferTopLocation[];
+}
+
+export interface StockTransferStatusBreakdown {
+  status: TransferStatus | string;
+  count: number;
+  percentage: number;
+  totalValue: number;
+  totalItems: number;
+}
+
+export interface StockTransferTrendPoint {
+  label: string | null;
+  transfers: number;
+  totalValue: number;
+  totalItems: number;
+}
+
+export interface StockTransferTopLocation {
+  locationId: string | null;
+  locationName: string | null;
+  locationCode?: string | null;
+  outboundTransfers: number;
+  outboundValue: number;
+  outboundItems: number;
 }
 
 // Supplier Models
@@ -238,9 +279,10 @@ export interface PurchaseOrder {
 }
 
 export interface PurchaseOrderItem {
-  productId: string;
+  id?: string;
+  productId: string | null;
   productName: string;
-  productSku: string;
+  productSku?: string | null;
   quantity: number;
   receivedQuantity: number;
   unitCost: number;
@@ -262,7 +304,11 @@ export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'overdue';
 export interface PurchaseOrderFormData {
   supplierId: string;
   items: PurchaseOrderItem[];
+  status?: POStatus;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
   expectedDeliveryDate?: Date;
+  actualDeliveryDate?: Date;
   discount: number;
   shippingCost: number;
   notes?: string;
@@ -502,4 +548,12 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
   totalPages: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }

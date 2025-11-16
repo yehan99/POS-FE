@@ -690,3 +690,16 @@
     gap: 0.75rem;
   }
 }
+
+:host ::ng-deep .purchase-order-dialog-panel .mat-mdc-dialog-container {
+  padding: 0 0 24px;
+  border-radius: 22px;
+}
+
+:host ::ng-deep .purchase-order-dialog-panel .mdc-dialog__content {
+  padding: 0 24px;
+}
+
+:host ::ng-deep .purchase-order-dialog-panel .mdc-dialog__actions {
+  padding: 0 24px 8px;
+}

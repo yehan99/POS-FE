@@ -1,0 +1,167 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<mat-dialog-content [formGroup]="form" class="po-form-dialog">
+  <div class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Supplier</mat-label>
+      <mat-select formControlName="supplierId" [disabled]="mode === 'view'">
+        <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+          {{ supplier.name }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('supplierId')?.hasError('required')">Supplier is required.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status" [disabled]="mode === 'view'">
+        <mat-option *ngFor="let status of poStatuses" [value]="status">
+          {{ status | titlecase }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('status')?.hasError('required')">Status is required.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Payment status</mat-label>
+      <mat-select formControlName="paymentStatus" [disabled]="mode === 'view'">
+        <mat-option *ngFor="let status of paymentStatuses" [value]="status">
+          {{ status | titlecase }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">Required.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Payment method</mat-label>
+      <input matInput formControlName="paymentMethod" [readonly]="mode === 'view'" placeholder="e.g. Bank transfer" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Expected delivery date</mat-label>
+      <input matInput formControlName="expectedDeliveryDate" [matDatepicker]="expectedPicker"
+        [readonly]="mode === 'view'" />
+      <mat-datepicker-toggle matSuffix [for]="expectedPicker"></mat-datepicker-toggle>
+      <mat-datepicker #expectedPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Actual delivery date</mat-label>
+      <input matInput formControlName="actualDeliveryDate" [matDatepicker]="actualPicker"
+        [readonly]="mode === 'view'" />
+      <mat-datepicker-toggle matSuffix [for]="actualPicker"></mat-datepicker-toggle>
+      <mat-datepicker #actualPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Order discount</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="discount" [readonly]="mode === 'view'" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Shipping cost</mat-label>
+      <input matInput type="number" min="0" step="0.01" formControlName="shippingCost" [readonly]="mode === 'view'" />
+    </mat-form-field>
+  </div>
+
+  <div class="items-section">
+    <div class="section-header">
+      <div>
+        <h3>Line items</h3>
+        <p>Specify the products and quantities for this purchase order.</p>
+      </div>
+      <button mat-stroked-button type="button" color="primary" (click)="addItem()" *ngIf="mode !== 'view'">
+        <mat-icon>add</mat-icon>
+        Add item
+      </button>
+    </div>
+
+    <div class="item-list" formArrayName="items">
+      <div class="item-row" *ngFor="let group of items.controls; let i = index; trackBy: trackByIndex"
+        [formGroupName]="i">
+        <div class="item-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Product / service</mat-label>
+            <input matInput formControlName="productName" [readonly]="mode === 'view'" />
+            <mat-error *ngIf="group.get('productName')?.hasError('required')">Required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>SKU / Code</mat-label>
+            <input matInput formControlName="productSku" [readonly]="mode === 'view'" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quantity</mat-label>
+            <input matInput type="number" min="1" formControlName="quantity" [readonly]="mode === 'view'" />
+            <mat-error *ngIf="group.get('quantity')?.hasError('required')">Required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Unit cost</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="unitCost" [readonly]="mode === 'view'" />
+            <mat-error *ngIf="group.get('unitCost')?.hasError('required')">Required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tax</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="tax" [readonly]="mode === 'view'" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Line discount</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="discount" [readonly]="mode === 'view'" />
+          </mat-form-field>
+        </div>
+
+        <button mat-icon-button type="button" color="warn" class="remove-item" (click)="removeItem(i)"
+          *ngIf="mode !== 'view'">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-grid">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notes</mat-label>
+      <textarea matInput rows="3" formControlName="notes" [readonly]="mode === 'view'"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Terms and conditions</mat-label>
+      <textarea matInput rows="4" formControlName="termsAndConditions" [readonly]="mode === 'view'"></textarea>
+    </mat-form-field>
+  </div>
+
+  <div class="summary-card">
+    <div class="summary-row">
+      <span>Subtotal</span>
+      <strong>{{ formTotals.subtotal | number: '1.2-2' }}</strong>
+    </div>
+    <div class="summary-row">
+      <span>Tax</span>
+      <strong>{{ formTotals.tax | number: '1.2-2' }}</strong>
+    </div>
+    <div class="summary-row">
+      <span>Total discounts</span>
+      <strong>-{{ formTotals.discount | number: '1.2-2' }}</strong>
+    </div>
+    <div class="summary-row total">
+      <span>Grand total</span>
+      <strong>{{ formTotals.total | number: '1.2-2' }}</strong>
+    </div>
+  </div>
+
+  <mat-progress-bar *ngIf="isSubmitting" mode="indeterminate"></mat-progress-bar>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="cancel()">
+    {{ mode === 'view' ? 'Close' : 'Cancel' }}
+  </button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="isSubmitting"
+    *ngIf="mode !== 'view'">
+    {{ mode === 'edit' ? 'Save changes' : 'Create order' }}
+  </button>
+</mat-dialog-actions>

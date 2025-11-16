@@ -12,6 +12,8 @@ import { StockAlertsComponent } from './stock-alerts/stock-alerts.component';
 import { InventoryDashboardComponent } from './inventory-dashboard/inventory-dashboard.component';
 import { SupplierFormDialogComponent } from './suppliers/dialogs/supplier-form-dialog/supplier-form-dialog.component';
 import { SupplierDetailDialogComponent } from './suppliers/dialogs/supplier-detail-dialog/supplier-detail-dialog.component';
+import { PurchaseOrderFormDialogComponent } from './purchase-orders/dialogs/purchase-order-form-dialog/purchase-order-form-dialog.component';
+import { ReceivePurchaseOrderDialogComponent } from './purchase-orders/dialogs/receive-purchase-order-dialog/receive-purchase-order-dialog.component';
 
 @NgModule({
   declarations: [
@@ -23,6 +25,8 @@ import { SupplierDetailDialogComponent } from './suppliers/dialogs/supplier-deta
     InventoryDashboardComponent,
     SupplierFormDialogComponent,
     SupplierDetailDialogComponent,
+    PurchaseOrderFormDialogComponent,
+    ReceivePurchaseOrderDialogComponent,
   ],
   imports: [
     CommonModule,

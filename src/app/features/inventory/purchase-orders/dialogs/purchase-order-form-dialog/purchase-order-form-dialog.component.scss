@@ -1,0 +1,122 @@
+.po-form-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  min-width: 0;
+  width: 100%;
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .items-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+
+      h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0.35rem 0 0;
+        color: rgba(15, 23, 42, 0.6);
+      }
+    }
+
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .item-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 1.1rem 1.25rem;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 16px;
+      background: rgba(248, 250, 252, 0.8);
+
+      .item-grid {
+        display: grid;
+        flex: 1;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+      }
+
+      .remove-item {
+        margin-top: 0.3rem;
+      }
+    }
+  }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+
+    .full-width {
+      width: 100%;
+    }
+  }
+
+  .summary-card {
+    align-self: flex-end;
+    min-width: 260px;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.08),
+      rgba(14, 165, 233, 0.05)
+    );
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+      color: rgba(15, 23, 42, 0.7);
+
+      strong {
+        font-weight: 600;
+        color: rgba(15, 23, 42, 0.92);
+      }
+
+      &.total {
+        margin-top: 0.4rem;
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(15, 23, 42, 0.12);
+        font-size: 1.05rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .po-form-dialog {
+    .item-row {
+      flex-direction: column;
+
+      .remove-item {
+        align-self: flex-end;
+      }
+    }
+  }
+}

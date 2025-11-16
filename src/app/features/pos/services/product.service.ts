@@ -116,6 +116,10 @@ export class ProductService {
           console.error('Get products error:', error);
           return of({
             data: [],
+            total: 0,
+            page: 1,
+            pageSize: limit,
+            totalPages: 0,
             pagination: {
               page: 1,
               limit: limit,
