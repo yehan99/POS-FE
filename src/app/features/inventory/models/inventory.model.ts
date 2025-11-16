@@ -440,6 +440,48 @@ export interface PurchaseOrderFilter {
   sortOrder?: 'asc' | 'desc';
 }
 
+// Purchase Order Dashboard Models
+export interface PurchaseOrderDashboardMetrics {
+  totalPurchaseOrders: number;
+  pendingApproval: number;
+  inProgress: number;
+  partiallyReceived: number;
+  received: number;
+  cancelled: number;
+  overdue: number;
+  totalValue: number;
+  outstandingValue: number;
+  spendThisMonth: number;
+  spendLastMonth: number;
+  averageCycleTimeDays: number;
+  onTimeFulfillmentRate: number;
+  statusBreakdown: PurchaseOrderStatusBreakdown[];
+  trend: PurchaseOrderTrendPoint[];
+  topSuppliers: PurchaseOrderTopSupplier[];
+}
+
+export interface PurchaseOrderStatusBreakdown {
+  status: POStatus | string;
+  count: number;
+  percentage: number;
+  totalValue: number;
+}
+
+export interface PurchaseOrderTrendPoint {
+  label: string;
+  totalValue: number;
+  purchaseOrders: number;
+}
+
+export interface PurchaseOrderTopSupplier {
+  supplierId: string;
+  supplierName: string;
+  totalOrders: number;
+  totalValue: number;
+  onTimeRate?: number | null;
+  averageLeadTimeDays?: number | null;
+}
+
 // Statistics Models
 export interface InventoryStatistics {
   totalProducts: number;

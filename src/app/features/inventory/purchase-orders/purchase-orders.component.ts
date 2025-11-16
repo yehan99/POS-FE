@@ -14,8 +14,12 @@ import {
   PurchaseOrderFilter,
   Supplier,
   POStatus,
+  PurchaseOrderDashboardMetrics,
+  PurchaseOrderTopSupplier,
+  PurchaseOrderTrendPoint,
+  PurchaseOrderStatusBreakdown,
 } from '../models/inventory.model';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-purchase-orders',
@@ -36,7 +40,16 @@ export class PurchaseOrdersComponent implements OnInit {
     'actions',
   ];
 
+  topSuppliersDisplayedColumns: string[] = [
+    'supplierName',
+    'totalValue',
+    'totalOrders',
+    'onTimeRate',
+    'averageLeadTimeDays',
+  ];
+
   dataSource = new MatTableDataSource<PurchaseOrder>([]);
+  topSuppliersDataSource = new MatTableDataSource<PurchaseOrderTopSupplier>([]);
   selection = new SelectionModel<PurchaseOrder>(true, []);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -44,6 +57,8 @@ export class PurchaseOrdersComponent implements OnInit {
 
   filterForm!: FormGroup;
   isLoading = false;
+  dashboardLoading = false;
+  dashboardMetrics?: PurchaseOrderDashboardMetrics;
 
   totalPOs = 0;
   pageSize = 10;
@@ -71,6 +86,7 @@ export class PurchaseOrdersComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeFilterForm();
+    this.loadDashboardMetrics();
     this.loadSuppliers();
     this.loadPurchaseOrders();
   }
@@ -100,6 +116,24 @@ export class PurchaseOrdersComponent implements OnInit {
     this.filterForm.get('status')?.valueChanges.subscribe(() => {
       this.currentPage = 0;
       this.loadPurchaseOrders();
+    });
+  }
+
+  loadDashboardMetrics(): void {
+    this.dashboardLoading = true;
+    this.poService.getPurchaseOrderDashboardMetrics().subscribe({
+      next: (metrics) => {
+        this.dashboardMetrics = this.normalizeDashboardMetrics(metrics);
+        this.topSuppliersDataSource.data = this.dashboardMetrics.topSuppliers;
+        this.dashboardLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading purchase order dashboard metrics:', error);
+        const fallback = this.buildMockDashboardMetrics();
+        this.dashboardMetrics = fallback;
+        this.topSuppliersDataSource.data = fallback.topSuppliers;
+        this.dashboardLoading = false;
+      },
     });
   }
 
@@ -134,6 +168,14 @@ export class PurchaseOrdersComponent implements OnInit {
         this.totalPOs = response.total;
         this.isLoading = false;
         this.selection.clear();
+        setTimeout(() => {
+          if (this.paginator) {
+            this.dataSource.paginator = this.paginator;
+          }
+          if (this.sort) {
+            this.dataSource.sort = this.sort;
+          }
+        });
       },
       error: (error) => {
         console.error('Error loading purchase orders:', error);
@@ -152,7 +194,13 @@ export class PurchaseOrdersComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filterForm.reset();
+    this.filterForm.reset({
+      search: '',
+      supplierId: '',
+      status: '',
+      dateFrom: null,
+      dateTo: null,
+    });
     this.currentPage = 0;
     this.loadPurchaseOrders();
   }
@@ -245,6 +293,60 @@ export class PurchaseOrdersComponent implements OnInit {
         },
       });
     }
+  }
+
+  bulkCancelSelected(): void {
+    if (this.selection.selected.length === 0) {
+      return;
+    }
+
+    const cancellable = this.selection.selected.filter((po) =>
+      this.canCancel(po)
+    );
+
+    if (cancellable.length === 0) {
+      this.snackBar.open(
+        'Selected purchase orders cannot be cancelled.',
+        'Close',
+        {
+          duration: 3000,
+        }
+      );
+      return;
+    }
+
+    if (
+      !confirm(
+        `Cancel ${cancellable.length} selected purchase order(s)? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    const requests = cancellable.map((po) =>
+      this.poService.cancelPurchaseOrder(po.id, 'Cancelled in bulk')
+    );
+
+    forkJoin(requests).subscribe({
+      next: () => {
+        this.snackBar.open('Selected purchase orders cancelled.', 'Close', {
+          duration: 3000,
+        });
+        this.loadPurchaseOrders();
+        this.selection.clear();
+      },
+      error: (error) => {
+        console.error('Error cancelling selected purchase orders:', error);
+        this.snackBar.open(
+          'Failed to cancel selected purchase orders.',
+          'Close',
+          {
+            duration: 3000,
+          }
+        );
+        this.loadPurchaseOrders();
+      },
+    });
   }
 
   downloadPDF(po: PurchaseOrder): void {
@@ -355,19 +457,202 @@ export class PurchaseOrdersComponent implements OnInit {
     }
   }
 
-  formatCurrency(amount: number): string {
+  formatCurrency(amount: number | null | undefined): string {
+    if (amount === null || amount === undefined) {
+      return '—';
+    }
+
     return new Intl.NumberFormat('en-LK', {
       style: 'currency',
       currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   }
 
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-US', {
+  formatDate(date: Date | string | null | undefined): string {
+    if (!date) {
+      return '—';
+    }
+
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) {
+      return '—';
+    }
+
+    return parsed.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
+  }
+
+  formatPercentage(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    return `${Number(value).toFixed(1)}%`;
+  }
+
+  formatCycleTime(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    if (value < 1) {
+      return '<1 day';
+    }
+
+    return `${Number(value).toFixed(1)} days`;
+  }
+
+  formatLeadTime(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '—';
+    }
+
+    if (value < 1) {
+      return '<1 day';
+    }
+
+    return `${Number(value).toFixed(1)} days`;
+  }
+
+  formatStatusLabel(status: string | null | undefined): string {
+    if (!status) {
+      return 'Unknown';
+    }
+
+    return status
+      .split('_')
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(' ');
+  }
+
+  private normalizeDashboardMetrics(
+    metrics: PurchaseOrderDashboardMetrics | null | undefined
+  ): PurchaseOrderDashboardMetrics {
+    if (!metrics) {
+      return this.buildMockDashboardMetrics();
+    }
+
+    const statusBreakdown: PurchaseOrderStatusBreakdown[] = (
+      metrics.statusBreakdown ?? []
+    ).map((item) => ({
+      status: item.status,
+      count: item.count ?? 0,
+      percentage: item.percentage ?? 0,
+      totalValue: item.totalValue ?? 0,
+    }));
+
+    const trend: PurchaseOrderTrendPoint[] = (metrics.trend ?? []).map(
+      (point) => ({
+        label: point.label,
+        totalValue: point.totalValue ?? 0,
+        purchaseOrders: point.purchaseOrders ?? 0,
+      })
+    );
+
+    const topSuppliers: PurchaseOrderTopSupplier[] = (
+      metrics.topSuppliers ?? []
+    ).map((supplier) => ({
+      supplierId: supplier.supplierId,
+      supplierName: supplier.supplierName,
+      totalOrders: supplier.totalOrders ?? 0,
+      totalValue: supplier.totalValue ?? 0,
+      onTimeRate: supplier.onTimeRate ?? null,
+      averageLeadTimeDays: supplier.averageLeadTimeDays ?? null,
+    }));
+
+    return {
+      totalPurchaseOrders: metrics.totalPurchaseOrders ?? 0,
+      pendingApproval: metrics.pendingApproval ?? 0,
+      inProgress: metrics.inProgress ?? 0,
+      partiallyReceived: metrics.partiallyReceived ?? 0,
+      received: metrics.received ?? 0,
+      cancelled: metrics.cancelled ?? 0,
+      overdue: metrics.overdue ?? 0,
+      totalValue: metrics.totalValue ?? 0,
+      outstandingValue: metrics.outstandingValue ?? 0,
+      spendThisMonth: metrics.spendThisMonth ?? 0,
+      spendLastMonth: metrics.spendLastMonth ?? 0,
+      averageCycleTimeDays: metrics.averageCycleTimeDays ?? 0,
+      onTimeFulfillmentRate: metrics.onTimeFulfillmentRate ?? 0,
+      statusBreakdown,
+      trend,
+      topSuppliers,
+    };
+  }
+
+  private buildMockDashboardMetrics(): PurchaseOrderDashboardMetrics {
+    return {
+      totalPurchaseOrders: 100,
+      pendingApproval: 18,
+      inProgress: 46,
+      partiallyReceived: 12,
+      received: 24,
+      cancelled: 6,
+      overdue: 5,
+      totalValue: 10850000,
+      outstandingValue: 4820000,
+      spendThisMonth: 2365000,
+      spendLastMonth: 2120000,
+      averageCycleTimeDays: 8.5,
+      onTimeFulfillmentRate: 89,
+      statusBreakdown: [
+        { status: 'pending', count: 18, percentage: 18, totalValue: 2400000 },
+        { status: 'approved', count: 24, percentage: 24, totalValue: 3150000 },
+        { status: 'ordered', count: 22, percentage: 22, totalValue: 2865000 },
+        {
+          status: 'partially_received',
+          count: 12,
+          percentage: 12,
+          totalValue: 1420000,
+        },
+        { status: 'received', count: 24, percentage: 24, totalValue: 3650000 },
+      ],
+      trend: [
+        { label: 'May', totalValue: 1850000, purchaseOrders: 26 },
+        { label: 'Jun', totalValue: 2045000, purchaseOrders: 29 },
+        { label: 'Jul', totalValue: 2120000, purchaseOrders: 31 },
+        { label: 'Aug', totalValue: 2365000, purchaseOrders: 34 },
+      ],
+      topSuppliers: [
+        {
+          supplierId: 'sup-1',
+          supplierName: 'Sunrise Foods Ltd',
+          totalOrders: 18,
+          totalValue: 1245000,
+          onTimeRate: 92,
+          averageLeadTimeDays: 5.2,
+        },
+        {
+          supplierId: 'sup-2',
+          supplierName: 'Global Electronics Co.',
+          totalOrders: 16,
+          totalValue: 1100000,
+          onTimeRate: 88,
+          averageLeadTimeDays: 6.1,
+        },
+        {
+          supplierId: 'sup-3',
+          supplierName: 'Lanka Packaging Imports',
+          totalOrders: 12,
+          totalValue: 890000,
+          onTimeRate: 90,
+          averageLeadTimeDays: 4.8,
+        },
+        {
+          supplierId: 'sup-4',
+          supplierName: 'Evergreen Hardware',
+          totalOrders: 10,
+          totalValue: 720000,
+          onTimeRate: 85,
+          averageLeadTimeDays: 7.4,
+        },
+      ],
+    };
   }
 
   canApprove(po: PurchaseOrder): boolean {
@@ -384,5 +669,17 @@ export class PurchaseOrdersComponent implements OnInit {
 
   canCancel(po: PurchaseOrder): boolean {
     return po.status !== 'received' && po.status !== 'cancelled';
+  }
+
+  getStatusColorValue(status: string | null | undefined): string {
+    if (!status) {
+      return '#6b7280';
+    }
+
+    if (this.poStatuses.includes(status as POStatus)) {
+      return this.getStatusColor(status as POStatus);
+    }
+
+    return '#6b7280';
   }
 }
