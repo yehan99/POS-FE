@@ -1,0 +1,109 @@
+.receive-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.transfer-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  background: #eef2ff;
+}
+
+.overview-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4338ca;
+}
+
+.overview-value,
+.overview-status {
+  font-weight: 600;
+  color: #1e1b4b;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.notes-field {
+  grid-column: 1 / -1;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.items-summary {
+  font-weight: 600;
+  color: #312e81;
+}
+
+.items-summary--complete {
+  color: #047857;
+}
+
+.item-card {
+  display: flex;
+  align-items: stretch;
+  gap: 1.25rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(49, 46, 129, 0.12);
+  background: #f8fafc;
+}
+
+.item-card__info {
+  flex: 1;
+}
+
+.item-card__info h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e1b4b;
+}
+
+.item-card__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.25rem 1rem;
+  font-size: 0.85rem;
+  color: #4c1d95;
+}
+
+.item-card__actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 180px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 1rem 1.5rem;
+}
+
+mat-progress-spinner {
+  margin-right: 0.5rem;
+}

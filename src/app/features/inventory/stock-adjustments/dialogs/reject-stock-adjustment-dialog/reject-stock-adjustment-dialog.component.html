@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>Reject Stock Adjustment</h2>
+
+<mat-dialog-content class="dialog-content">
+    <p class="description">
+        Provide a reason for rejecting adjustment
+        <strong>{{ data.adjustment.adjustmentNumber }}</strong>.
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" id="rejectAdjustmentForm">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Rejection reason</mat-label>
+            <textarea matInput rows="4" formControlName="reason"
+                placeholder="Describe why this adjustment is being rejected"></textarea>
+            <mat-hint align="end">{{ form.get('reason')?.value?.length || 0 }}/255</mat-hint>
+            <mat-error *ngIf="form.get('reason')?.hasError('required')">
+                A reason is required to reject this adjustment.
+            </mat-error>
+            <mat-error *ngIf="form.get('reason')?.hasError('minlength')">
+                Reason must contain at least 3 characters.
+            </mat-error>
+        </mat-form-field>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-flat-button color="warn" type="submit" form="rejectAdjustmentForm">
+        <mat-icon>cancel</mat-icon>
+        Reject Adjustment
+    </button>
+</mat-dialog-actions>

@@ -1,0 +1,94 @@
+<h2 mat-dialog-title>Receive Stock Transfer</h2>
+
+<form class="receive-form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-dialog-content>
+        <section class="transfer-overview">
+            <div>
+                <span class="overview-label">Transfer #</span>
+                <span class="overview-value">{{ transfer.transferNumber }}</span>
+            </div>
+            <div>
+                <span class="overview-label">From</span>
+                <span class="overview-value">{{ transfer.fromLocationName || '—' }}</span>
+            </div>
+            <div>
+                <span class="overview-label">To</span>
+                <span class="overview-value">{{ transfer.toLocationName || '—' }}</span>
+            </div>
+            <div>
+                <span class="overview-label">Status</span>
+                <span class="overview-status">{{ transfer.status | titlecase }}</span>
+            </div>
+        </section>
+
+        <div class="form-grid">
+            <mat-form-field appearance="outline">
+                <mat-label>Received By</mat-label>
+                <input matInput formControlName="receivedBy" placeholder="Receiver name" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="notes-field">
+                <mat-label>Notes</mat-label>
+                <textarea matInput formControlName="notes" rows="3"></textarea>
+                <mat-hint align="end">{{ form.get('notes')?.value?.length || 0 }}/2000</mat-hint>
+            </mat-form-field>
+        </div>
+
+        <section formArrayName="items" class="items-list">
+            <header class="items-header">
+                <h3>Items To Receive</h3>
+                <div class="items-summary" *ngIf="pendingItemCount > 0; else allReceived">
+                    Pending Items: {{ pendingItemCount }}
+                </div>
+            </header>
+
+            <ng-template #allReceived>
+                <div class="items-summary items-summary--complete">
+                    All items have already been received.
+                </div>
+            </ng-template>
+
+            <div class="item-card" *ngFor="let group of items.controls; let i = index; trackBy: trackByIndex"
+                [formGroupName]="i">
+                <div class="item-card__info">
+                    <h4>{{ group.get('productName')?.value }}</h4>
+                    <div class="item-card__meta">
+                        <span>SKU: {{ group.get('productSku')?.value || '—' }}</span>
+                        <span>Ordered: {{ getOrdered(group) }}</span>
+                        <span>Received: {{ getAlreadyReceived(group) }}</span>
+                        <span>Remaining: {{ getRemaining(group) }}</span>
+                    </div>
+                </div>
+
+                <div class="item-card__actions">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Receive Qty</mat-label>
+                        <input matInput type="number" min="0" [max]="getRemaining(group)"
+                            formControlName="receivedQuantity" />
+                        <mat-error *ngIf="group.get('receivedQuantity')?.hasError('max')">
+                            Cannot exceed remaining quantity ({{ getRemaining(group) }}).
+                        </mat-error>
+                        <mat-error *ngIf="group.get('receivedQuantity')?.hasError('min')">
+                            Quantity cannot be negative.
+                        </mat-error>
+                    </mat-form-field>
+
+                    <button mat-stroked-button type="button" color="primary" (click)="setFullQuantity(i)"
+                        [disabled]="getRemaining(group) === 0">
+                        Receive All
+                    </button>
+                </div>
+            </div>
+        </section>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting">
+            Cancel
+        </button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting || !canSubmit">
+            <mat-progress-spinner *ngIf="isSubmitting" diameter="18" mode="indeterminate"></mat-progress-spinner>
+            <span *ngIf="!isSubmitting">Mark As Received</span>
+        </button>
+    </mat-dialog-actions>
+</form>

@@ -1,11 +1,13 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { finalize, debounceTime } from 'rxjs/operators';
+import { AuthService } from '../../../core/services/auth.service';
 import { InventoryService } from '../services/inventory.service';
 import {
   InventoryFilter,
@@ -17,6 +19,9 @@ import {
   StockTransferTrendPoint,
   TransferStatus,
 } from '../models/inventory.model';
+import { StockTransferFormDialogComponent } from './dialogs/stock-transfer-form-dialog/stock-transfer-form-dialog.component';
+import { ReceiveStockTransferDialogComponent } from './dialogs/receive-stock-transfer-dialog/receive-stock-transfer-dialog.component';
+import { CancelStockTransferDialogComponent } from './dialogs/cancel-stock-transfer-dialog/cancel-stock-transfer-dialog.component';
 
 interface MetricCard {
   label: string;
@@ -75,12 +80,24 @@ export class StockTransfersComponent implements OnInit, AfterViewInit {
   statusBreakdown: StockTransferStatusBreakdown[] = [];
   trendData: StockTransferTrendPoint[] = [];
   topLocations: StockTransferTopLocation[] = [];
+  private readonly requestedByDefault: string | null;
 
   constructor(
     private readonly inventoryService: InventoryService,
     private readonly snackBar: MatSnackBar,
-    private readonly fb: FormBuilder
-  ) {}
+    private readonly fb: FormBuilder,
+    private readonly dialog: MatDialog,
+    private readonly authService: AuthService
+  ) {
+    const currentUser = this.authService.getCurrentUserValue();
+    this.requestedByDefault =
+      currentUser?.fullName ||
+      [currentUser?.firstName, currentUser?.lastName]
+        .filter(Boolean)
+        .join(' ')
+        .trim() ||
+      null;
+  }
 
   ngOnInit(): void {
     this.initializeFilterForm();
@@ -207,8 +224,22 @@ export class StockTransfersComponent implements OnInit, AfterViewInit {
   }
 
   createTransfer(): void {
-    this.snackBar.open('Transfer creation coming soon', 'Close', {
-      duration: 2500,
+    const dialogRef = this.dialog.open(StockTransferFormDialogComponent, {
+      width: '920px',
+      disableClose: true,
+      autoFocus: false,
+      panelClass: 'stock-transfer-dialog-panel',
+      data: {
+        mode: 'create',
+        locations: this.locations,
+        requestedBy: this.requestedByDefault,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'saved') {
+        this.refreshData();
+      }
     });
   }
 
@@ -296,7 +327,27 @@ export class StockTransfersComponent implements OnInit, AfterViewInit {
   }
 
   viewDetails(transfer: StockTransfer): void {
-    console.info('View transfer details', transfer);
+    this.inventoryService.getStockTransferById(transfer.id).subscribe({
+      next: (fullTransfer) => {
+        this.dialog.open(StockTransferFormDialogComponent, {
+          width: '920px',
+          autoFocus: false,
+          panelClass: 'stock-transfer-dialog-panel',
+          data: {
+            mode: 'view',
+            transfer: fullTransfer,
+            locations: this.locations,
+            requestedBy: this.requestedByDefault,
+          },
+        });
+      },
+      error: (error) => {
+        console.error('Failed to load transfer details', error);
+        this.snackBar.open('Unable to load transfer details', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
   }
 
   approveTransfer(transferId: string): void {
@@ -340,39 +391,25 @@ export class StockTransfersComponent implements OnInit, AfterViewInit {
   receiveTransfer(transferId: string): void {
     this.inventoryService.getStockTransferById(transferId).subscribe({
       next: (transfer) => {
-        const receivedItems = (transfer.items ?? []).map((item) => ({
-          itemId: item.id,
-          productId: item.productId,
-          receivedQuantity: item.quantity ?? 0,
-        }));
-
-        if (!receivedItems.length) {
-          this.snackBar.open(
-            'No items available to receive for this transfer',
-            'Close',
-            {
-              duration: 3000,
-            }
-          );
-          return;
-        }
-
-        this.inventoryService
-          .receiveStockTransfer(transferId, receivedItems)
-          .subscribe({
-            next: () => {
-              this.snackBar.open('Transfer received successfully', 'Close', {
-                duration: 3000,
-              });
-              this.refreshData();
+        const dialogRef = this.dialog.open(
+          ReceiveStockTransferDialogComponent,
+          {
+            width: '640px',
+            disableClose: true,
+            autoFocus: false,
+            panelClass: 'stock-transfer-dialog-panel',
+            data: {
+              transfer,
+              requestedBy: this.requestedByDefault,
             },
-            error: (error) => {
-              console.error('Failed to receive transfer', error);
-              this.snackBar.open('Failed to receive transfer', 'Close', {
-                duration: 3000,
-              });
-            },
-          });
+          }
+        );
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result?.action === 'updated') {
+            this.refreshData();
+          }
+        });
       },
       error: (error) => {
         console.error('Failed to load transfer for receiving', error);
@@ -384,24 +421,46 @@ export class StockTransfersComponent implements OnInit, AfterViewInit {
   }
 
   cancelTransfer(transferId: string): void {
-    if (!confirm('Cancel this transfer? This cannot be undone.')) {
-      return;
-    }
+    this.inventoryService.getStockTransferById(transferId).subscribe({
+      next: (transfer) => {
+        const dialogRef = this.dialog.open(CancelStockTransferDialogComponent, {
+          width: '520px',
+          disableClose: true,
+          autoFocus: false,
+          panelClass: 'stock-transfer-dialog-panel',
+          data: { transfer },
+        });
 
-    this.inventoryService
-      .cancelStockTransfer(transferId, 'Cancelled by user')
-      .subscribe({
-        next: () => {
-          this.snackBar.open('Transfer cancelled', 'Close', { duration: 3000 });
-          this.refreshData();
-        },
-        error: (error) => {
-          console.error('Failed to cancel transfer', error);
-          this.snackBar.open('Failed to cancel transfer', 'Close', {
-            duration: 3000,
-          });
-        },
-      });
+        dialogRef.afterClosed().subscribe((result) => {
+          if (!result?.reason) {
+            return;
+          }
+
+          this.inventoryService
+            .cancelStockTransfer(transferId, result.reason)
+            .subscribe({
+              next: () => {
+                this.snackBar.open('Transfer cancelled', 'Close', {
+                  duration: 3000,
+                });
+                this.refreshData();
+              },
+              error: (error) => {
+                console.error('Failed to cancel transfer', error);
+                this.snackBar.open('Failed to cancel transfer', 'Close', {
+                  duration: 3000,
+                });
+              },
+            });
+        });
+      },
+      error: (error) => {
+        console.error('Failed to load transfer for cancellation', error);
+        this.snackBar.open('Unable to load transfer details', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
   }
 
   getStatusColor(status: TransferStatus | string): string {

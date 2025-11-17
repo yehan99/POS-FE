@@ -1,0 +1,40 @@
+.cancel-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.transfer-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #fdf2f2;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b91c1c;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: #7f1d1d;
+}
+
+.summary-status {
+  font-weight: 600;
+  color: #111827;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-actions {
+  padding: 1rem 1.5rem;
+}

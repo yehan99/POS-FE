@@ -7,19 +7,24 @@ export interface StockAdjustment {
   productSku: string;
   adjustmentType: AdjustmentType;
   quantity: number;
+  netQuantity: number;
   previousStock: number;
   newStock: number;
   reason: string;
   notes?: string;
   cost: number;
   totalValue: number;
+  netValue: number;
   locationId?: string;
   locationName?: string;
   status: AdjustmentStatus;
   createdBy: string;
   approvedBy?: string;
-  createdAt: Date;
-  approvedAt?: Date;
+  rejectedBy?: string;
+  rejectionReason?: string;
+  createdAt: string | Date;
+  approvedAt?: string | Date | null;
+  rejectedAt?: string | Date | null;
 }
 
 export type AdjustmentType =
@@ -33,12 +38,63 @@ export type AdjustmentType =
 export type AdjustmentStatus = 'pending' | 'approved' | 'rejected';
 
 export interface StockAdjustmentFormData {
+  adjustmentNumber?: string;
   productId: string;
   adjustmentType: AdjustmentType;
   quantity: number;
   reason: string;
   notes?: string;
   locationId?: string;
+}
+
+export interface ProductLookupSummary {
+  id: string;
+  name: string;
+  sku: string;
+  stockQuantity: number;
+  costPrice?: number;
+}
+
+export interface StockAdjustmentDashboardMetrics {
+  totalAdjustments: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  netQuantityChange: number;
+  totalValueAdjusted: number;
+  locationsImpacted: number;
+  statusBreakdown: StockAdjustmentStatusBreakdown[];
+  typeBreakdown: StockAdjustmentTypeBreakdown[];
+  topReasons: StockAdjustmentReasonBreakdown[];
+  trend: StockAdjustmentTrendPoint[];
+}
+
+export interface StockAdjustmentStatusBreakdown {
+  status: AdjustmentStatus | string;
+  count: number;
+  percentage: number;
+  totalQuantity: number;
+  totalValue: number;
+}
+
+export interface StockAdjustmentTypeBreakdown {
+  type: AdjustmentType | string;
+  count: number;
+  totalQuantity: number;
+  totalValue: number;
+}
+
+export interface StockAdjustmentReasonBreakdown {
+  reason: string;
+  count: number;
+  percentage: number;
+}
+
+export interface StockAdjustmentTrendPoint {
+  label: string;
+  adjustments: number;
+  netQuantity: number;
+  totalValue: number;
 }
 
 // Stock Transfer Models
@@ -68,13 +124,13 @@ export interface StockTransfer {
 
 export interface StockTransferItem {
   id?: string;
-  productId: string;
+  productId: string | null;
   productName: string;
-  productSku: string | null;
+  productSku?: string | null;
   quantity: number;
   receivedQuantity?: number;
-  unitCost: number;
-  totalCost: number;
+  unitCost?: number | null;
+  totalCost?: number | null;
 }
 
 export type TransferStatus =
@@ -89,6 +145,7 @@ export interface StockTransferFormData {
   fromLocationId: string;
   toLocationId: string;
   items: StockTransferItem[];
+  requestedBy?: string | null;
   notes?: string;
 }
 

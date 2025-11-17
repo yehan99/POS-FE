@@ -1,9 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { SelectionModel } from '@angular/cdk/collections';
 import { InventoryService } from '../services/inventory.service';
@@ -11,8 +11,24 @@ import {
   StockAdjustment,
   AdjustmentType,
   Location,
+  InventoryFilter,
+  StockAdjustmentDashboardMetrics,
+  StockAdjustmentReasonBreakdown,
+  StockAdjustmentStatusBreakdown,
+  StockAdjustmentTypeBreakdown,
 } from '../models/inventory.model';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+import { StockAdjustmentFormDialogComponent } from './dialogs/stock-adjustment-form-dialog/stock-adjustment-form-dialog.component';
+import { RejectStockAdjustmentDialogComponent } from './dialogs/reject-stock-adjustment-dialog/reject-stock-adjustment-dialog.component';
+
+interface MetricCard {
+  label: string;
+  value: string;
+  icon: string;
+  accent: 'primary' | 'accent' | 'success' | 'warn' | 'neutral';
+  description?: string;
+}
 
 @Component({
   selector: 'app-stock-adjustments',
@@ -20,7 +36,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
   templateUrl: './stock-adjustments.component.html',
   styleUrl: './stock-adjustments.component.scss',
 })
-export class StockAdjustmentsComponent implements OnInit {
+export class StockAdjustmentsComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = [
     'select',
     'adjustmentNumber',
@@ -42,6 +58,7 @@ export class StockAdjustmentsComponent implements OnInit {
 
   filterForm!: FormGroup;
   isLoading = false;
+  dashboardLoading = false;
 
   totalAdjustments = 0;
   pageSize = 10;
@@ -57,18 +74,29 @@ export class StockAdjustmentsComponent implements OnInit {
     'correction',
   ];
   locations: Location[] = [];
+  dashboardMetrics?: StockAdjustmentDashboardMetrics;
+  metricCards: MetricCard[] = [];
+  statusBreakdown: StockAdjustmentStatusBreakdown[] = [];
+  typeBreakdown: StockAdjustmentTypeBreakdown[] = [];
+  topReasons: StockAdjustmentReasonBreakdown[] = [];
 
   constructor(
     private inventoryService: InventoryService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.initializeFilterForm();
     this.loadLocations();
+    this.loadDashboardMetrics();
     this.loadAdjustments();
+  }
+
+  ngAfterViewInit(): void {
+    this.attachSort();
+    this.syncPaginator();
   }
 
   initializeFilterForm(): void {
@@ -92,16 +120,19 @@ export class StockAdjustmentsComponent implements OnInit {
     this.filterForm.get('type')?.valueChanges.subscribe(() => {
       this.currentPage = 0;
       this.loadAdjustments();
+      this.loadDashboardMetrics();
     });
 
     this.filterForm.get('status')?.valueChanges.subscribe(() => {
       this.currentPage = 0;
       this.loadAdjustments();
+      this.loadDashboardMetrics();
     });
 
     this.filterForm.get('locationId')?.valueChanges.subscribe(() => {
       this.currentPage = 0;
       this.loadAdjustments();
+      this.loadDashboardMetrics();
     });
   }
 
@@ -116,36 +147,74 @@ export class StockAdjustmentsComponent implements OnInit {
     });
   }
 
-  loadAdjustments(): void {
-    this.isLoading = true;
-    const formValue = this.filterForm.value;
-
-    const filters = {
-      search: formValue.search || undefined,
-      type: formValue.type || undefined,
-      status: formValue.status || undefined,
-      locationId: formValue.locationId || undefined,
-      dateFrom: formValue.dateFrom || undefined,
-      dateTo: formValue.dateTo || undefined,
-      page: this.currentPage + 1,
-      pageSize: this.pageSize,
-    };
-
-    this.inventoryService.getStockAdjustments(filters).subscribe({
-      next: (response) => {
-        this.dataSource.data = response.data;
-        this.totalAdjustments = response.total;
-        this.isLoading = false;
-        this.selection.clear();
+  loadDashboardMetrics(): void {
+    this.dashboardLoading = true;
+    this.inventoryService.getStockAdjustmentDashboardMetrics().subscribe({
+      next: (metrics) => {
+        const normalized = this.normalizeDashboardMetrics(metrics);
+        this.dashboardMetrics = normalized;
+        this.metricCards = this.buildMetricCards(normalized);
+        this.statusBreakdown = normalized.statusBreakdown;
+        this.typeBreakdown = normalized.typeBreakdown;
+        this.topReasons = normalized.topReasons;
+        this.dashboardLoading = false;
       },
       error: (error) => {
-        console.error('Error loading adjustments:', error);
-        this.snackBar.open('Failed to load adjustments', 'Close', {
-          duration: 3000,
-        });
-        this.isLoading = false;
+        console.error(
+          'Error loading stock adjustment dashboard metrics:',
+          error
+        );
+        const fallback = this.buildEmptyDashboardMetrics();
+        this.dashboardMetrics = fallback;
+        this.metricCards = this.buildMetricCards(fallback);
+        this.statusBreakdown = fallback.statusBreakdown;
+        this.typeBreakdown = fallback.typeBreakdown;
+        this.topReasons = fallback.topReasons;
+        this.dashboardLoading = false;
       },
     });
+  }
+
+  loadAdjustments(): void {
+    this.isLoading = true;
+    const filters = this.buildAdjustmentFilters();
+
+    this.inventoryService
+      .getStockAdjustments(filters)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (response) => {
+          const adjustments = (response.data ?? []).map((item) =>
+            this.normalizeAdjustment(item)
+          );
+          this.dataSource.data = adjustments;
+
+          const pagination = response.pagination ?? {
+            page: response.page ?? 1,
+            limit: response.pageSize ?? this.pageSize,
+            total: response.total ?? this.dataSource.data.length,
+            totalPages: response.totalPages ?? 1,
+            hasNext: false,
+            hasPrev: false,
+          };
+
+          this.totalAdjustments =
+            pagination.total ?? this.dataSource.data.length;
+          this.pageSize = pagination.limit ?? this.pageSize;
+          this.currentPage = Math.max((pagination.page ?? 1) - 1, 0);
+
+          this.selection.clear();
+          this.attachSort();
+          this.syncPaginator();
+        },
+        error: (error) => {
+          console.error('Error loading adjustments:', error);
+          this.dataSource.data = [];
+          this.snackBar.open('Failed to load adjustments', 'Close', {
+            duration: 3000,
+          });
+        },
+      });
   }
 
   onPageChange(event: PageEvent): void {
@@ -155,24 +224,74 @@ export class StockAdjustmentsComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filterForm.reset();
+    this.filterForm.reset(
+      {
+        search: '',
+        type: '',
+        status: '',
+        locationId: '',
+        dateFrom: '',
+        dateTo: '',
+      },
+      { emitEvent: false }
+    );
     this.currentPage = 0;
     this.loadAdjustments();
+    this.loadDashboardMetrics();
   }
 
   applyDateFilter(): void {
     this.currentPage = 0;
     this.loadAdjustments();
+    this.loadDashboardMetrics();
   }
 
   createAdjustment(): void {
-    // TODO: Open adjustment creation dialog
-    console.log('Create adjustment');
+    const dialogRef = this.dialog.open(StockAdjustmentFormDialogComponent, {
+      width: '640px',
+      maxWidth: '90vw',
+      data: {
+        mode: 'create',
+        locations: this.locations,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action === 'saved') {
+        this.snackBar.open('Stock adjustment created successfully', 'Close', {
+          duration: 3000,
+        });
+        this.refreshData();
+      }
+    });
   }
 
   viewAdjustmentDetails(adjustment: StockAdjustment): void {
-    // TODO: Open adjustment detail dialog
-    console.log('View adjustment details', adjustment);
+    this.inventoryService.getStockAdjustmentById(adjustment.id).subscribe({
+      next: (response) => {
+        const dialogRef = this.dialog.open(StockAdjustmentFormDialogComponent, {
+          width: '640px',
+          maxWidth: '90vw',
+          data: {
+            mode: 'view',
+            adjustment: this.normalizeAdjustment(response),
+            locations: this.locations,
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result?.action === 'updated') {
+            this.refreshData();
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading adjustment details:', error);
+        this.snackBar.open('Failed to load adjustment details', 'Close', {
+          duration: 3000,
+        });
+      },
+    });
   }
 
   approveAdjustment(adjustment: StockAdjustment): void {
@@ -186,7 +305,7 @@ export class StockAdjustmentsComponent implements OnInit {
           this.snackBar.open('Adjustment approved successfully', 'Close', {
             duration: 3000,
           });
-          this.loadAdjustments();
+          this.refreshData();
         },
         error: (error) => {
           console.error('Error approving adjustment:', error);
@@ -196,6 +315,41 @@ export class StockAdjustmentsComponent implements OnInit {
         },
       });
     }
+  }
+
+  rejectAdjustment(adjustment: StockAdjustment): void {
+    if (!this.canReject(adjustment)) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RejectStockAdjustmentDialogComponent, {
+      width: '520px',
+      maxWidth: '90vw',
+      data: { adjustment },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.action !== 'rejected' || !result.reason) {
+        return;
+      }
+
+      this.inventoryService
+        .rejectStockAdjustment(adjustment.id, result.reason)
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Adjustment rejected successfully', 'Close', {
+              duration: 3000,
+            });
+            this.refreshData();
+          },
+          error: (error) => {
+            console.error('Error rejecting adjustment:', error);
+            this.snackBar.open('Failed to reject adjustment', 'Close', {
+              duration: 3000,
+            });
+          },
+        });
+    });
   }
 
   bulkApprove(): void {
@@ -221,11 +375,16 @@ export class StockAdjustmentsComponent implements OnInit {
                 'Close',
                 { duration: 3000 }
               );
-              this.loadAdjustments();
+              this.refreshData();
             }
           },
           error: (error) => {
             console.error('Error approving adjustment:', error);
+            this.snackBar.open(
+              `Failed to approve ${adjustment.adjustmentNumber}`,
+              'Close',
+              { duration: 3000 }
+            );
           },
         });
       });
@@ -233,16 +392,7 @@ export class StockAdjustmentsComponent implements OnInit {
   }
 
   exportAdjustments(): void {
-    const formValue = this.filterForm.value;
-
-    const filters = {
-      search: formValue.search || undefined,
-      type: formValue.type || undefined,
-      status: formValue.status || undefined,
-      locationId: formValue.locationId || undefined,
-      dateFrom: formValue.dateFrom || undefined,
-      dateTo: formValue.dateTo || undefined,
-    };
+    const { page, pageSize, ...filters } = this.buildAdjustmentFilters();
 
     this.inventoryService.exportStockAdjustments(filters).subscribe({
       next: (blob) => {
@@ -267,6 +417,215 @@ export class StockAdjustmentsComponent implements OnInit {
     });
   }
 
+  private buildAdjustmentFilters(): InventoryFilter {
+    const formValue = this.filterForm.value;
+
+    return {
+      search: formValue.search || undefined,
+      type: formValue.type || undefined,
+      status: formValue.status || undefined,
+      locationId: formValue.locationId || undefined,
+      dateFrom: formValue.dateFrom || undefined,
+      dateTo: formValue.dateTo || undefined,
+      page: this.currentPage + 1,
+      pageSize: this.pageSize,
+    };
+  }
+
+  private attachSort(): void {
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
+  }
+
+  private syncPaginator(): void {
+    if (!this.paginator) {
+      return;
+    }
+
+    this.paginator.pageIndex = this.currentPage;
+    this.paginator.length = this.totalAdjustments;
+    this.paginator.pageSize = this.pageSize;
+  }
+
+  private refreshData(): void {
+    this.loadAdjustments();
+    this.loadDashboardMetrics();
+  }
+
+  private normalizeDashboardMetrics(
+    metrics?: StockAdjustmentDashboardMetrics | null
+  ): StockAdjustmentDashboardMetrics {
+    if (!metrics) {
+      return this.buildEmptyDashboardMetrics();
+    }
+
+    return {
+      totalAdjustments: metrics.totalAdjustments ?? 0,
+      pending: metrics.pending ?? 0,
+      approved: metrics.approved ?? 0,
+      rejected: metrics.rejected ?? 0,
+      netQuantityChange: metrics.netQuantityChange ?? 0,
+      totalValueAdjusted: metrics.totalValueAdjusted ?? 0,
+      locationsImpacted: metrics.locationsImpacted ?? 0,
+      statusBreakdown: (metrics.statusBreakdown ?? []).map((item) => ({
+        status: item.status ?? 'unknown',
+        count: item.count ?? 0,
+        percentage: item.percentage ?? 0,
+        totalQuantity: item.totalQuantity ?? 0,
+        totalValue: item.totalValue ?? 0,
+      })),
+      typeBreakdown: (metrics.typeBreakdown ?? []).map((item) => ({
+        type: item.type ?? 'other',
+        count: item.count ?? 0,
+        totalQuantity: item.totalQuantity ?? 0,
+        totalValue: item.totalValue ?? 0,
+      })),
+      topReasons: (metrics.topReasons ?? []).map((item) => ({
+        reason: item.reason ?? 'Other',
+        count: item.count ?? 0,
+        percentage: item.percentage ?? 0,
+      })),
+      trend: (metrics.trend ?? []).map((item) => ({
+        label: item.label ?? 'Period',
+        adjustments: item.adjustments ?? 0,
+        netQuantity: item.netQuantity ?? 0,
+        totalValue: item.totalValue ?? 0,
+      })),
+    };
+  }
+
+  private buildEmptyDashboardMetrics(): StockAdjustmentDashboardMetrics {
+    return {
+      totalAdjustments: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      netQuantityChange: 0,
+      totalValueAdjusted: 0,
+      locationsImpacted: 0,
+      statusBreakdown: [],
+      typeBreakdown: [],
+      topReasons: [],
+      trend: [],
+    };
+  }
+
+  private buildMetricCards(
+    metrics: StockAdjustmentDashboardMetrics
+  ): MetricCard[] {
+    const netQuantity = metrics.netQuantityChange ?? 0;
+    const netIcon = netQuantity >= 0 ? 'trending_up' : 'trending_down';
+    const netAccent: MetricCard['accent'] =
+      netQuantity > 0 ? 'success' : netQuantity < 0 ? 'warn' : 'neutral';
+
+    return [
+      {
+        label: 'Total Adjustments',
+        value: this.formatNumber(metrics.totalAdjustments),
+        icon: 'inventory_2',
+        accent: 'primary',
+        description: `${this.formatNumber(
+          metrics.locationsImpacted
+        )} locations impacted`,
+      },
+      {
+        label: 'Pending Approval',
+        value: this.formatNumber(metrics.pending),
+        icon: 'hourglass_top',
+        accent: 'accent',
+        description: `${this.formatNumber(
+          metrics.approved
+        )} approved · ${this.formatNumber(metrics.rejected)} rejected`,
+      },
+      {
+        label: 'Net Quantity Change',
+        value: this.formatSignedNumber(netQuantity),
+        icon: netIcon,
+        accent: netAccent,
+        description: `${this.formatNumber(
+          Math.abs(netQuantity)
+        )} units impacted`,
+      },
+      {
+        label: 'Value Adjusted',
+        value: this.formatCurrency(metrics.totalValueAdjusted),
+        icon: 'account_balance',
+        accent: 'neutral',
+        description: 'Cumulative stock value impact',
+      },
+    ];
+  }
+
+  private formatNumber(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '0';
+    }
+
+    return new Intl.NumberFormat('en-LK').format(value);
+  }
+
+  private formatSignedNumber(value: number | null | undefined): string {
+    if (value === null || value === undefined || value === 0) {
+      return '0';
+    }
+
+    const formatted = this.formatNumber(Math.abs(value));
+    return value > 0 ? `+${formatted}` : `-${formatted}`;
+  }
+
+  private formatCurrency(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return 'LKR 0';
+    }
+
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  formatPercentage(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '0%';
+    }
+
+    return `${new Intl.NumberFormat('en-LK', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    }).format(value)}%`;
+  }
+
+  getStatusLabel(status: string | null | undefined): string {
+    if (!status) {
+      return 'Unknown';
+    }
+
+    return status
+      .split('_')
+      .map((segment) =>
+        segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : ''
+      )
+      .join(' ')
+      .trim();
+  }
+
+  formatTypeLabel(type: string | null | undefined): string {
+    if (!type) {
+      return 'Other';
+    }
+
+    return type
+      .split('_')
+      .map((segment) =>
+        segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : ''
+      )
+      .join(' ')
+      .trim();
+  }
+
   // Selection methods
   isAllSelected(): boolean {
     const numSelected = this.selection.selected.length;
@@ -283,7 +642,7 @@ export class StockAdjustmentsComponent implements OnInit {
   }
 
   // Utility methods
-  getTypeColor(type: AdjustmentType): string {
+  getTypeColor(type: AdjustmentType | string): string {
     switch (type) {
       case 'increase':
       case 'found':
@@ -301,7 +660,7 @@ export class StockAdjustmentsComponent implements OnInit {
     }
   }
 
-  getTypeIcon(type: AdjustmentType): string {
+  getTypeIcon(type: AdjustmentType | string): string {
     switch (type) {
       case 'increase':
       case 'found':
@@ -334,8 +693,17 @@ export class StockAdjustmentsComponent implements OnInit {
     }
   }
 
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('en-US', {
+  formatDate(value: string | Date | null | undefined): string {
+    if (!value) {
+      return 'N/A';
+    }
+
+    const parsed = typeof value === 'string' ? new Date(value) : value;
+    if (Number.isNaN(parsed.getTime())) {
+      return 'N/A';
+    }
+
+    return parsed.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -346,5 +714,51 @@ export class StockAdjustmentsComponent implements OnInit {
 
   canApprove(adjustment: StockAdjustment): boolean {
     return adjustment.status === 'pending';
+  }
+
+  canReject(adjustment: StockAdjustment): boolean {
+    return adjustment.status === 'pending';
+  }
+
+  getQuantityDelta(adjustment: StockAdjustment): number {
+    if (typeof adjustment.netQuantity === 'number') {
+      return adjustment.netQuantity;
+    }
+
+    return this.estimateNetQuantity(adjustment);
+  }
+
+  private normalizeAdjustment(adjustment: StockAdjustment): StockAdjustment {
+    const netQuantity =
+      typeof adjustment.netQuantity === 'number'
+        ? adjustment.netQuantity
+        : this.estimateNetQuantity(adjustment);
+
+    const netValue =
+      typeof adjustment.netValue === 'number'
+        ? adjustment.netValue
+        : netQuantity * (adjustment.cost ?? 0);
+
+    return {
+      ...adjustment,
+      netQuantity,
+      netValue,
+      quantity: Math.abs(adjustment.quantity ?? netQuantity),
+      totalValue:
+        typeof adjustment.totalValue === 'number'
+          ? adjustment.totalValue
+          : Math.abs(netValue),
+    };
+  }
+
+  private estimateNetQuantity(adjustment: StockAdjustment): number {
+    const baseQuantity = Math.abs(adjustment.quantity ?? 0);
+    const negativeTypes: AdjustmentType[] = ['decrease', 'damage', 'loss'];
+
+    if (negativeTypes.includes(adjustment.adjustmentType)) {
+      return -baseQuantity;
+    }
+
+    return baseQuantity;
   }
 }

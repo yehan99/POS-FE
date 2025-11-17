@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>Cancel Stock Transfer</h2>
+
+<form class="cancel-form" [formGroup]="form" (ngSubmit)="submit()">
+    <mat-dialog-content>
+        <section class="transfer-summary">
+            <div>
+                <span class="summary-label">Transfer #</span>
+                <span class="summary-value">{{ transfer.transferNumber }}</span>
+            </div>
+            <div>
+                <span class="summary-label">From</span>
+                <span class="summary-value">{{ transfer.fromLocationName || '—' }}</span>
+            </div>
+            <div>
+                <span class="summary-label">To</span>
+                <span class="summary-value">{{ transfer.toLocationName || '—' }}</span>
+            </div>
+            <div>
+                <span class="summary-label">Status</span>
+                <span class="summary-status">{{ transfer.status | titlecase }}</span>
+            </div>
+        </section>
+
+        <mat-form-field appearance="outline">
+            <mat-label>Cancellation Reason</mat-label>
+            <textarea matInput formControlName="reason" rows="4"
+                placeholder="Describe why this transfer is being cancelled"></textarea>
+            <mat-error *ngIf="form.get('reason')?.hasError('required')">
+                A reason is required to cancel this transfer.
+            </mat-error>
+            <mat-error *ngIf="form.get('reason')?.hasError('minlength')">
+                Please provide a brief explanation (at least 5 characters).
+            </mat-error>
+            <mat-hint align="end">{{ form.get('reason')?.value?.length || 0 }}/1000</mat-hint>
+        </mat-form-field>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button type="button" (click)="cancel()">Keep Transfer</button>
+        <button mat-flat-button color="warn" type="submit">Confirm Cancel</button>
+    </mat-dialog-actions>
+</form>

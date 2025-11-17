@@ -1,0 +1,154 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<form class="transfer-form" [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content>
+    <section class="transfer-meta" *ngIf="transfer">
+      <div class="meta-row">
+        <div>
+          <span class="meta-label">Transfer #</span>
+          <span class="meta-value">{{ transfer.transferNumber }}</span>
+        </div>
+        <div>
+          <span class="meta-label">Status</span>
+          <span class="status-pill" [class]="'status-pill status-' + transfer.status">
+            {{ transfer.status | titlecase }}
+          </span>
+        </div>
+      </div>
+      <div class="meta-row">
+        <div>
+          <span class="meta-label">Requested By</span>
+          <span class="meta-value">{{ transfer.requestedBy || '—' }}</span>
+        </div>
+        <div>
+          <span class="meta-label">Created</span>
+          <span class="meta-value">{{ transfer.createdAt | date: 'medium' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>From Location</mat-label>
+        <mat-select formControlName="fromLocationId" required>
+          <mat-option value="" disabled>Select a location</mat-option>
+          <mat-option *ngFor="let location of locations" [value]="location.id">
+            {{ location.name }} ({{ location.code }})
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('fromLocationId')?.hasError('required')">
+          From location is required.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To Location</mat-label>
+        <mat-select formControlName="toLocationId" required>
+          <mat-option value="" disabled>Select a location</mat-option>
+          <mat-option *ngFor="let location of locations" [value]="location.id">
+            {{ location.name }} ({{ location.code }})
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('toLocationId')?.hasError('required')">
+          To location is required.
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Requested By</mat-label>
+        <input matInput formControlName="requestedBy" placeholder="Requester name" />
+        <mat-hint *ngIf="!form.get('requestedBy')?.value && requestedByFallback">
+          Defaulting to {{ requestedByFallback }}
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="notes-field">
+        <mat-label>Notes</mat-label>
+        <textarea matInput formControlName="notes" rows="3"></textarea>
+        <mat-hint align="end">
+          {{ form.get('notes')?.value?.length || 0 }}/2000
+        </mat-hint>
+      </mat-form-field>
+    </div>
+
+    <mat-error *ngIf="form.errors?.['sameLocation']" class="form-level-error">
+      From and to locations cannot be the same.
+    </mat-error>
+
+    <section formArrayName="items" class="items-section">
+      <header class="items-header">
+        <h3>Transfer Items</h3>
+        <button mat-stroked-button type="button" color="primary" (click)="addItem()" *ngIf="mode === 'create'">
+          Add Item
+        </button>
+      </header>
+
+      <div class="item-row" *ngFor="let itemGroup of items.controls; let i = index; trackBy: trackByIndex"
+        [formGroupName]="i">
+        <div class="item-row__fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Product</mat-label>
+            <input matInput formControlName="productName" placeholder="Product name" />
+            <mat-error *ngIf="itemGroup.get('productName')?.hasError('required')">
+              Product name is required.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>SKU</mat-label>
+            <input matInput formControlName="productSku" placeholder="SKU" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Quantity</mat-label>
+            <input matInput type="number" min="1" formControlName="quantity" />
+            <mat-error *ngIf="itemGroup.get('quantity')?.hasError('min')">
+              Quantity must be at least 1.
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Unit Cost</mat-label>
+            <input matInput type="number" min="0" step="0.01" formControlName="unitCost" />
+          </mat-form-field>
+
+          <div class="line-total">
+            <span class="line-total__label">Line Total</span>
+            <span class="line-total__value">
+              {{ getLineTotal(itemGroup) | number: '1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        <button mat-icon-button color="warn" type="button" (click)="removeItem(i)" aria-label="Remove item"
+          *ngIf="mode === 'create'">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </section>
+
+    <footer class="items-summary" *ngIf="items.length">
+      <div>
+        <span class="summary-label">Total Items</span>
+        <span class="summary-value">{{ formTotals.totalItems }}</span>
+      </div>
+      <div>
+        <span class="summary-label">Total Value</span>
+        <span class="summary-value">{{ formTotals.totalValue | number: '1.2-2' }}</span>
+      </div>
+    </footer>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting">
+      {{ mode === 'view' ? 'Close' : 'Cancel' }}
+    </button>
+
+    <button *ngIf="mode !== 'view'" mat-flat-button color="primary" type="submit" [disabled]="isSubmitting">
+      <mat-progress-spinner *ngIf="isSubmitting" diameter="18" mode="indeterminate"></mat-progress-spinner>
+      <span *ngIf="!isSubmitting">
+        {{ mode === 'create' ? 'Create Transfer' : 'Save' }}
+      </span>
+    </button>
+  </mat-dialog-actions>
+</form>

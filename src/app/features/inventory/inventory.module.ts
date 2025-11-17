@@ -14,6 +14,9 @@ import { SupplierFormDialogComponent } from './suppliers/dialogs/supplier-form-d
 import { SupplierDetailDialogComponent } from './suppliers/dialogs/supplier-detail-dialog/supplier-detail-dialog.component';
 import { PurchaseOrderFormDialogComponent } from './purchase-orders/dialogs/purchase-order-form-dialog/purchase-order-form-dialog.component';
 import { ReceivePurchaseOrderDialogComponent } from './purchase-orders/dialogs/receive-purchase-order-dialog/receive-purchase-order-dialog.component';
+import { StockTransferFormDialogComponent } from './stock-transfers/dialogs/stock-transfer-form-dialog/stock-transfer-form-dialog.component';
+import { ReceiveStockTransferDialogComponent } from './stock-transfers/dialogs/receive-stock-transfer-dialog/receive-stock-transfer-dialog.component';
+import { CancelStockTransferDialogComponent } from './stock-transfers/dialogs/cancel-stock-transfer-dialog/cancel-stock-transfer-dialog.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +37,9 @@ import { ReceivePurchaseOrderDialogComponent } from './purchase-orders/dialogs/r
     SharedModule,
     ReactiveFormsModule,
     FormsModule,
+    StockTransferFormDialogComponent,
+    ReceiveStockTransferDialogComponent,
+    CancelStockTransferDialogComponent,
   ],
 })
 export class InventoryModule {}

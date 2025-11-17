@@ -1,236 +1,370 @@
-<div class="stock-adjustments-container">
-    <!-- Header -->
-    <div class="header">
-        <div class="title-section">
-            <h1>Stock Adjustments</h1>
-            <p class="subtitle">Manage stock increases, decreases, and corrections</p>
-        </div>
-        <div class="action-buttons">
-            <button mat-stroked-button (click)="exportAdjustments()">
-                <mat-icon>download</mat-icon>
-                Export
-            </button>
-            <button mat-raised-button color="primary" (click)="createAdjustment()">
-                <mat-icon>add</mat-icon>
-                Create Adjustment
-            </button>
-        </div>
+<section class="stock-adjustments-management">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Inventory Operations</p>
+        <h1>Stock Adjustments</h1>
+        <p class="subtitle">
+          Maintain accurate on-hand balances with controlled adjustments and approvals.
+        </p>
+      </div>
     </div>
-
-    <!-- Filters -->
-    <mat-card class="filters-card">
-        <mat-card-content>
-            <form [formGroup]="filterForm" class="filters-form">
-                <mat-form-field appearance="outline" class="search-field">
-                    <mat-label>Search</mat-label>
-                    <input matInput formControlName="search" placeholder="Search by number, product...">
-                    <mat-icon matPrefix>search</mat-icon>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                    <mat-label>Type</mat-label>
-                    <mat-select formControlName="type">
-                        <mat-option value="">All Types</mat-option>
-                        <mat-option *ngFor="let type of adjustmentTypes" [value]="type">
-                            {{ type | titlecase }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                    <mat-label>Status</mat-label>
-                    <mat-select formControlName="status">
-                        <mat-option value="">All Statuses</mat-option>
-                        <mat-option value="pending">Pending</mat-option>
-                        <mat-option value="approved">Approved</mat-option>
-                        <mat-option value="rejected">Rejected</mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                    <mat-label>Location</mat-label>
-                    <mat-select formControlName="locationId">
-                        <mat-option value="">All Locations</mat-option>
-                        <mat-option *ngFor="let location of locations" [value]="location.id">
-                            {{ location.name }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                    <mat-label>Date From</mat-label>
-                    <input matInput [matDatepicker]="dateFromPicker" formControlName="dateFrom"
-                        (dateChange)="applyDateFilter()">
-                    <mat-datepicker-toggle matSuffix [for]="dateFromPicker"></mat-datepicker-toggle>
-                    <mat-datepicker #dateFromPicker></mat-datepicker>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                    <mat-label>Date To</mat-label>
-                    <input matInput [matDatepicker]="dateToPicker" formControlName="dateTo"
-                        (dateChange)="applyDateFilter()">
-                    <mat-datepicker-toggle matSuffix [for]="dateToPicker"></mat-datepicker-toggle>
-                    <mat-datepicker #dateToPicker></mat-datepicker>
-                </mat-form-field>
-
-                <button mat-stroked-button type="button" (click)="clearFilters()" class="clear-btn">
-                    <mat-icon>clear</mat-icon>
-                    Clear
-                </button>
-            </form>
-        </mat-card-content>
-    </mat-card>
-
-    <!-- Bulk Actions -->
-    <div class="bulk-actions" *ngIf="selection.selected.length > 0">
-        <span class="selection-count">{{ selection.selected.length }} adjustment(s) selected</span>
-        <button mat-raised-button color="primary" (click)="bulkApprove()">
-            <mat-icon>check_circle</mat-icon>
-            Approve Selected
-        </button>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="exportAdjustments()">
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+      <button mat-flat-button color="primary" type="button" class="action-primary" (click)="createAdjustment()">
+        <mat-icon>add</mat-icon>
+        Create Adjustment
+      </button>
     </div>
+  </header>
 
-    <!-- Adjustments Table -->
-    <mat-card class="table-card">
-        <mat-card-content>
-            <div class="table-container">
-                <table mat-table [dataSource]="dataSource" matSort>
+  <app-card variant="elevated" padding="large" class="insights-panel" *ngIf="metricCards.length > 0">
+    <div class="insights-panel__header">
+      <h2>Adjustment Insights</h2>
+      <p>Snapshot of approval flow, value impact, and adjustment momentum.</p>
+    </div>
+    <mat-progress-bar *ngIf="dashboardLoading" mode="indeterminate"></mat-progress-bar>
+    <div class="insights-grid">
+      <div class="insight-card" *ngFor="let card of metricCards">
+        <div class="insight-card__icon" [ngClass]="'insight-card__icon--' + card.accent">
+          <mat-icon>{{ card.icon }}</mat-icon>
+        </div>
+        <div class="insight-card__details">
+          <span class="label">{{ card.label }}</span>
+          <span class="value">{{ card.value }}</span>
+          <span class="description" *ngIf="card.description">{{ card.description }}</span>
+        </div>
+      </div>
+    </div>
+  </app-card>
 
-                    <!-- Checkbox Column -->
-                    <ng-container matColumnDef="select">
-                        <th mat-header-cell *matHeaderCellDef>
-                            <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                                [checked]="selection.hasValue() && isAllSelected()"
-                                [indeterminate]="selection.hasValue() && !isAllSelected()">
-                            </mat-checkbox>
-                        </th>
-                        <td mat-cell *matCellDef="let row">
-                            <mat-checkbox (click)="$event.stopPropagation()"
-                                (change)="$event ? selection.toggle(row) : null" [checked]="selection.isSelected(row)">
-                            </mat-checkbox>
-                        </td>
-                    </ng-container>
-
-                    <!-- Adjustment Number Column -->
-                    <ng-container matColumnDef="adjustmentNumber">
-                        <th mat-header-cell *matHeaderCellDef>Number</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <span class="adjustment-number">{{ adjustment.adjustmentNumber }}</span>
-                        </td>
-                    </ng-container>
-
-                    <!-- Type Column -->
-                    <ng-container matColumnDef="type">
-                        <th mat-header-cell *matHeaderCellDef>Type</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <div class="type-badge" [style.color]="getTypeColor(adjustment.type)">
-                                <mat-icon>{{ getTypeIcon(adjustment.type) }}</mat-icon>
-                                <span>{{ adjustment.type | titlecase }}</span>
-                            </div>
-                        </td>
-                    </ng-container>
-
-                    <!-- Product Column -->
-                    <ng-container matColumnDef="product">
-                        <th mat-header-cell *matHeaderCellDef>Product</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <div class="product-info">
-                                <strong>{{ adjustment.productName }}</strong>
-                                <span class="product-sku">{{ adjustment.productSku }}</span>
-                            </div>
-                        </td>
-                    </ng-container>
-
-                    <!-- Location Column -->
-                    <ng-container matColumnDef="location">
-                        <th mat-header-cell *matHeaderCellDef>Location</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            {{ adjustment.locationName || 'N/A' }}
-                        </td>
-                    </ng-container>
-
-                    <!-- Quantity Column -->
-                    <ng-container matColumnDef="quantity">
-                        <th mat-header-cell *matHeaderCellDef>Quantity</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <span class="quantity" [class.positive]="adjustment.quantity > 0"
-                                [class.negative]="adjustment.quantity < 0">
-                                {{ adjustment.quantity > 0 ? '+' : '' }}{{ adjustment.quantity }}
-                            </span>
-                        </td>
-                    </ng-container>
-
-                    <!-- Reason Column -->
-                    <ng-container matColumnDef="reason">
-                        <th mat-header-cell *matHeaderCellDef>Reason</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <span class="reason-text">{{ adjustment.reason }}</span>
-                        </td>
-                    </ng-container>
-
-                    <!-- Status Column -->
-                    <ng-container matColumnDef="status">
-                        <th mat-header-cell *matHeaderCellDef>Status</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <span class="status-badge" [style.backgroundColor]="getStatusColor(adjustment.status)">
-                                {{ adjustment.status | titlecase }}
-                            </span>
-                        </td>
-                    </ng-container>
-
-                    <!-- Date Column -->
-                    <ng-container matColumnDef="date">
-                        <th mat-header-cell *matHeaderCellDef>Date</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            {{ formatDate(adjustment.createdAt) }}
-                        </td>
-                    </ng-container>
-
-                    <!-- Actions Column -->
-                    <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef>Actions</th>
-                        <td mat-cell *matCellDef="let adjustment">
-                            <button mat-icon-button [matMenuTriggerFor]="menu">
-                                <mat-icon>more_vert</mat-icon>
-                            </button>
-                            <mat-menu #menu="matMenu">
-                                <button mat-menu-item (click)="viewAdjustmentDetails(adjustment)">
-                                    <mat-icon>visibility</mat-icon>
-                                    <span>View Details</span>
-                                </button>
-                                <button mat-menu-item (click)="approveAdjustment(adjustment)"
-                                    *ngIf="canApprove(adjustment)">
-                                    <mat-icon>check_circle</mat-icon>
-                                    <span>Approve</span>
-                                </button>
-                            </mat-menu>
-                        </td>
-                    </ng-container>
-
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                </table>
-
-                <!-- Loading Spinner -->
-                <div class="loading-spinner" *ngIf="isLoading">
-                    <mat-spinner diameter="50"></mat-spinner>
-                </div>
-
-                <!-- No Data -->
-                <div class="no-data" *ngIf="!isLoading && dataSource.data.length === 0">
-                    <mat-icon>adjust</mat-icon>
-                    <p>No adjustments found</p>
-                    <button mat-raised-button color="primary" (click)="createAdjustment()">
-                        <mat-icon>add</mat-icon>
-                        Create First Adjustment
-                    </button>
-                </div>
+  <div class="dashboard-grid">
+    <app-card variant="elevated" padding="large" class="status-card">
+      <div class="status-card__header">
+        <h3>Status Breakdown</h3>
+        <span class="meta">{{ statusBreakdown.length }} statuses</span>
+      </div>
+      <div class="status-list" *ngIf="statusBreakdown.length; else emptyStatus">
+        <div class="status-item" *ngFor="let status of statusBreakdown">
+          <div class="status-item__info">
+            <span class="status-dot" [style.backgroundColor]="getStatusColor(status.status)"></span>
+            <div>
+              <p class="status-label">{{ getStatusLabel(status.status) }}</p>
+              <p class="status-subtitle">{{ status.count | number }} adjustments</p>
             </div>
+          </div>
+          <div class="status-item__metrics">
+            <span class="status-percentage">{{ formatPercentage(status.percentage) }}</span>
+            <span class="status-value">{{ status.totalQuantity | number }} units</span>
+          </div>
+        </div>
+      </div>
+      <ng-template #emptyStatus>
+        <div class="empty-state">
+          <mat-icon>pie_chart_outline</mat-icon>
+          <p>No status insights yet.</p>
+        </div>
+      </ng-template>
+    </app-card>
 
-            <!-- Paginator -->
-            <mat-paginator [length]="totalAdjustments" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 50]"
-                (page)="onPageChange($event)" showFirstLastButtons>
-            </mat-paginator>
-        </mat-card-content>
-    </mat-card>
-</div>
+    <app-card variant="elevated" padding="large" class="type-card">
+      <div class="type-card__header">
+        <h3>Adjustment Mix</h3>
+        <span class="meta">{{ typeBreakdown.length }} types</span>
+      </div>
+      <div class="type-list" *ngIf="typeBreakdown.length; else emptyTypes">
+        <div class="type-item" *ngFor="let type of typeBreakdown">
+          <div class="type-item__info">
+            <span class="type-icon" [style.color]="getTypeColor(type.type)">
+              <mat-icon>{{ getTypeIcon(type.type) }}</mat-icon>
+            </span>
+            <div>
+              <p class="type-label">{{ formatTypeLabel(type.type) }}</p>
+              <p class="type-subtitle">{{ type.count | number }} adjustments</p>
+            </div>
+          </div>
+          <div class="type-item__metrics">
+            <span class="type-quantity">{{ type.totalQuantity | number }} units</span>
+            <span class="type-value">
+              {{ type.totalValue | currency: 'LKR':'symbol':'1.0-0' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <ng-template #emptyTypes>
+        <div class="empty-state">
+          <mat-icon>category</mat-icon>
+          <p>No adjustment mix insights yet.</p>
+        </div>
+      </ng-template>
+    </app-card>
+  </div>
+
+  <app-card variant="elevated" padding="large" class="top-reasons-card" *ngIf="topReasons.length > 0">
+    <div class="top-reasons-card__header">
+      <h3>Top Reasons</h3>
+      <span class="meta">Most frequent adjustment drivers</span>
+    </div>
+    <div class="reasons-list">
+      <div class="reason-item" *ngFor="let reason of topReasons">
+        <div>
+          <p class="reason-label">{{ reason.reason }}</p>
+          <p class="reason-subtitle">{{ reason.count | number }} adjustments</p>
+        </div>
+        <span class="reason-percentage">{{ formatPercentage(reason.percentage) }}</span>
+      </div>
+    </div>
+  </app-card>
+
+  <app-card variant="elevated" padding="large" class="filter-panel">
+    <div class="filter-panel__header">
+      <div>
+        <h2>Smart Filters</h2>
+        <p>Refine adjustments by status, type, location, or entered dates.</p>
+      </div>
+      <div class="filter-panel__meta">
+        <mat-icon color="primary">inventory_2</mat-icon>
+        <span>{{ totalAdjustments | number }} total</span>
+      </div>
+    </div>
+
+    <form [formGroup]="filterForm" class="filter-grid">
+      <mat-form-field appearance="outline" class="filter-grid__field filter-grid__search">
+        <mat-label>Search adjustments</mat-label>
+        <input matInput formControlName="search" placeholder="Number, product, or notes" />
+        <mat-icon matPrefix>search</mat-icon>
+        <button mat-icon-button matSuffix type="button" *ngIf="filterForm.get('search')?.value"
+          (click)="filterForm.get('search')?.reset('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="">All types</mat-option>
+          <mat-option *ngFor="let type of adjustmentTypes" [value]="type">
+            {{ formatTypeLabel(type) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option value="pending">Pending</mat-option>
+          <mat-option value="approved">Approved</mat-option>
+          <mat-option value="rejected">Rejected</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Location</mat-label>
+        <mat-select formControlName="locationId">
+          <mat-option value="">All locations</mat-option>
+          <mat-option *ngFor="let location of locations" [value]="location.id">
+            {{ location.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Date from</mat-label>
+        <input matInput [matDatepicker]="dateFromPicker" formControlName="dateFrom" (dateChange)="applyDateFilter()" />
+        <mat-datepicker-toggle matSuffix [for]="dateFromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #dateFromPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-grid__field">
+        <mat-label>Date to</mat-label>
+        <input matInput [matDatepicker]="dateToPicker" formControlName="dateTo" (dateChange)="applyDateFilter()" />
+        <mat-datepicker-toggle matSuffix [for]="dateToPicker"></mat-datepicker-toggle>
+        <mat-datepicker #dateToPicker></mat-datepicker>
+      </mat-form-field>
+
+      <div class="filter-grid__footer">
+        <button mat-stroked-button type="button" (click)="clearFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Reset Filters
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="loadAdjustments(); loadDashboardMetrics()">
+          <mat-icon>refresh</mat-icon>
+          Apply Filters
+        </button>
+      </div>
+    </form>
+  </app-card>
+
+  <div class="bulk-actions" *ngIf="selection.selected.length > 0">
+    <div class="bulk-actions__info">
+      <mat-icon>checklist</mat-icon>
+      <span>{{ selection.selected.length }} adjustment(s) selected</span>
+    </div>
+    <button mat-stroked-button color="primary" type="button" (click)="bulkApprove()">
+      <mat-icon>check_circle</mat-icon>
+      Approve Selected
+    </button>
+  </div>
+
+  <app-card variant="default" padding="none" class="table-card">
+    <div class="table-card__header">
+      <div>
+        <h2>Adjustments</h2>
+        <p>Review adjustments, understand impact, and action approvals quickly.</p>
+      </div>
+      <div class="table-card__meta" *ngIf="!isLoading">
+        <mat-icon color="primary">insights</mat-icon>
+        <span>{{ dataSource.data.length | number }} shown · {{ totalAdjustments | number }} total</span>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort class="stock-adjustments-table">
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox (change)="$event ? toggleAllRows() : null" [checked]="selection.hasValue() && isAllSelected()"
+              [indeterminate]="selection.hasValue() && !isAllSelected()">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+              [checked]="selection.isSelected(row)">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="adjustmentNumber">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Number</th>
+          <td mat-cell *matCellDef="let adjustment">
+            <span class="adjustment-badge">{{ adjustment.adjustmentNumber }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let adjustment">
+            <div class="type-chip" [style.color]="getTypeColor(adjustment.type)">
+              <mat-icon>{{ getTypeIcon(adjustment.type) }}</mat-icon>
+              <span>{{ formatTypeLabel(adjustment.type) }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Product</th>
+          <td mat-cell *matCellDef="let adjustment">
+            <div class="product-cell">
+              <strong>{{ adjustment.productName }}</strong>
+              <span class="product-sku">{{ adjustment.productSku }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>Location</th>
+          <td mat-cell *matCellDef="let adjustment">
+            {{ adjustment.locationName || 'N/A' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Quantity</th>
+          <td mat-cell *matCellDef="let adjustment">
+            <ng-container *ngIf="getQuantityDelta(adjustment) as delta">
+              <span class="quantity-chip" [class.quantity-chip--positive]="delta > 0"
+                [class.quantity-chip--negative]="delta < 0">
+                {{ delta > 0 ? '+' : '' }}{{ delta }}
+              </span>
+            </ng-container>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="reason">
+          <th mat-header-cell *matHeaderCellDef>Reason</th>
+          <td mat-cell *matCellDef="let adjustment">
+            <span class="reason-text">{{ adjustment.reason || '—' }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let adjustment">
+            <span class="status-chip" [style.backgroundColor]="getStatusColor(adjustment.status)">
+              {{ getStatusLabel(adjustment.status) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+          <td mat-cell *matCellDef="let adjustment">
+            {{ formatDate(adjustment.createdAt) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let adjustment" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="adjustmentActions" (click)="$event.stopPropagation()">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #adjustmentActions="matMenu">
+              <button mat-menu-item (click)="viewAdjustmentDetails(adjustment)">
+                <mat-icon>visibility</mat-icon>
+                <span>View Details</span>
+              </button>
+              <button mat-menu-item (click)="approveAdjustment(adjustment)" *ngIf="canApprove(adjustment)">
+                <mat-icon>check_circle</mat-icon>
+                <span>Approve</span>
+              </button>
+              <button mat-menu-item (click)="rejectAdjustment(adjustment)" *ngIf="canReject(adjustment)">
+                <mat-icon>cancel</mat-icon>
+                <span>Reject</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell empty-table-state" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state">
+              <mat-icon>inventory</mat-icon>
+              <h3>No adjustments found</h3>
+              <p>Try adjusting the filters or create a new adjustment.</p>
+              <button mat-stroked-button color="primary" type="button" (click)="createAdjustment()">
+                Create adjustment
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <div class="table-loading" *ngIf="isLoading">
+        <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+      </div>
+    </div>
+
+    <div class="table-footer">
+      <div class="table-footer__summary">
+        <mat-icon>info</mat-icon>
+        <span>
+          Showing page {{ currentPage + 1 }} · {{ dataSource.data.length | number }} of
+          {{ totalAdjustments | number }} adjustments
+        </span>
+      </div>
+      <mat-paginator [length]="totalAdjustments" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 50]"
+        (page)="onPageChange($event)" showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </app-card>
+</section>
