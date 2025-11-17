@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import {
   HardwareDevice,
   HardwareEvent,
@@ -8,17 +11,31 @@ import {
   HardwareType,
 } from '../models/hardware.model';
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface ConnectionStatusResponse {
+  total: number;
+  connected: number;
+  disconnected: number;
+  error: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class HardwareService {
+  private readonly apiUrl = `${environment.apiUrl}/hardware/devices`;
   private devices$ = new BehaviorSubject<Map<string, HardwareDevice>>(
     new Map()
   );
   private events$ = new Subject<HardwareEvent>();
   private initialized = false;
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.initializeService();
   }
 
@@ -28,8 +45,8 @@ export class HardwareService {
   private initializeService(): void {
     if (this.initialized) return;
 
-    // Load saved devices from localStorage
-    this.loadDevicesFromStorage();
+    // Load devices from backend
+    this.loadDevices();
 
     // Check for Web Serial API support (for USB devices)
     if ('serial' in navigator) {
@@ -46,6 +63,41 @@ export class HardwareService {
     }
 
     this.initialized = true;
+  }
+
+  /**
+   * Load devices from backend
+   */
+  loadDevices(filters?: {
+    type?: string;
+    status?: string;
+    enabled?: boolean;
+    search?: string;
+  }): Observable<HardwareDevice[]> {
+    let params = new HttpParams();
+
+    if (filters?.type) params = params.set('type', filters.type);
+    if (filters?.status) params = params.set('status', filters.status);
+    if (filters?.enabled !== undefined)
+      params = params.set('enabled', filters.enabled.toString());
+    if (filters?.search) params = params.set('search', filters.search);
+
+    return this.http
+      .get<ApiResponse<HardwareDevice[]>>(this.apiUrl, { params })
+      .pipe(
+        map((response) => response.data),
+        tap((devices) => {
+          const deviceMap = new Map<string, HardwareDevice>();
+          devices.forEach((device) => {
+            deviceMap.set(device.id, device);
+          });
+          this.devices$.next(deviceMap);
+        }),
+        catchError((error) => {
+          console.error('Error loading devices:', error);
+          throw error;
+        })
+      );
   }
 
   /**
@@ -73,23 +125,59 @@ export class HardwareService {
   }
 
   /**
-   * Register a new device
+   * Get device by ID from backend
    */
-  registerDevice(device: HardwareDevice): void {
-    const devices = this.devices$.value;
-    devices.set(device.id, device);
-    this.devices$.next(new Map(devices));
-    this.saveDevicesToStorage();
-
-    this.emitEvent({
-      type: HardwareEventType.DEVICE_CONNECTED,
-      deviceId: device.id,
-      timestamp: new Date(),
-    });
+  getDeviceById(deviceId: string): Observable<HardwareDevice> {
+    return this.http
+      .get<ApiResponse<HardwareDevice>>(`${this.apiUrl}/${deviceId}`)
+      .pipe(map((response) => response.data));
   }
 
   /**
-   * Update device status
+   * Register a new device
+   */
+  registerDevice(
+    device: Omit<HardwareDevice, 'id'>
+  ): Observable<HardwareDevice> {
+    return this.http
+      .post<ApiResponse<HardwareDevice>>(this.apiUrl, device)
+      .pipe(
+        map((response) => response.data),
+        tap((newDevice) => {
+          const devices = this.devices$.value;
+          devices.set(newDevice.id, newDevice);
+          this.devices$.next(new Map(devices));
+
+          this.emitEvent({
+            type: HardwareEventType.DEVICE_CONNECTED,
+            deviceId: newDevice.id,
+            timestamp: new Date(),
+          });
+        })
+      );
+  }
+
+  /**
+   * Update device
+   */
+  updateDevice(
+    deviceId: string,
+    device: Partial<HardwareDevice>
+  ): Observable<HardwareDevice> {
+    return this.http
+      .put<ApiResponse<HardwareDevice>>(`${this.apiUrl}/${deviceId}`, device)
+      .pipe(
+        map((response) => response.data),
+        tap((updatedDevice) => {
+          const devices = this.devices$.value;
+          devices.set(updatedDevice.id, updatedDevice);
+          this.devices$.next(new Map(devices));
+        })
+      );
+  }
+
+  /**
+   * Update device status (local only for real-time feedback)
    */
   updateDeviceStatus(
     deviceId: string,
@@ -107,7 +195,6 @@ export class HardwareService {
       }
       devices.set(deviceId, device);
       this.devices$.next(new Map(devices));
-      this.saveDevicesToStorage();
 
       if (status === ConnectionStatus.DISCONNECTED) {
         this.emitEvent({
@@ -129,26 +216,33 @@ export class HardwareService {
   /**
    * Remove a device
    */
-  removeDevice(deviceId: string): void {
-    const devices = this.devices$.value;
-    devices.delete(deviceId);
-    this.devices$.next(new Map(devices));
-    this.saveDevicesToStorage();
+  removeDevice(deviceId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<void>>(`${this.apiUrl}/${deviceId}`)
+      .pipe(
+        map(() => undefined),
+        tap(() => {
+          const devices = this.devices$.value;
+          devices.delete(deviceId);
+          this.devices$.next(new Map(devices));
+        })
+      );
   }
 
   /**
    * Enable/disable a device
    */
-  toggleDevice(deviceId: string, enabled: boolean): void {
-    const devices = this.devices$.value;
-    const device = devices.get(deviceId);
-
-    if (device) {
-      device.enabled = enabled;
-      devices.set(deviceId, device);
-      this.devices$.next(new Map(devices));
-      this.saveDevicesToStorage();
-    }
+  toggleDevice(deviceId: string): Observable<HardwareDevice> {
+    return this.http
+      .put<ApiResponse<HardwareDevice>>(`${this.apiUrl}/${deviceId}/toggle`, {})
+      .pipe(
+        map((response) => response.data),
+        tap((updatedDevice) => {
+          const devices = this.devices$.value;
+          devices.set(updatedDevice.id, updatedDevice);
+          this.devices$.next(new Map(devices));
+        })
+      );
   }
 
   /**
@@ -169,35 +263,35 @@ export class HardwareService {
    * Test device connection
    */
   async testConnection(deviceId: string): Promise<boolean> {
-    const device = this.getDevice(deviceId);
-    if (!device) {
-      throw new Error('Device not found');
-    }
-
     try {
       this.updateDeviceStatus(deviceId, ConnectionStatus.CONNECTING);
 
-      // Simulate connection test (in real implementation, this would test actual hardware)
-      await this.delay(1000);
+      const response = await this.http
+        .post<ApiResponse<HardwareDevice>>(
+          `${this.apiUrl}/${deviceId}/test`,
+          {}
+        )
+        .toPromise();
 
-      const success = Math.random() > 0.2; // 80% success rate for demo
+      if (response?.data) {
+        const device = response.data;
+        this.updateDeviceStatus(deviceId, device.status, device.error);
 
-      if (success) {
-        this.updateDeviceStatus(deviceId, ConnectionStatus.CONNECTED);
-        return true;
-      } else {
-        this.updateDeviceStatus(
-          deviceId,
-          ConnectionStatus.ERROR,
-          'Connection test failed'
-        );
-        return false;
+        // Update local device data
+        const devices = this.devices$.value;
+        devices.set(deviceId, device);
+        this.devices$.next(new Map(devices));
+
+        return device.status === ConnectionStatus.CONNECTED;
       }
+
+      return false;
     } catch (error) {
+      console.error('Error testing connection:', error);
       this.updateDeviceStatus(
         deviceId,
         ConnectionStatus.ERROR,
-        'Connection error'
+        'Connection test failed'
       );
       return false;
     }
@@ -206,22 +300,12 @@ export class HardwareService {
   /**
    * Get connection status summary
    */
-  getConnectionStatus(): {
-    total: number;
-    connected: number;
-    disconnected: number;
-    error: number;
-  } {
-    const devices = Array.from(this.devices$.value.values());
-    return {
-      total: devices.length,
-      connected: devices.filter((d) => d.status === ConnectionStatus.CONNECTED)
-        .length,
-      disconnected: devices.filter(
-        (d) => d.status === ConnectionStatus.DISCONNECTED
-      ).length,
-      error: devices.filter((d) => d.status === ConnectionStatus.ERROR).length,
-    };
+  getConnectionStatus(): Observable<ConnectionStatusResponse> {
+    return this.http
+      .get<ApiResponse<ConnectionStatusResponse>>(
+        `${this.apiUrl}/connection-status`
+      )
+      .pipe(map((response) => response.data));
   }
 
   /**
@@ -276,44 +360,31 @@ export class HardwareService {
   }
 
   /**
-   * Save devices to localStorage
-   */
-  private saveDevicesToStorage(): void {
-    try {
-      const devices = Array.from(this.devices$.value.values());
-      localStorage.setItem('hardware_devices', JSON.stringify(devices));
-    } catch (error) {
-      console.error('Error saving devices to storage:', error);
-    }
-  }
-
-  /**
-   * Load devices from localStorage
-   */
-  private loadDevicesFromStorage(): void {
-    try {
-      const stored = localStorage.getItem('hardware_devices');
-      if (stored) {
-        const devices = JSON.parse(stored) as HardwareDevice[];
-        const deviceMap = new Map<string, HardwareDevice>();
-        devices.forEach((device) => {
-          // Set all devices as disconnected on startup
-          device.status = ConnectionStatus.DISCONNECTED;
-          deviceMap.set(device.id, device);
-        });
-        this.devices$.next(deviceMap);
-      }
-    } catch (error) {
-      console.error('Error loading devices from storage:', error);
-    }
-  }
-
-  /**
    * Clear all devices
    */
-  clearAllDevices(): void {
-    this.devices$.next(new Map());
-    localStorage.removeItem('hardware_devices');
+  clearAllDevices(): Observable<void> {
+    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/clear-all`).pipe(
+      map(() => undefined),
+      tap(() => {
+        this.devices$.next(new Map());
+      })
+    );
+  }
+
+  /**
+   * Bulk delete devices
+   */
+  bulkDeleteDevices(deviceIds: string[]): Observable<void> {
+    return this.http
+      .post<ApiResponse<void>>(`${this.apiUrl}/bulk-delete`, { ids: deviceIds })
+      .pipe(
+        map(() => undefined),
+        tap(() => {
+          const devices = this.devices$.value;
+          deviceIds.forEach((id) => devices.delete(id));
+          this.devices$.next(new Map(devices));
+        })
+      );
   }
 
   /**

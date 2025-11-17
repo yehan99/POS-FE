@@ -48,7 +48,14 @@ export class ScannerService {
       ...config,
     };
 
-    this.hardwareService.registerDevice(scanner);
+    this.hardwareService.registerDevice(scanner).subscribe({
+      next: (device) => {
+        console.log('Scanner registered successfully:', device);
+      },
+      error: (error) => {
+        console.error('Error registering scanner:', error);
+      },
+    });
     return scanner.id;
   }
 

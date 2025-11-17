@@ -76,13 +76,27 @@ export class HardwareConfigComponent implements OnInit, OnDestroy {
    * Load devices from hardware service
    */
   loadDevices(): void {
+    // Subscribe to local device updates
     this.hardwareService
       .getDevices()
       .pipe(takeUntil(this.destroy$))
       .subscribe((deviceMap) => {
         this.devices = Array.from(deviceMap.values());
         this.applyFilters();
-        this.updateConnectionStatus();
+      });
+
+    // Load devices from backend
+    this.hardwareService
+      .loadDevices()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.updateConnectionStatus();
+        },
+        error: (error) => {
+          console.error('Error loading devices:', error);
+          this.showNotification('Failed to load devices from server', 'error');
+        },
       });
   }
 
@@ -128,7 +142,30 @@ export class HardwareConfigComponent implements OnInit, OnDestroy {
    * Update connection status summary
    */
   updateConnectionStatus(): void {
-    this.connectionStatus = this.hardwareService.getConnectionStatus();
+    this.hardwareService
+      .getConnectionStatus()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (status) => {
+          this.connectionStatus = status;
+        },
+        error: (error) => {
+          console.error('Error loading connection status:', error);
+          // Fallback to local calculation if backend fails
+          const devices = this.devices;
+          this.connectionStatus = {
+            total: devices.length,
+            connected: devices.filter(
+              (d) => d.status === ConnectionStatus.CONNECTED
+            ).length,
+            disconnected: devices.filter(
+              (d) => d.status === ConnectionStatus.DISCONNECTED
+            ).length,
+            error: devices.filter((d) => d.status === ConnectionStatus.ERROR)
+              .length,
+          };
+        },
+      });
   }
 
   /**
@@ -340,12 +377,21 @@ export class HardwareConfigComponent implements OnInit, OnDestroy {
    */
   removeDevice(device: HardwareDevice): void {
     if (confirm(`Are you sure you want to remove ${device.name}?`)) {
-      this.hardwareService.removeDevice(device.id);
-      this.showNotification('Device removed successfully', 'success');
-
-      if (this.selectedDevice?.id === device.id) {
-        this.selectedDevice = null;
-      }
+      this.hardwareService
+        .removeDevice(device.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.showNotification('Device removed successfully', 'success');
+            if (this.selectedDevice?.id === device.id) {
+              this.selectedDevice = null;
+            }
+          },
+          error: (error) => {
+            console.error('Error removing device:', error);
+            this.showNotification('Failed to remove device', 'error');
+          },
+        });
     }
   }
 
@@ -353,11 +399,23 @@ export class HardwareConfigComponent implements OnInit, OnDestroy {
    * Toggle device enabled state
    */
   toggleDevice(device: HardwareDevice): void {
-    this.hardwareService.toggleDevice(device.id, !device.enabled);
-    this.showNotification(
-      `${device.name} ${device.enabled ? 'enabled' : 'disabled'}`,
-      'success'
-    );
+    this.hardwareService
+      .toggleDevice(device.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedDevice) => {
+          this.showNotification(
+            `${updatedDevice.name} ${
+              updatedDevice.enabled ? 'enabled' : 'disabled'
+            }`,
+            'success'
+          );
+        },
+        error: (error) => {
+          console.error('Error toggling device:', error);
+          this.showNotification('Failed to toggle device', 'error');
+        },
+      });
   }
 
   /**

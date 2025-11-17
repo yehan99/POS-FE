@@ -70,7 +70,16 @@ export class PrinterService {
       ...config,
     };
 
-    this.hardwareService.registerDevice(printer);
+    // Register device via HTTP API
+    this.hardwareService.registerDevice(printer).subscribe({
+      next: (device) => {
+        console.log('Printer registered successfully:', device);
+      },
+      error: (error) => {
+        console.error('Error registering printer:', error);
+      },
+    });
+
     return printer.id;
   }
 

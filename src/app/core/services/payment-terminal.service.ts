@@ -53,7 +53,14 @@ export class PaymentTerminalService {
       ...config,
     };
 
-    this.hardwareService.registerDevice(terminal);
+    this.hardwareService.registerDevice(terminal).subscribe({
+      next: (device) => {
+        console.log('Payment terminal registered successfully:', device);
+      },
+      error: (error) => {
+        console.error('Error registering payment terminal:', error);
+      },
+    });
     return terminal.id;
   }
 

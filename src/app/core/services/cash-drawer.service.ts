@@ -38,7 +38,14 @@ export class CashDrawerService {
       ...config,
     };
 
-    this.hardwareService.registerDevice(drawer);
+    this.hardwareService.registerDevice(drawer).subscribe({
+      next: (device) => {
+        console.log('Cash drawer registered successfully:', device);
+      },
+      error: (error) => {
+        console.error('Error registering cash drawer:', error);
+      },
+    });
     this.drawerStates.set(drawer.id, false); // Initially closed
     return drawer.id;
   }
