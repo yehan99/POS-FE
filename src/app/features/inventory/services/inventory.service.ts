@@ -20,6 +20,7 @@ import {
   AgingAnalysis,
   GoodsReceivedNote,
   ProductLookupSummary,
+  InventoryDashboardData,
 } from '../models/inventory.model';
 
 @Injectable({
@@ -140,9 +141,7 @@ export class InventoryService {
         `${this.apiUrl}/adjustments/bulk`,
         { adjustments }
       )
-      .pipe(
-        map((response) => this.unwrapStockAdjustmentCollection(response))
-      );
+      .pipe(map((response) => this.unwrapStockAdjustmentCollection(response)));
   }
 
   getStockAdjustmentDashboardMetrics(): Observable<StockAdjustmentDashboardMetrics> {
@@ -285,36 +284,83 @@ export class InventoryService {
 
     if (filters.type) params = params.set('type', filters.type);
     if (filters.status) params = params.set('status', filters.status);
+    if (filters.severity) params = params.set('severity', filters.severity);
     if (filters.locationId)
-      params = params.set('locationId', filters.locationId);
+      params = params.set('location_id', filters.locationId);
     if (filters.page) params = params.set('page', filters.page.toString());
     if (filters.pageSize)
       params = params.set('pageSize', filters.pageSize.toString());
 
-    return this.http.get<PaginatedResponse<StockAlert>>(
-      `${this.apiUrl}/alerts`,
-      { params }
-    );
+    return this.http
+      .get<{
+        success: boolean;
+        data: StockAlert[];
+        total: number;
+        page: number;
+        per_page: number;
+        total_pages: number;
+      }>(`${this.apiUrl}/alerts`, { params })
+      .pipe(
+        map((response) => ({
+          data: response.data,
+          total: response.total,
+          page: response.page,
+          pageSize: response.per_page,
+          totalPages: response.total_pages,
+          pagination: {
+            page: response.page,
+            limit: response.per_page,
+            total: response.total,
+            totalPages: response.total_pages,
+            hasNext: response.page < response.total_pages,
+            hasPrev: response.page > 1,
+          },
+        }))
+      );
   }
 
-  acknowledgeAlert(id: string): Observable<StockAlert> {
-    return this.http.post<StockAlert>(
-      `${this.apiUrl}/alerts/${id}/acknowledge`,
-      {}
-    );
+  getAlertsSummary(): Observable<any> {
+    return this.http
+      .get<{ success: boolean; data: any }>(`${this.apiUrl}/alerts/summary`)
+      .pipe(map((response) => response.data));
   }
 
-  resolveAlert(id: string): Observable<StockAlert> {
-    return this.http.post<StockAlert>(
-      `${this.apiUrl}/alerts/${id}/resolve`,
-      {}
-    );
+  acknowledgeAlert(
+    id: string,
+    acknowledgedBy?: string
+  ): Observable<StockAlert> {
+    return this.http
+      .put<{ success: boolean; data: StockAlert }>(
+        `${this.apiUrl}/alerts/${id}/acknowledge`,
+        { acknowledged_by: acknowledgedBy }
+      )
+      .pipe(map((response) => response.data));
   }
 
-  bulkAcknowledgeAlerts(ids: string[]): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/alerts/bulk-acknowledge`, {
-      ids,
-    });
+  resolveAlert(
+    id: string,
+    resolvedBy?: string,
+    resolutionNotes?: string
+  ): Observable<StockAlert> {
+    return this.http
+      .put<{ success: boolean; data: StockAlert }>(
+        `${this.apiUrl}/alerts/${id}/resolve`,
+        { resolved_by: resolvedBy, resolution_notes: resolutionNotes }
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  bulkResolveAlerts(
+    ids: string[],
+    resolvedBy?: string,
+    resolutionNotes?: string
+  ): Observable<{ count: number }> {
+    return this.http
+      .post<{ success: boolean; count: number }>(
+        `${this.apiUrl}/alerts/bulk-resolve`,
+        { ids, resolved_by: resolvedBy, resolution_notes: resolutionNotes }
+      )
+      .pipe(map((response) => ({ count: response.count })));
   }
 
   // Goods Received Notes
@@ -395,6 +441,55 @@ export class InventoryService {
     return this.http.get<InventoryStatistics>(`${this.apiUrl}/statistics`, {
       params,
     });
+  }
+
+  // Dashboard
+  getDashboardData(alertLimit = 5): Observable<InventoryDashboardData> {
+    let params = new HttpParams();
+    params = params.set('alert_limit', alertLimit.toString());
+
+    return this.http
+      .get<{ success: boolean; data: InventoryDashboardData }>(
+        `${this.apiUrl}/dashboard`,
+        { params }
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  getDashboardMetrics(): Observable<any[]> {
+    return this.http
+      .get<{ success: boolean; data: any[] }>(
+        `${this.apiUrl}/dashboard/metrics`
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  getDashboardPipeline(): Observable<any[]> {
+    return this.http
+      .get<{ success: boolean; data: any[] }>(
+        `${this.apiUrl}/dashboard/pipeline`
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  getDashboardExceptions(): Observable<any[]> {
+    return this.http
+      .get<{ success: boolean; data: any[] }>(
+        `${this.apiUrl}/dashboard/exceptions`
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  getDashboardAlerts(limit = 5): Observable<any[]> {
+    let params = new HttpParams();
+    params = params.set('limit', limit.toString());
+
+    return this.http
+      .get<{ success: boolean; data: any[] }>(
+        `${this.apiUrl}/dashboard/alerts`,
+        { params }
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Export

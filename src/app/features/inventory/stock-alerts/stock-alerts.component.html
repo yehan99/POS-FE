@@ -1,190 +1,237 @@
-<div class="stock-alerts-container">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <h1>Stock Alerts</h1>
-      <p class="subtitle">Monitor low stock, overstock, and expiry warnings</p>
+<section class="stock-alerts-dashboard">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/inventory" matTooltip="Back to inventory" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Inventory Management</p>
+        <h1>Stock Alerts</h1>
+        <p class="subtitle">Monitor critical stock levels and take proactive action.</p>
+      </div>
     </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="clearFilters()" *ngIf="hasActiveFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Clear Filters
+      </button>
+      <button mat-flat-button color="primary" type="button" class="action-primary" *ngIf="selection.selected.length > 0"
+        (click)="bulkAcknowledge()">
+        <mat-icon>check</mat-icon>
+        Acknowledge ({{ selection.selected.length }})
+      </button>
+    </div>
+  </header>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <app-card variant="elevated" padding="medium" class="summary-card">
+      <div class="summary-card__content">
+        <div class="summary-card__icon summary-card__icon--critical">
+          <mat-icon>error</mat-icon>
+        </div>
+        <div class="summary-card__info">
+          <span class="summary-card__label">Critical Alerts</span>
+          <span class="summary-card__value">{{ getCriticalCount() }}</span>
+        </div>
+      </div>
+    </app-card>
+
+    <app-card variant="elevated" padding="medium" class="summary-card">
+      <div class="summary-card__content">
+        <div class="summary-card__icon summary-card__icon--warning">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="summary-card__info">
+          <span class="summary-card__label">Active Alerts</span>
+          <span class="summary-card__value">{{ getActiveCount() }}</span>
+        </div>
+      </div>
+    </app-card>
+
+    <app-card variant="elevated" padding="medium" class="summary-card">
+      <div class="summary-card__content">
+        <div class="summary-card__icon summary-card__icon--info">
+          <mat-icon>inventory</mat-icon>
+        </div>
+        <div class="summary-card__info">
+          <span class="summary-card__label">Out of Stock</span>
+          <span class="summary-card__value">{{ getOutOfStockCount() }}</span>
+        </div>
+      </div>
+    </app-card>
+
+    <app-card variant="elevated" padding="medium" class="summary-card">
+      <div class="summary-card__content">
+        <div class="summary-card__icon summary-card__icon--primary">
+          <mat-icon>trending_down</mat-icon>
+        </div>
+        <div class="summary-card__info">
+          <span class="summary-card__label">Low Stock</span>
+          <span class="summary-card__value">{{ getLowStockCount() }}</span>
+        </div>
+      </div>
+    </app-card>
   </div>
 
   <!-- Filters -->
-  <mat-card class="filters-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filters-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Alert Type</mat-label>
-          <mat-select formControlName="type">
-            <mat-option value="">All Types</mat-option>
-            <mat-option *ngFor="let type of alertTypes" [value]="type">
-              {{ type.replace('_', ' ') | titlecase }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+  <app-card variant="elevated" padding="large" class="filters-card">
+    <div class="filters-card__header">
+      <h3>Filters</h3>
+      <span class="meta">Refine your alert view</span>
+    </div>
+    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Alert Type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="">All Types</mat-option>
+          <mat-option *ngFor="let type of alertTypes" [value]="type">
+            {{ formatAlertType(type) }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>category</mat-icon>
+      </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status">
-            <mat-option value="">All Statuses</mat-option>
-            <mat-option *ngFor="let status of alertStatuses" [value]="status">
-              {{ status | titlecase }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All Statuses</mat-option>
+          <mat-option *ngFor="let status of alertStatuses" [value]="status">
+            {{ status | titlecase }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>info</mat-icon>
+      </mat-form-field>
 
-        <button mat-stroked-button type="button" (click)="clearFilters()" class="clear-btn">
-          <mat-icon>clear</mat-icon>
-          Clear
-        </button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+      <mat-form-field appearance="outline">
+        <mat-label>Severity</mat-label>
+        <mat-select formControlName="severity">
+          <mat-option value="">All Severities</mat-option>
+          <mat-option *ngFor="let severity of severityLevels" [value]="severity">
+            {{ severity | titlecase }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>priority_high</mat-icon>
+      </mat-form-field>
+    </form>
+  </app-card>
 
-  <!-- Bulk Actions -->
-  <div class="bulk-actions" *ngIf="selection.selected.length > 0">
-    <span class="selection-count">{{ selection.selected.length }} alert(s) selected</span>
-    <button mat-raised-button color="primary" (click)="bulkAcknowledge()">
-      <mat-icon>check</mat-icon>
-      Acknowledge Selected
-    </button>
-  </div>
+  <!-- Alerts List -->
+  <app-card variant="elevated" padding="large" class="alerts-card">
+    <div class="alerts-card__header">
+      <div>
+        <h3>Active Alerts</h3>
+        <span class="meta">{{ totalAlerts }} total alert(s)</span>
+      </div>
+      <div class="alerts-card__actions" *ngIf="selection.selected.length > 0">
+        <span class="selection-info">{{ selection.selected.length }} selected</span>
+      </div>
+    </div>
 
-  <!-- Alerts Table -->
-  <mat-card class="table-card">
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="dataSource" matSort>
+    <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
 
-          <!-- Checkbox Column -->
-          <ng-container matColumnDef="select">
-            <th mat-header-cell *matHeaderCellDef>
-              <mat-checkbox (change)="$event ? toggleAllRows() : null"
-                [checked]="selection.hasValue() && isAllSelected()"
-                [indeterminate]="selection.hasValue() && !isAllSelected()">
-              </mat-checkbox>
-            </th>
-            <td mat-cell *matCellDef="let row">
-              <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
-                [checked]="selection.isSelected(row)">
-              </mat-checkbox>
-            </td>
-          </ng-container>
+    <div class="alerts-list" *ngIf="!isLoading && dataSource.data.length > 0">
+      <div class="alert-item" *ngFor="let alert of dataSource.data"
+        [class.alert-item--selected]="selection.isSelected(alert)">
+        <div class="alert-item__select">
+          <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(alert) : null"
+            [checked]="selection.isSelected(alert)">
+          </mat-checkbox>
+        </div>
 
-          <!-- Severity Column -->
-          <ng-container matColumnDef="severity">
-            <th mat-header-cell *matHeaderCellDef>Severity</th>
-            <td mat-cell *matCellDef="let alert">
-              <span class="severity-badge" [style.backgroundColor]="getSeverityColor(alert.severity)">
+        <div class="alert-item__icon" [style.backgroundColor]="getSeverityColor(alert.severity)">
+          <mat-icon>{{ getTypeIcon(alert.alertType) }}</mat-icon>
+        </div>
+
+        <div class="alert-item__content">
+          <div class="alert-item__header">
+            <h4 class="alert-item__title">{{ alert.productName }}</h4>
+            <div class="alert-item__badges">
+              <span class="badge badge--type" [style.backgroundColor]="getTypeBadgeColor(alert.alertType)">
+                {{ formatAlertType(alert.alertType) }}
+              </span>
+              <span class="badge badge--severity" [style.backgroundColor]="getSeverityColor(alert.severity)">
                 {{ alert.severity | titlecase }}
               </span>
-            </td>
-          </ng-container>
-
-          <!-- Type Column -->
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef>Type</th>
-            <td mat-cell *matCellDef="let alert">
-              <div class="type-badge" [style.color]="getTypeColor(alert.alertType)">
-                <mat-icon>{{ getTypeIcon(alert.alertType) }}</mat-icon>
-                <span>{{ alert.alertType.replace('_', ' ') | titlecase }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Product Column -->
-          <ng-container matColumnDef="product">
-            <th mat-header-cell *matHeaderCellDef>Product</th>
-            <td mat-cell *matCellDef="let alert">
-              <div class="product-info">
-                <strong>{{ alert.productName }}</strong>
-                <span class="product-sku">{{ alert.productSku }}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Current Stock Column -->
-          <ng-container matColumnDef="currentStock">
-            <th mat-header-cell *matHeaderCellDef>Current Stock</th>
-            <td mat-cell *matCellDef="let alert">
-              <span class="stock-value" [class.critical]="alert.currentStock === 0">
-                {{ alert.currentStock }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Threshold Column -->
-          <ng-container matColumnDef="threshold">
-            <th mat-header-cell *matHeaderCellDef>Threshold</th>
-            <td mat-cell *matCellDef="let alert">
-              {{ alert.threshold || 'N/A' }}
-            </td>
-          </ng-container>
-
-          <!-- Location Column -->
-          <ng-container matColumnDef="location">
-            <th mat-header-cell *matHeaderCellDef>Location</th>
-            <td mat-cell *matCellDef="let alert">
-              {{ alert.locationName || 'All Locations' }}
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let alert">
-              <span class="status-badge" [class]="alert.status">
+              <span class="badge badge--status" [class.badge--active]="alert.status === 'active'">
                 {{ alert.status | titlecase }}
               </span>
-            </td>
-          </ng-container>
+            </div>
+          </div>
 
-          <!-- Created At Column -->
-          <ng-container matColumnDef="createdAt">
-            <th mat-header-cell *matHeaderCellDef>Created</th>
-            <td mat-cell *matCellDef="let alert">
+          <p class="alert-item__message">{{ alert.message }}</p>
+
+          <div class="alert-item__meta">
+            <span class="meta-item">
+              <mat-icon>inventory_2</mat-icon>
+              SKU: {{ alert.productSku }}
+            </span>
+            <span class="meta-item" *ngIf="alert.locationName">
+              <mat-icon>store</mat-icon>
+              {{ alert.locationName }}
+            </span>
+            <span class="meta-item">
+              <mat-icon>schedule</mat-icon>
               {{ formatDate(alert.createdAt) }}
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let alert">
-              <button mat-icon-button [matMenuTriggerFor]="menu">
-                <mat-icon>more_vert</mat-icon>
-              </button>
-              <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="acknowledgeAlert(alert)" *ngIf="alert.status === 'active'">
-                  <mat-icon>check</mat-icon>
-                  <span>Acknowledge</span>
-                </button>
-                <button mat-menu-item (click)="resolveAlert(alert)" *ngIf="alert.status !== 'resolved'">
-                  <mat-icon>check_circle</mat-icon>
-                  <span>Resolve</span>
-                </button>
-              </mat-menu>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <!-- Loading Spinner -->
-        <div class="loading-spinner" *ngIf="isLoading">
-          <mat-spinner diameter="50"></mat-spinner>
+            </span>
+          </div>
         </div>
 
-        <!-- No Data -->
-        <div class="no-data" *ngIf="!isLoading && dataSource.data.length === 0">
-          <mat-icon>notifications_none</mat-icon>
-          <p>No alerts found</p>
+        <div class="alert-item__stock">
+          <div class="stock-info">
+            <span class="stock-info__label">Current Stock</span>
+            <span class="stock-info__value" [style.color]="getStockColor(alert.currentStock, alert.threshold)">
+              {{ alert.currentStock }}
+            </span>
+          </div>
+          <div class="stock-info" *ngIf="alert.threshold">
+            <span class="stock-info__label">Threshold</span>
+            <span class="stock-info__value">{{ alert.threshold }}</span>
+          </div>
+        </div>
+
+        <div class="alert-item__actions">
+          <button mat-icon-button matTooltip="Acknowledge" [disabled]="alert.status !== 'active'"
+            (click)="acknowledgeAlert(alert)">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Resolve" [disabled]="alert.status === 'resolved'"
+            (click)="resolveAlert(alert)">
+            <mat-icon>done_all</mat-icon>
+          </button>
+          <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="More options">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="viewProductDetails(alert)">
+              <mat-icon>visibility</mat-icon>
+              <span>View Product</span>
+            </button>
+            <button mat-menu-item (click)="createAdjustment(alert)">
+              <mat-icon>edit_note</mat-icon>
+              <span>Create Adjustment</span>
+            </button>
+          </mat-menu>
         </div>
       </div>
+    </div>
 
-      <!-- Paginator -->
-      <mat-paginator [length]="totalAlerts" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 50]"
-        (page)="onPageChange($event)" showFirstLastButtons>
-      </mat-paginator>
-    </mat-card-content>
-  </mat-card>
-</div>
+    <div class="empty-state" *ngIf="!isLoading && dataSource.data.length === 0">
+      <mat-icon>inventory_2</mat-icon>
+      <h3>No Alerts Found</h3>
+      <p>All stock levels are healthy or no alerts match your filters.</p>
+      <button mat-stroked-button (click)="clearFilters()" *ngIf="hasActiveFilters()">
+        Clear Filters
+      </button>
+    </div>
+
+    <mat-paginator *ngIf="totalAlerts > 0" [length]="totalAlerts" [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 25, 50, 100]" (page)="onPageChange($event)" showFirstLastButtons>
+    </mat-paginator>
+  </app-card>
+
+  <div class="loading-state" *ngIf="isLoading && dataSource.data.length === 0">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading stock alerts…</p>
+  </div>
+</section>

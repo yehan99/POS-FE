@@ -1,171 +1,169 @@
-<div class="inventory-dashboard-container">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <h1>Inventory Management</h1>
-      <p class="subtitle">Manage stock levels, transfers, and suppliers</p>
+<section class="inventory-dashboard">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Inventory Operations</p>
+        <h1>Inventory Overview</h1>
+        <p class="subtitle">Unified view of stock health, exceptions, and supply actions.</p>
+      </div>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="navigateTo('/inventory/alerts')">
+        <mat-icon>notifications</mat-icon>
+        Alerts
+      </button>
+      <button mat-flat-button color="primary" type="button" class="action-primary"
+        (click)="navigateTo('/inventory/purchase-orders')">
+        <mat-icon>add</mat-icon>
+        Create PO
+      </button>
+    </div>
+  </header>
+
+  <app-card variant="elevated" padding="large" class="snapshot-card">
+    <div class="snapshot-card__header">
+      <div>
+        <h2>Inventory Snapshot</h2>
+        <p>Key KPIs across catalogue coverage, valuation, and exception load.</p>
+      </div>
+      <div class="snapshot-card__meta" *ngIf="dashboardData">
+        <mat-icon color="primary">insights</mat-icon>
+        <span>Live metrics</span>
+      </div>
+    </div>
+    <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+    <div class="snapshot-grid" *ngIf="metricTiles.length > 0">
+      <button type="button" class="snapshot-tile" *ngFor="let tile of metricTiles"
+        [class.snapshot-tile--clickable]="tile.route" (click)="tile.route && navigateTo(tile.route)"
+        (keydown.enter)="tile.route && onNavigateKey($event, tile.route)"
+        (keydown.space)="tile.route && onNavigateKey($event, tile.route)" [attr.aria-label]="tile.ariaLabel">
+        <div class="snapshot-tile__icon" [ngClass]="'snapshot-tile__icon--' + tile.accent">
+          <mat-icon>{{ tile.icon }}</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">{{ tile.label }}</span>
+          <span class="snapshot-tile__value">{{ tile.value }}</span>
+        </div>
+      </button>
+    </div>
+    <div *ngIf="!isLoading && metricTiles.length === 0" style="padding: 2rem; text-align: center; color: #999;">
+      No metrics data available
+    </div>
+  </app-card>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-grid__column">
+      <app-card variant="elevated" padding="large" class="operations-card">
+        <div class="operations-card__header">
+          <h3>Operational Pipeline</h3>
+          <span class="meta">Monitor the queues driving daily fulfilment.</span>
+        </div>
+        <div class="operations-list">
+          <button class="operations-item" type="button" *ngFor="let item of pipelineItems"
+            (click)="navigateTo(item.route)" (keydown.enter)="onNavigateKey($event, item.route)"
+            (keydown.space)="onNavigateKey($event, item.route)">
+            <div class="operations-item__info">
+              <mat-icon class="operations-item__icon" [ngClass]="'operations-item__icon--' + item.accent">
+                {{ item.icon }}
+              </mat-icon>
+              <div>
+                <p class="operations-item__label">{{ item.label }}</p>
+                <span class="operations-item__hint">{{ item.hint }}</span>
+              </div>
+            </div>
+            <span class="operations-item__value">{{ item.value }}</span>
+          </button>
+        </div>
+      </app-card>
+
+      <app-card variant="elevated" padding="large" class="exceptions-card">
+        <div class="exceptions-card__header">
+          <h3>Exception Monitor</h3>
+          <span class="meta">Stay ahead of alerts impacting stock availability.</span>
+        </div>
+        <div class="exceptions-pill-grid">
+          <button type="button" class="exception-pill" *ngFor="let item of exceptionItems"
+            [class.exception-pill--critical]="item.severity === 'critical'"
+            [class.exception-pill--warning]="item.severity === 'warning'"
+            [class.exception-pill--danger]="item.severity === 'danger'"
+            [class.exception-pill--info]="item.severity === 'info'" (click)="item.route && navigateTo(item.route)"
+            (keydown.enter)="item.route && onNavigateKey($event, item.route)"
+            (keydown.space)="item.route && onNavigateKey($event, item.route)" [attr.aria-label]="item.ariaLabel">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <div>
+              <span class="exception-pill__label">{{ item.label }}</span>
+              <span class="exception-pill__value">{{ item.value }}</span>
+            </div>
+          </button>
+        </div>
+      </app-card>
+    </div>
+
+    <div class="dashboard-grid__column">
+      <app-card variant="elevated" padding="large" class="actions-card">
+        <div class="actions-card__header">
+          <h3>Quick Actions</h3>
+          <span class="meta">Jump straight into high frequency tasks.</span>
+        </div>
+        <div class="actions-grid">
+          <button mat-stroked-button type="button" *ngFor="let action of quickActions"
+            (click)="navigateTo(action.route)" class="actions-grid__button">
+            <mat-icon [style.color]="action.color">{{ action.icon }}</mat-icon>
+            <span>{{ action.label }}</span>
+          </button>
+        </div>
+      </app-card>
+
+      <app-card variant="elevated" padding="large" class="alerts-card">
+        <div class="alerts-card__header">
+          <div>
+            <h3>Recent Alerts</h3>
+            <span class="meta">Most recent stock and replenishment exceptions.</span>
+          </div>
+          <button mat-button color="primary" type="button" (click)="navigateTo('/inventory/alerts')">
+            View All
+          </button>
+        </div>
+        <ng-container *ngIf="recentAlerts.length; else emptyAlerts">
+          <div class="alerts-list">
+            <div class="alert-item" *ngFor="let alert of recentAlerts">
+              <div class="alert-item__icon" [style.backgroundColor]="getAlertSeverityColor(alert.severity)">
+                <mat-icon>{{ alert.type === 'low_stock' ? 'trending_down' :
+                  alert.type === 'out_of_stock' ? 'error' :
+                  alert.type === 'overstock' ? 'trending_up' : 'schedule' }}</mat-icon>
+              </div>
+              <div class="alert-item__body">
+                <p class="alert-item__title">{{ alert.title }}</p>
+                <p class="alert-item__message">{{ alert.message }}</p>
+                <div class="alert-item__meta">
+                  <span class="type-chip">{{ alert.type | titlecase }}</span>
+                  <span class="severity" [style.color]="getAlertSeverityColor(alert.severity)">
+                    {{ alert.severity | titlecase }}
+                  </span>
+                </div>
+              </div>
+              <div class="alert-item__stock">
+                <span class="label">Current</span>
+                <span class="value">{{ alert.stock.current }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #emptyAlerts>
+          <div class="alerts-empty">
+            <mat-icon>inventory</mat-icon>
+            <p>All clear. No active inventory alerts.</p>
+          </div>
+        </ng-template>
+      </app-card>
     </div>
   </div>
 
-  <!-- Statistics Cards -->
-  <div class="statistics-grid" *ngIf="statistics && !isLoading">
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon products">
-          <mat-icon>inventory</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Total Products</p>
-          <p class="stat-value">{{ statistics.totalProducts }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon value">
-          <mat-icon>account_balance_wallet</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Stock Value</p>
-          <p class="stat-value">{{ formatCurrency(statistics.totalStockValue) }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/alerts')">
-      <mat-card-content>
-        <div class="stat-icon warning">
-          <mat-icon>warning</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Low Stock Items</p>
-          <p class="stat-value">{{ statistics.lowStockItems }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/alerts')">
-      <mat-card-content>
-        <div class="stat-icon danger">
-          <mat-icon>error</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Out of Stock</p>
-          <p class="stat-value">{{ statistics.outOfStockItems }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/adjustments')">
-      <mat-card-content>
-        <div class="stat-icon pending">
-          <mat-icon>edit</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Pending Adjustments</p>
-          <p class="stat-value">{{ statistics.pendingAdjustments }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/transfers')">
-      <mat-card-content>
-        <div class="stat-icon transfer">
-          <mat-icon>swap_horiz</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Pending Transfers</p>
-          <p class="stat-value">{{ statistics.pendingTransfers }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/purchase-orders')">
-      <mat-card-content>
-        <div class="stat-icon po">
-          <mat-icon>shopping_cart</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Pending POs</p>
-          <p class="stat-value">{{ statistics.pendingPurchaseOrders }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card clickable" (click)="navigateTo('/inventory/alerts')">
-      <mat-card-content>
-        <div class="stat-icon alerts">
-          <mat-icon>notifications_active</mat-icon>
-        </div>
-        <div class="stat-details">
-          <p class="stat-label">Active Alerts</p>
-          <p class="stat-value">{{ statistics.activeAlerts }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
+  <div class="loading-state" *ngIf="isLoading && !dashboardData">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading inventory intelligence…</p>
   </div>
-
-  <!-- Quick Actions -->
-  <mat-card class="quick-actions-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>flash_on</mat-icon>
-        Quick Actions
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="quick-actions-grid">
-        <button mat-raised-button *ngFor="let action of quickActions" (click)="navigateTo(action.route)"
-          class="action-button" [style.background]="action.color">
-          <mat-icon>{{ action.icon }}</mat-icon>
-          <span>{{ action.label }}</span>
-        </button>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Recent Alerts -->
-  <mat-card class="alerts-card" *ngIf="recentAlerts.length > 0">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>notifications</mat-icon>
-        Recent Alerts
-      </mat-card-title>
-      <button mat-button color="primary" (click)="navigateTo('/inventory/alerts')">
-        View All
-      </button>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="alerts-list">
-        <div class="alert-item" *ngFor="let alert of recentAlerts">
-          <div class="alert-icon" [style.backgroundColor]="getAlertSeverityColor(alert.severity)">
-            <mat-icon>{{ alert.alertType === 'low_stock' ? 'trending_down' :
-              alert.alertType === 'out_of_stock' ? 'error' :
-              alert.alertType === 'overstock' ? 'trending_up' : 'schedule' }}</mat-icon>
-          </div>
-          <div class="alert-details">
-            <p class="alert-product">{{ alert.productName }}</p>
-            <p class="alert-message">{{ alert.message }}</p>
-            <p class="alert-meta">
-              <span class="alert-type">{{ alert.alertType | titlecase }}</span>
-              <span class="alert-severity" [style.color]="getAlertSeverityColor(alert.severity)">
-                {{ alert.severity | titlecase }}
-              </span>
-            </p>
-          </div>
-          <div class="alert-stock">
-            <p class="stock-label">Current</p>
-            <p class="stock-value">{{ alert.currentStock }}</p>
-          </div>
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading inventory data...</p>
-  </div>
-</div>
+</section>

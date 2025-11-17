@@ -1,10 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { SelectionModel } from '@angular/cdk/collections';
+import { Router } from '@angular/router';
 import { InventoryService } from '../services/inventory.service';
 import {
   StockAlert,
@@ -20,24 +19,10 @@ import {
   styleUrl: './stock-alerts.component.scss',
 })
 export class StockAlertsComponent implements OnInit {
-  displayedColumns: string[] = [
-    'select',
-    'severity',
-    'type',
-    'product',
-    'currentStock',
-    'threshold',
-    'location',
-    'status',
-    'createdAt',
-    'actions',
-  ];
-
-  dataSource = new MatTableDataSource<StockAlert>([]);
+  dataSource: { data: StockAlert[] } = { data: [] };
   selection = new SelectionModel<StockAlert>(true, []);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
   filterForm!: FormGroup;
   isLoading = false;
@@ -59,7 +44,8 @@ export class StockAlertsComponent implements OnInit {
   constructor(
     private inventoryService: InventoryService,
     private snackBar: MatSnackBar,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -115,9 +101,39 @@ export class StockAlertsComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filterForm.reset();
+    this.filterForm.reset({
+      type: '',
+      status: '',
+      severity: '',
+    });
     this.currentPage = 0;
     this.loadAlerts();
+  }
+
+  hasActiveFilters(): boolean {
+    const formValue = this.filterForm.value;
+    return !!(formValue.type || formValue.status || formValue.severity);
+  }
+
+  // Summary methods
+  getCriticalCount(): number {
+    return this.dataSource.data.filter(
+      (a) => a.severity === 'critical' && a.status === 'active'
+    ).length;
+  }
+
+  getActiveCount(): number {
+    return this.dataSource.data.filter((a) => a.status === 'active').length;
+  }
+
+  getOutOfStockCount(): number {
+    return this.dataSource.data.filter((a) => a.alertType === 'out_of_stock')
+      .length;
+  }
+
+  getLowStockCount(): number {
+    return this.dataSource.data.filter((a) => a.alertType === 'low_stock')
+      .length;
   }
 
   // Selection methods
@@ -174,18 +190,16 @@ export class StockAlertsComponent implements OnInit {
     }
 
     const ids = selectedAlerts.map((a) => a.id);
-    this.inventoryService.bulkAcknowledgeAlerts(ids).subscribe({
-      next: () => {
-        this.snackBar.open(
-          `${selectedAlerts.length} alert(s) acknowledged`,
-          'Close',
-          { duration: 3000 }
-        );
+    this.inventoryService.bulkResolveAlerts(ids, 'System').subscribe({
+      next: (result) => {
+        this.snackBar.open(`${result.count} alert(s) resolved`, 'Close', {
+          duration: 3000,
+        });
         this.loadAlerts();
       },
       error: (error) => {
-        console.error('Error bulk acknowledging alerts:', error);
-        this.snackBar.open('Failed to acknowledge alerts', 'Close', {
+        console.error('Error bulk resolving alerts:', error);
+        this.snackBar.open('Failed to resolve alerts', 'Close', {
           duration: 3000,
         });
       },
@@ -193,6 +207,10 @@ export class StockAlertsComponent implements OnInit {
   }
 
   // Utility methods
+  formatAlertType(type: AlertType): string {
+    return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  }
+
   getSeverityColor(severity: AlertSeverity): string {
     const colors = {
       low: '#4caf50',
@@ -225,6 +243,24 @@ export class StockAlertsComponent implements OnInit {
     return colors[type];
   }
 
+  getTypeBadgeColor(type: AlertType): string {
+    const colors: { [key: string]: string } = {
+      low_stock: 'rgba(255, 152, 0, 0.1)',
+      out_of_stock: 'rgba(244, 67, 54, 0.1)',
+      overstock: 'rgba(33, 150, 243, 0.1)',
+      expiring_soon: 'rgba(255, 87, 34, 0.1)',
+      expired: 'rgba(211, 47, 47, 0.1)',
+    };
+    return colors[type];
+  }
+
+  getStockColor(current: number, threshold?: number): string {
+    if (!threshold) return '#666';
+    if (current === 0) return '#f44336';
+    if (current <= threshold) return '#ff9800';
+    return '#4caf50';
+  }
+
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -232,6 +268,17 @@ export class StockAlertsComponent implements OnInit {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+    });
+  }
+
+  // Navigation methods
+  viewProductDetails(alert: StockAlert): void {
+    this.router.navigate(['/products', alert.productId]);
+  }
+
+  createAdjustment(alert: StockAlert): void {
+    this.router.navigate(['/inventory/adjustments'], {
+      queryParams: { productId: alert.productId },
     });
   }
 }

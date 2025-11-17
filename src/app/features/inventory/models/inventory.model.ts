@@ -515,6 +515,7 @@ export interface InventoryFilter {
   dateTo?: Date;
   status?: string;
   type?: string;
+  severity?: string;
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -596,6 +597,52 @@ export interface InventoryStatistics {
   pendingTransfers: number;
   pendingPurchaseOrders: number;
   activeAlerts: number;
+}
+
+// Dashboard Models
+export interface InventoryDashboardData {
+  metrics: InventoryDashboardMetric[];
+  pipeline: InventoryDashboardPipeline[];
+  exceptions: InventoryDashboardException[];
+  alerts: InventoryDashboardAlert[];
+}
+
+export interface InventoryDashboardMetric {
+  label: string;
+  value: number | string;
+  icon: string;
+  colorClass: 'primary' | 'accent' | 'warn' | 'error' | 'info';
+  route?: string | null;
+}
+
+export interface InventoryDashboardPipeline {
+  icon: string;
+  iconClass: 'edit' | 'transfer' | 'po';
+  label: string;
+  hint: string;
+  value: number;
+  route: string;
+}
+
+export interface InventoryDashboardException {
+  icon: string;
+  severity: 'critical' | 'warning' | 'danger' | 'info';
+  label: string;
+  value: string;
+  route: string;
+}
+
+export interface InventoryDashboardAlert {
+  id: string;
+  type: 'out_of_stock' | 'low_stock' | 'overstock' | 'expiring_soon';
+  severity: 'critical' | 'warning' | 'info';
+  title: string;
+  message: string;
+  stock: {
+    current: number;
+    reorder: number;
+  };
+  timestamp: string;
 }
 
 // Paginated Response
