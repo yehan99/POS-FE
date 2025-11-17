@@ -24,7 +24,7 @@ export class ProductService {
   constructor(private http: HttpClient) {
     // Set up debounced search
     this.searchResults$ = this.searchSubject.pipe(
-      debounceTime(300), // Wait 300ms after user stops typing
+      debounceTime(500), // Wait 500ms after user stops typing
       distinctUntilChanged(), // Only emit if value has changed
       switchMap((searchTerm) => this.searchProducts(searchTerm))
     );
@@ -50,12 +50,12 @@ export class ProductService {
     }
 
     let params = new HttpParams()
-      .set('q', query.trim())
+      .set('search', query.trim())
       .set('page', page.toString())
       .set('limit', limit.toString());
 
     return this.http
-      .get<PaginatedResponse<Product>>(`${this.apiUrl}/search`, { params })
+      .get<{ data: Product[]; pagination: any }>(`${this.apiUrl}`, { params })
       .pipe(
         map((response) => response.data),
         catchError((error) => {
@@ -70,7 +70,9 @@ export class ProductService {
    */
   getProductByBarcode(barcode: string): Observable<Product | null> {
     return this.http
-      .get<{ data: Product }>(`${this.apiUrl}/barcode/${barcode}`)
+      .get<{ success: boolean; data: Product }>(
+        `${this.apiUrl}/barcode/${barcode}`
+      )
       .pipe(
         map((response) => response.data),
         catchError((error) => {

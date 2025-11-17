@@ -90,6 +90,15 @@ export const cartReducer = createReducer(
     });
   }),
 
+  // Apply Discount (alias for setCartDiscount)
+  on(CartActions.applyDiscount, (state, { discountType, discountValue }) => {
+    return calculateCartTotals({
+      ...state,
+      discountType,
+      discountValue: Math.max(0, discountValue),
+    });
+  }),
+
   // Remove Cart Discount
   on(CartActions.removeCartDiscount, (state) => {
     return calculateCartTotals({

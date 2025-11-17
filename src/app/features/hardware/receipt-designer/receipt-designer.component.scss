@@ -1,303 +1,654 @@
-@import "../../../../styles/variables";
-@import "../../../../styles/mixins";
+@import "../../../../styles/_variables";
 
 .receipt-designer-container {
-  padding: 24px;
-  background: #f5f5f5;
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
 
-  .designer-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+  // Page Header
+  .page-header {
+    margin-bottom: 2rem;
 
-    .header-left {
-      h1 {
-        margin: 0;
-        font-size: 28px;
-        font-weight: 600;
-        color: #333;
-      }
-
-      .subtitle {
-        margin: 4px 0 0;
-        color: #666;
-        font-size: 14px;
-      }
-    }
-
-    .header-right {
-      display: flex;
-      gap: 12px;
-
-      button mat-icon {
-        margin-right: 8px;
-      }
-    }
-  }
-
-  .designer-content {
-    display: grid;
-    grid-template-columns: 280px 1fr 400px;
-    gap: 24px;
-    align-items: start;
-  }
-
-  // Templates Sidebar
-  .templates-sidebar {
-    .new-template-btn {
-      width: 100%;
-      margin-bottom: 16px;
-
-      mat-icon {
-        margin-right: 8px;
-      }
-    }
-
-    .templates-list {
-      max-height: calc(100vh - 300px);
-      overflow-y: auto;
-
-      mat-list-item {
-        cursor: pointer;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        transition: all 0.2s ease;
-
-        &:hover {
-          background: #f5f5f5;
-        }
-
-        &.selected {
-          background: #e3f2fd;
-          border-left: 4px solid #2196f3;
-        }
-
-        .paper-width-chip {
-          font-size: 11px;
-          height: 20px;
-          background: #e3f2fd;
-          color: #2196f3;
-        }
-
-        .default-chip {
-          font-size: 11px;
-          height: 20px;
-          background: #fff3e0;
-          color: #ef6c00;
-          margin-left: 4px;
-        }
-
-        .empty-text {
-          color: #999;
-          font-style: italic;
-        }
-      }
-    }
-  }
-
-  // Editor Panel
-  .editor-panel {
-    mat-card-header {
+    .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 1rem;
 
-      mat-card-title {
-        display: flex;
+      .btn-back {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 8px;
+        display: inline-flex;
         align-items: center;
-        gap: 12px;
+        justify-content: center;
+        border: 1px solid $border;
+        background: $surface;
+        color: $text-secondary;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        span {
+          display: none;
+        }
+
+        &:hover {
+          background: $background;
+          border-color: $border;
+          color: $text-primary;
+        }
+      }
+
+      .title-section {
+        .page-title {
+          font-size: 2rem;
+          font-weight: 700;
+          color: $text-primary;
+          margin: 0 0 0.5rem 0;
+          letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+          font-size: 0.95rem;
+          color: $text-secondary;
+          margin: 0;
+        }
       }
 
       .header-actions {
         display: flex;
-        gap: 8px;
+        gap: 0.75rem;
         align-items: center;
+      }
+    }
+  }
 
-        button mat-icon {
-          margin-right: 8px;
+  // Summary Cards
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .summary-card {
+      background: $surface;
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          135deg,
+          $primary 0%,
+          color-mix(in srgb, $primary, black 10%) 100%
+        );
+        flex-shrink: 0;
+
+        mat-icon {
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+          color: white;
+        }
+
+        &.success {
+          background: linear-gradient(
+            135deg,
+            $success 0%,
+            color-mix(in srgb, $success, black 10%) 100%
+          );
+        }
+
+        &.warning {
+          background: linear-gradient(
+            135deg,
+            $warning 0%,
+            color-mix(in srgb, $warning, black 10%) 100%
+          );
+        }
+
+        &.accent {
+          background: linear-gradient(
+            135deg,
+            $accent 0%,
+            color-mix(in srgb, $accent, black 10%) 100%
+          );
+        }
+      }
+
+      .card-content {
+        flex: 1;
+
+        .card-value {
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: $text-primary;
+          line-height: 1.2;
+          margin-bottom: 0.25rem;
+        }
+
+        .card-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: $text-secondary;
+          margin-bottom: 0.125rem;
+        }
+
+        .card-sublabel {
+          font-size: 0.75rem;
+          color: $text-tertiary;
+        }
+      }
+    }
+  }
+
+  // Main Content Grid
+  .content-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr 400px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  // Shared Card Styles
+  .card {
+    background: $surface;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid $border;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba($primary, 0.02), transparent);
+
+      .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: $text-primary;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          color: $primary;
+        }
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+
+  // Templates Card
+  .templates-card {
+    .templates-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .template-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        background: $background;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: color-mix(in srgb, $primary, white 95%);
+          border-color: color-mix(in srgb, $primary, white 80%);
+        }
+
+        &.selected {
+          background: color-mix(in srgb, $primary, white 90%);
+          border-color: $primary;
+          box-shadow: 0 2px 8px rgba($primary, 0.15);
+        }
+
+        .template-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          background: linear-gradient(
+            135deg,
+            $primary 0%,
+            color-mix(in srgb, $primary, black 10%) 100%
+          );
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            color: white;
+          }
+        }
+
+        .template-info {
+          flex: 1;
+          min-width: 0;
+
+          .template-name {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: $text-primary;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .template-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+
+            .meta-item {
+              font-size: 0.75rem;
+              padding: 0.125rem 0.5rem;
+              border-radius: 4px;
+              background: $surface;
+              color: $text-secondary;
+              border: 1px solid $border;
+            }
+          }
+        }
+
+        .template-actions {
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
+        &:hover .template-actions {
+          opacity: 1;
         }
       }
     }
 
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: $text-tertiary;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        color: $text-secondary;
+        margin-bottom: 1.5rem;
+      }
+    }
+  }
+
+  // Editor Card
+  .editor-card {
     .basic-settings {
       display: grid;
       grid-template-columns: 1fr 1fr 200px;
-      gap: 16px;
-      margin-bottom: 24px;
+      gap: 1rem;
+      margin-bottom: 2rem;
+
+      .full-width {
+        grid-column: 1 / 2;
+      }
 
       mat-form-field {
         width: 100%;
       }
     }
 
-    .tab-content {
-      padding: 24px 0;
+    .config-tabs {
+      ::ng-deep {
+        .mat-mdc-tab-header {
+          margin-bottom: 1.5rem;
+          border-bottom: 2px solid $border;
+        }
 
-      h3 {
-        margin: 24px 0 12px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-
-        &:first-child {
-          margin-top: 0;
+        .mat-mdc-tab-body-content {
+          overflow: visible !important;
+          padding: 1rem 0;
         }
       }
 
-      .section-config {
-        margin-top: 16px;
+      .tab-content {
+        h3 {
+          margin: 1.5rem 0 1rem;
+          font-size: 1rem;
+          font-weight: 600;
+          color: $text-primary;
 
-        mat-slide-toggle,
-        mat-checkbox {
-          display: block;
-          margin: 12px 0;
-        }
-
-        mat-form-field {
-          width: 100%;
-          max-width: 300px;
-        }
-
-        .logo-config {
-          display: flex;
-          gap: 12px;
-          margin: 12px 0;
-
-          button mat-icon {
-            margin-right: 8px;
+          &:first-child {
+            margin-top: 0;
           }
         }
 
-        .contact-options {
-          display: flex;
-          gap: 16px;
-          margin: 12px 0;
-        }
+        .section-config {
+          margin-top: 1rem;
 
-        .full-width {
-          max-width: 100%;
+          mat-slide-toggle,
+          mat-checkbox {
+            display: block;
+            margin: 0.75rem 0;
+          }
+
+          mat-form-field {
+            width: 100%;
+            max-width: 400px;
+            margin: 0.75rem 0;
+          }
+
+          .logo-config {
+            display: flex;
+            gap: 0.75rem;
+            margin: 0.75rem 0;
+          }
+
+          .contact-options {
+            display: flex;
+            gap: 1rem;
+            margin: 0.75rem 0;
+          }
+
+          .full-width {
+            max-width: 100%;
+          }
         }
       }
     }
 
     .editor-actions {
       display: flex;
-      gap: 12px;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid #eee;
-
-      button mat-icon {
-        margin-right: 8px;
-      }
+      gap: 0.75rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid $border;
     }
 
     .view-mode {
-      padding: 40px 20px;
       text-align: center;
+      padding: 3rem 2rem;
 
-      .info-text {
-        color: #999;
-        font-size: 14px;
+      .info-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          color: $text-tertiary;
+        }
+
+        p {
+          color: $text-secondary;
+          margin: 0;
+        }
       }
     }
   }
 
-  // Preview Panel
-  .preview-panel {
+  // Preview Card
+  .preview-card {
     position: sticky;
-    top: 24px;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    display: flex;
+    flex-direction: column;
 
-    mat-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .card-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
     }
 
     .receipt-preview {
-      background: white;
-      border: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+      background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
       border-radius: 8px;
-      padding: 20px;
       min-height: 400px;
-      max-height: calc(100vh - 300px);
-      overflow-y: auto;
 
-      .preview-text {
-        font-family: "Courier New", Courier, monospace;
-        font-size: 12px;
-        line-height: 1.4;
-        margin: 0;
-        white-space: pre-wrap;
-        word-wrap: break-word;
+      .preview-paper {
+        background: white;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        padding: 1.5rem 1rem;
+        border-radius: 4px;
+        max-width: 100%;
+
+        .preview-text {
+          font-family: "Courier New", Courier, monospace;
+          font-size: 11px;
+          line-height: 1.4;
+          margin: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          color: #000;
+        }
       }
+    }
+  }
+
+  // Buttons
+  .btn-primary,
+  .btn-secondary,
+  .btn-action {
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-primary {
+    background: linear-gradient(
+      135deg,
+      $primary 0%,
+      color-mix(in srgb, $primary, black 10%) 100%
+    );
+    color: white;
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba($primary, 0.3);
+      transform: translateY(-2px);
+    }
+  }
+
+  .btn-secondary {
+    background: $surface;
+    color: $text-primary;
+    border: 1px solid $border;
+
+    &:hover:not(:disabled) {
+      background: $background;
+      border-color: $primary;
+    }
+  }
+
+  .btn-action {
+    background: linear-gradient(
+      135deg,
+      $success 0%,
+      color-mix(in srgb, $success, black 10%) 100%
+    );
+    color: white;
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba($success, 0.3);
+      transform: translateY(-2px);
+    }
+  }
+
+  .btn-icon,
+  .btn-icon-small {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: $background;
+      color: $primary;
+    }
+
+    &.active {
+      background: color-mix(in srgb, $primary, white 90%);
+      color: $primary;
+    }
+  }
+
+  .btn-icon-small {
+    width: 32px;
+    height: 32px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
   }
 
   // Responsive Design
   @media (max-width: 1400px) {
-    .designer-content {
-      grid-template-columns: 250px 1fr 350px;
-    }
-
-    .preview-panel .receipt-preview {
-      padding: 16px;
+    .content-grid {
+      grid-template-columns: 280px 1fr 360px;
     }
   }
 
   @media (max-width: 1200px) {
-    .designer-content {
+    .content-grid {
       grid-template-columns: 1fr;
 
-      .templates-sidebar,
-      .preview-panel {
+      .templates-card,
+      .preview-card {
         display: none;
       }
     }
   }
 
   @media (max-width: 768px) {
-    padding: 16px;
+    padding: 1rem;
 
-    .designer-header {
+    .page-header .header-content {
       flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
+      align-items: stretch;
+      gap: 1rem;
 
-      .header-right {
-        width: 100%;
-
-        button {
-          flex: 1;
-        }
+      .header-actions {
+        justify-content: space-between;
       }
     }
 
-    .editor-panel {
-      .basic-settings {
-        grid-template-columns: 1fr;
+    .summary-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .editor-card .basic-settings {
+      grid-template-columns: 1fr;
+
+      .full-width {
+        grid-column: 1;
       }
     }
   }
 }
 
-// Material overrides
+// Material Component Overrides
 ::ng-deep {
   .receipt-designer-container {
-    .mat-mdc-tab-body-content {
-      overflow: visible !important;
-    }
+    mat-form-field.mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background: white;
+      }
 
-    .mat-mdc-tab-header {
-      margin-bottom: 16px;
-    }
-
-    mat-form-field {
       .mat-mdc-form-field-subscript-wrapper {
         display: none;
       }
+    }
+
+    .mat-mdc-menu-panel {
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     }
   }
 }

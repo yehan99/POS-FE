@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Location } from '@angular/common';
 import { interval, Subscription } from 'rxjs';
 import { HardwareService } from '../../../core/services/hardware.service';
 import { HardwareStatusService } from '../../../core/services/hardware-status.service';
@@ -92,7 +93,8 @@ export class HardwareStatusComponent implements OnInit, OnDestroy {
     private printerService: PrinterService,
     private scannerService: ScannerService,
     private cashDrawerService: CashDrawerService,
-    private paymentTerminalService: PaymentTerminalService
+    private paymentTerminalService: PaymentTerminalService,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -106,6 +108,10 @@ export class HardwareStatusComponent implements OnInit, OnDestroy {
     if (this.refreshSubscription) {
       this.refreshSubscription.unsubscribe();
     }
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 
   loadSystemStatus(): void {

@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -53,7 +55,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private barcodeScanner: BarcodeScannerService,
     private transactionService: TransactionService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router,
+    private location: Location
   ) {
     // Initialize cart observables
     this.cartItems$ = this.store.select(CartSelectors.selectCartItems);
@@ -94,6 +98,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (term.length >= 2) {
       this.isSearching = true;
       this.productService.search(term);
+
+      // Subscribe to results to stop loading spinner
+      this.searchResults$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+        this.isSearching = false;
+      });
+    } else {
+      this.isSearching = false;
     }
   }
 
@@ -101,6 +112,24 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.addProductToCart(product);
     this.searchTerm = '';
     this.isSearching = false;
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.isSearching = false;
+  }
+
+  displayProductName(product: Product | null): string {
+    return product ? product.name : '';
+  }
+
+  // Navigation
+  goBack(): void {
+    this.location.back();
+  }
+
+  navigateTo(route: string): void {
+    this.router.navigate([route]);
   }
 
   // Cart Operations
@@ -345,5 +374,107 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   // Format currency
   formatCurrency(amount: number): string {
     return `LKR ${amount.toFixed(2)}`;
+  }
+
+  // Quick Actions
+  holdSale(): void {
+    // Save current cart state to local storage or backend
+    this.store
+      .select(CartSelectors.selectCartSummary)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((summary) => {
+        const heldSale = {
+          id: `HELD-${Date.now()}`,
+          timestamp: new Date(),
+          summary: summary,
+        };
+
+        // Save to local storage
+        const heldSales = JSON.parse(localStorage.getItem('heldSales') || '[]');
+        heldSales.push(heldSale);
+        localStorage.setItem('heldSales', JSON.stringify(heldSales));
+
+        this.showSnackBar('Sale held successfully', 'success');
+        this.store.dispatch(CartActions.clearCart());
+      });
+  }
+
+  recallCart(): void {
+    // Retrieve held sales from local storage
+    const heldSales = JSON.parse(localStorage.getItem('heldSales') || '[]');
+
+    if (heldSales.length === 0) {
+      this.showSnackBar('No held sales available', 'info');
+      return;
+    }
+
+    // For now, recall the most recent one
+    // TODO: Show dialog with list of held sales to choose from
+    const lastHeldSale = heldSales[heldSales.length - 1];
+
+    // Restore cart items
+    if (lastHeldSale.summary && lastHeldSale.summary.items) {
+      lastHeldSale.summary.items.forEach((item: CartItem) => {
+        this.store.dispatch(
+          CartActions.addToCart({
+            product: item.product,
+            quantity: item.quantity,
+          })
+        );
+      });
+
+      // Remove from held sales
+      heldSales.pop();
+      localStorage.setItem('heldSales', JSON.stringify(heldSales));
+
+      this.showSnackBar('Cart recalled successfully', 'success');
+    }
+  }
+
+  attachCustomer(): void {
+    // TODO: Open customer selection dialog
+    this.showSnackBar('Customer management coming soon', 'info');
+  }
+
+  applyDiscount(): void {
+    // TODO: Open discount dialog
+    const discountPercentage = prompt('Enter discount percentage (0-100):');
+
+    if (discountPercentage) {
+      const discount = parseFloat(discountPercentage);
+      if (!isNaN(discount) && discount >= 0 && discount <= 100) {
+        this.store.dispatch(
+          CartActions.applyDiscount({
+            discountType: 'percentage',
+            discountValue: discount,
+          })
+        );
+        this.showSnackBar(`${discount}% discount applied`, 'success');
+      } else {
+        this.showSnackBar('Invalid discount value', 'error');
+      }
+    }
+  }
+
+  addNotes(): void {
+    // TODO: Open notes dialog
+    const notes = prompt('Add notes for this transaction:');
+
+    if (notes) {
+      // TODO: Store notes in cart state
+      this.showSnackBar('Notes added successfully', 'success');
+    }
+  }
+
+  printQuote(): void {
+    // Generate quote from current cart
+    this.store
+      .select(CartSelectors.selectCartSummary)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((summary) => {
+        // TODO: Open quote print dialog
+        this.showSnackBar('Quote printing coming soon', 'info');
+        console.log('Quote data:', summary);
+      });
   }
 }

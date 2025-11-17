@@ -10,6 +10,8 @@
   flex-direction: column;
   gap: 1.75rem;
   padding: 2rem 2.5rem 3rem;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .page-header {

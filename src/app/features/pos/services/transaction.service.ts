@@ -21,8 +21,12 @@ export class TransactionService {
   // Save a new transaction
   saveTransaction(transaction: Transaction): Observable<Transaction> {
     return this.http
-      .post<Transaction>(`${environment.apiUrl}/transactions`, transaction)
+      .post<{ success: boolean; data: Transaction; message?: string }>(
+        `${environment.apiUrl}/transactions`,
+        transaction
+      )
       .pipe(
+        map((response) => response.data),
         tap((savedTransaction) => {
           // Add to local cache
           const current = this.transactionsSubject.value;
@@ -41,11 +45,21 @@ export class TransactionService {
       .set('limit', limit.toString());
 
     return this.http
-      .get<{ transactions: Transaction[]; total: number }>(
-        `${environment.apiUrl}/transactions`,
-        { params }
-      )
+      .get<{
+        success: boolean;
+        data: {
+          transactions: Transaction[];
+          total: number;
+          page: number;
+          limit: number;
+          total_pages: number;
+        };
+      }>(`${environment.apiUrl}/transactions`, { params })
       .pipe(
+        map((response) => ({
+          transactions: response.data.transactions,
+          total: response.data.total,
+        })),
         tap((response) => {
           if (page === 1) {
             this.transactionsSubject.next(response.transactions);
@@ -92,24 +106,35 @@ export class TransactionService {
       params = params.set('search', filter.searchTerm);
     }
 
-    return this.http.get<{ transactions: Transaction[]; total: number }>(
-      `${environment.apiUrl}/transactions/search`,
-      { params }
-    );
+    return this.http
+      .get<{
+        success: boolean;
+        data: { transactions: Transaction[]; total: number };
+      }>(`${environment.apiUrl}/transactions/search`, { params })
+      .pipe(
+        map((response) => ({
+          transactions: response.data.transactions,
+          total: response.data.total,
+        }))
+      );
   }
 
   // Get a single transaction by ID
   getTransactionById(id: string): Observable<Transaction> {
-    return this.http.get<Transaction>(
-      `${environment.apiUrl}/transactions/${id}`
-    );
+    return this.http
+      .get<{ success: boolean; data: Transaction }>(
+        `${environment.apiUrl}/transactions/${id}`
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Get transaction by transaction number
   getTransactionByNumber(transactionNumber: string): Observable<Transaction> {
-    return this.http.get<Transaction>(
-      `${environment.apiUrl}/transactions/number/${transactionNumber}`
-    );
+    return this.http
+      .get<{ success: boolean; data: Transaction }>(
+        `${environment.apiUrl}/transactions/number/${transactionNumber}`
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Get today's transactions
@@ -139,10 +164,12 @@ export class TransactionService {
       params = params.set('endDate', endDate.toISOString());
     }
 
-    return this.http.get<TransactionSummary>(
-      `${environment.apiUrl}/transactions/summary`,
-      { params }
-    );
+    return this.http
+      .get<{ success: boolean; data: TransactionSummary }>(
+        `${environment.apiUrl}/transactions/summary`,
+        { params }
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Refund a transaction
@@ -150,10 +177,12 @@ export class TransactionService {
     transactionId: string,
     reason: string
   ): Observable<Transaction> {
-    return this.http.post<Transaction>(
-      `${environment.apiUrl}/transactions/${transactionId}/refund`,
-      { reason }
-    );
+    return this.http
+      .post<{ success: boolean; data: Transaction; message?: string }>(
+        `${environment.apiUrl}/transactions/${transactionId}/refund`,
+        { reason }
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Cancel a transaction
@@ -161,10 +190,12 @@ export class TransactionService {
     transactionId: string,
     reason: string
   ): Observable<Transaction> {
-    return this.http.post<Transaction>(
-      `${environment.apiUrl}/transactions/${transactionId}/cancel`,
-      { reason }
-    );
+    return this.http
+      .post<{ success: boolean; data: Transaction; message?: string }>(
+        `${environment.apiUrl}/transactions/${transactionId}/cancel`,
+        { reason }
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Get cashier's transactions for a shift

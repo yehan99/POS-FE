@@ -37,6 +37,11 @@ export const setCartDiscount = createAction(
   props<{ discountType: 'percentage' | 'fixed'; discountValue: number }>()
 );
 
+export const applyDiscount = createAction(
+  '[Cart] Apply Discount',
+  props<{ discountType: 'percentage' | 'fixed'; discountValue: number }>()
+);
+
 export const removeCartDiscount = createAction('[Cart] Remove Cart Discount');
 
 // Customer

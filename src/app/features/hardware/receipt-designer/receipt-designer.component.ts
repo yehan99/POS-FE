@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Location } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
@@ -59,7 +60,8 @@ export class ReceiptDesignerComponent implements OnInit, OnDestroy {
   constructor(
     private receiptTemplateService: ReceiptTemplateService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -333,6 +335,14 @@ export class ReceiptDesignerComponent implements OnInit, OnDestroy {
       printWindow.document.close();
       printWindow.print();
     }
+  }
+
+  getDefaultTemplateCount(): number {
+    return this.templates.filter((t) => t.isDefault).length;
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 
   private showSuccess(message: string): void {
