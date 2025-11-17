@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Subject, Observable, fromEvent } from 'rxjs';
-import { filter, map, debounceTime } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { HardwareService } from './hardware.service';
 import {
   ScannerConfig,
@@ -16,12 +16,13 @@ import {
   providedIn: 'root',
 })
 export class ScannerService {
+  private readonly hardwareService = inject(HardwareService);
   private scans$ = new Subject<ScanResult>();
-  private keyboardBuffer: string = '';
-  private keyboardTimer: any;
+  private keyboardBuffer = '';
+  private keyboardTimer: ReturnType<typeof setTimeout> | null = null;
   private listening = false;
 
-  constructor(private hardwareService: HardwareService) {
+  constructor() {
     this.initializeKeyboardWedge();
   }
 
@@ -208,8 +209,21 @@ export class ScannerService {
   private playScanSound(): void {
     try {
       // Create a simple beep sound using Web Audio API
-      const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const AudioContextClass =
+        (
+          window as typeof globalThis & {
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).AudioContext ||
+        (
+          window as typeof globalThis & {
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -242,7 +256,7 @@ export class ScannerService {
   /**
    * Manual scan (for testing or manual entry)
    */
-  manualScan(code: string, deviceId: string = 'manual'): void {
+  manualScan(code: string, deviceId = 'manual'): void {
     const format = this.detectBarcodeFormat(code);
 
     const result: ScanResult = {
@@ -363,7 +377,7 @@ export class ScannerService {
    * Read data from USB scanner
    */
   private async readFromUSBScanner(
-    reader: any,
+    reader: ReadableStreamDefaultReader<Uint8Array>,
     scannerId: string
   ): Promise<void> {
     try {
@@ -403,7 +417,16 @@ export class ScannerService {
   /**
    * Parse product information from barcode
    */
-  parseProductCode(code: string, format: BarcodeFormat): any {
+  parseProductCode(
+    code: string,
+    format: BarcodeFormat
+  ): {
+    country?: string;
+    manufacturer?: string;
+    product?: string;
+    check?: string;
+    code?: string;
+  } | null {
     // EAN-13 example: First 3 digits = country, next 4-7 = manufacturer, rest = product
     if (format === BarcodeFormat.EAN_13 && code.length === 13) {
       return {

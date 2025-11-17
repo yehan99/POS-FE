@@ -408,7 +408,7 @@ input[type="radio"] {
   box-shadow: $shadow-sm;
 
   &:hover:not(:disabled) {
-    background-color: darken($error, 8%);
+    background-color: color-mix(in srgb, $error, black 8%);
     box-shadow: $shadow-md;
   }
 }
@@ -420,7 +420,7 @@ input[type="radio"] {
   box-shadow: $shadow-sm;
 
   &:hover:not(:disabled) {
-    background-color: darken($success, 8%);
+    background-color: color-mix(in srgb, $success, black 8%);
     box-shadow: $shadow-md;
   }
 }

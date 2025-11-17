@@ -336,7 +336,7 @@
 
   &.status-active {
     background-color: rgba($success, 0.1);
-    color: darken($success, 10%);
+    color: color-mix(in srgb, $success, black 10%);
   }
 
   &.status-inactive {
@@ -346,17 +346,17 @@
 
   &.status-pending {
     background-color: rgba($warning, 0.1);
-    color: darken($warning, 10%);
+    color: color-mix(in srgb, $warning, black 10%);
   }
 
   &.status-completed {
     background-color: rgba($info, 0.1);
-    color: darken($info, 10%);
+    color: color-mix(in srgb, $info, black 10%);
   }
 
   &.status-cancelled {
     background-color: rgba($error, 0.1);
-    color: darken($error, 10%);
+    color: color-mix(in srgb, $error, black 10%);
   }
 
   &.status-draft {
