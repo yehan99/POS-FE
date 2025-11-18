@@ -1,18 +1,16 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import {
-  CustomerService,
-  Customer,
-} from '../../../core/services/customer.service';
 import {
   debounceTime,
   distinctUntilChanged,
   switchMap,
-  startWith,
-  map,
+  catchError,
 } from 'rxjs/operators';
-import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { CustomerService } from '../../../features/customers/services/customer.service';
+import { Customer } from '../../../features/customers/models/customer.model';
 
 export interface CustomerDialogData {
   customerId?: string;
@@ -28,11 +26,12 @@ export interface CustomerDialogResult {
   templateUrl: './customer-dialog.component.html',
   styleUrls: ['./customer-dialog.component.scss'],
 })
-export class CustomerDialogComponent implements OnInit {
+export class CustomerDialogComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   searchControl = new FormControl('');
-  filteredCustomers$!: Observable<Customer[]>;
-  allCustomers$ = new BehaviorSubject<Customer[]>([]);
-  isLoading = false;
+  searchResults$!: Observable<Customer[]>;
+  isSearching = false;
   selectedCustomer: Customer | null = null;
 
   constructor(
@@ -42,65 +41,51 @@ export class CustomerDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Setup search that reacts to both search term and customer list changes
-    this.filteredCustomers$ = combineLatest([
-      this.searchControl.valueChanges.pipe(startWith('')),
-      this.allCustomers$,
-    ]).pipe(
-      debounceTime(300),
-      map(([searchTerm, allCustomers]) => {
-        // Handle object selection from autocomplete
-        if (searchTerm && typeof searchTerm === 'object') {
-          return [];
+    // Set up debounced search similar to product search
+    this.searchResults$ = this.searchControl.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap((searchTerm: string | Customer | null) => {
+        const term = typeof searchTerm === 'string' ? searchTerm : '';
+
+        if (term.length < 2) {
+          return of([]);
         }
 
-        const term = (searchTerm || '').toString().toLowerCase().trim();
-
-        if (!term) {
-          // Show first 20 customers when no search term
-          return allCustomers.slice(0, 20);
-        }
-
-        // Search locally
-        const localResults = allCustomers.filter((customer) => {
-          const fullName = `${customer.firstName || ''} ${
-            customer.lastName || ''
-          }`.toLowerCase();
-          const phone = (customer.phone || '').toLowerCase();
-          const email = (customer.email || '').toLowerCase();
-
-          return (
-            fullName.includes(term) ||
-            phone.includes(term) ||
-            email.includes(term)
-          );
-        });
-
-        return localResults.slice(0, 20);
-      })
+        this.isSearching = true;
+        return this.customerService.searchCustomers(term).pipe(
+          catchError((error) => {
+            console.error('Customer search error:', error);
+            this.isSearching = false;
+            return of([]);
+          })
+        );
+      }),
+      takeUntil(this.destroy$)
     );
 
-    // Load all customers
-    this.loadCustomers();
-  }
-
-  loadCustomers(): void {
-    this.isLoading = true;
-    this.customerService.getAll(1, 100).subscribe({
-      next: (response) => {
-        this.allCustomers$.next(response.data);
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading customers:', error);
-        this.isLoading = false;
-        this.allCustomers$.next([]);
-      },
+    // Subscribe to manage loading state
+    this.searchResults$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.isSearching = false;
     });
   }
 
-  onCustomerSelected(event: any): void {
-    this.selectedCustomer = event.option.value;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchChange(value: string | Customer | null): void {
+    const term = typeof value === 'string' ? value : '';
+    if (term.length < 2) {
+      this.isSearching = false;
+    }
+  }
+
+  onCustomerSelected(customer: Customer): void {
+    this.selectedCustomer = customer;
+    this.searchControl.setValue('');
+    this.isSearching = false;
   }
 
   displayCustomer = (customer: Customer | null): string => {
@@ -118,7 +103,15 @@ export class CustomerDialogComponent implements OnInit {
   }
 
   getCustomerName(customer: Customer): string {
-    return `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+    const firstName = customer.firstName || '';
+    const lastName = customer.lastName || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || customer.phone || 'Unknown';
+  }
+
+  clearSearch(): void {
+    this.searchControl.setValue('');
+    this.isSearching = false;
   }
 
   cancel(): void {

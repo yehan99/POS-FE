@@ -47,6 +47,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   itemCount$: Observable<number>;
   canCheckout$: Observable<boolean>;
   cartSummary$: Observable<any>;
+  selectedCustomer$: Observable<{ id?: string; name?: string } | null>;
 
   constructor(
     private store: Store,
@@ -69,6 +70,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.itemCount$ = this.store.select(CartSelectors.selectCartItemCount);
     this.canCheckout$ = this.store.select(CartSelectors.selectCanCheckout);
     this.cartSummary$ = this.store.select(CartSelectors.selectCartSummary);
+    this.selectedCustomer$ = this.store.select((state: any) => {
+      const cart = state.cart as CartState;
+      return cart.customerId
+        ? { id: cart.customerId, name: cart.customerName }
+        : null;
+    });
   }
 
   ngOnInit(): void {
@@ -405,13 +412,29 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result: CustomerDialogResult) => {
       if (result?.customer) {
-        // TODO: Dispatch action to attach customer to cart
-        this.showSnackBar(
-          `Customer ${result.customer.name} added to order`,
-          'success'
+        const customerName =
+          `${result.customer.firstName || ''} ${
+            result.customer.lastName || ''
+          }`.trim() ||
+          result.customer.phone ||
+          'Customer';
+
+        // Dispatch action to attach customer to cart
+        this.store.dispatch(
+          CartActions.setCustomer({
+            customerId: result.customer.id || '',
+            customerName: customerName,
+          })
         );
+
+        this.showSnackBar(`${customerName} attached to order`, 'success');
       }
     });
+  }
+
+  removeCustomer(): void {
+    this.store.dispatch(CartActions.removeCustomer());
+    this.showSnackBar('Customer removed from order', 'info');
   }
 
   applyDiscount(): void {

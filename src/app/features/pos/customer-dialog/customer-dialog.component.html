@@ -16,35 +16,60 @@
     <!-- Autocomplete Search Field -->
     <div class="search-section">
       <mat-form-field appearance="outline" class="search-field">
+        <mat-icon matPrefix class="search-icon">search</mat-icon>
         <mat-label>Search by phone or name</mat-label>
-        <mat-icon matPrefix>search</mat-icon>
-        <input matInput [formControl]="searchControl" [matAutocomplete]="auto"
-          placeholder="Start typing to search customers" autocomplete="off">
-        <mat-spinner matSuffix *ngIf="isLoading" diameter="20"></mat-spinner>
+        <input type="text" matInput [formControl]="searchControl" [matAutocomplete]="auto"
+          (input)="onSearchChange(searchControl.value)" placeholder="e.g., 077123456 or John Doe" autocomplete="off">
+        <mat-hint>Type at least 2 characters to begin searching</mat-hint>
+        <mat-spinner *ngIf="isSearching && searchControl.value && searchControl.value.length >= 2" diameter="20"
+          matSuffix class="search-spinner"></mat-spinner>
+        <button *ngIf="searchControl.value && !isSearching" mat-icon-button matSuffix (click)="clearSearch()"
+          aria-label="Clear search">
+          <mat-icon>close</mat-icon>
+        </button>
       </mat-form-field>
 
       <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayCustomer"
-        (optionSelected)="onCustomerSelected($event)">
-        <mat-option *ngFor="let customer of filteredCustomers$ | async" [value]="customer">
-          <div class="autocomplete-option">
-            <div class="option-avatar">
-              <mat-icon>person</mat-icon>
-            </div>
-            <div class="option-info">
-              <div class="option-name">
-                {{ getCustomerName(customer) }}
-                <span class="option-tier" *ngIf="customer.loyaltyTier">
-                  {{ customer.loyaltyTier }}
-                </span>
-              </div>
-              <div class="option-details">
-                <span *ngIf="customer.phone">{{ customer.phone }}</span>
-                <span *ngIf="customer.email"> • {{ customer.email }}</span>
-                <span *ngIf="customer.loyaltyPoints"> • {{ customer.loyaltyPoints }} pts</span>
-              </div>
-            </div>
+        (optionSelected)="onCustomerSelected($event.option.value)" class="customer-autocomplete">
+        <mat-option *ngIf="isSearching" disabled>
+          <div class="loading-option">
+            <mat-spinner diameter="24"></mat-spinner>
+            <span>Searching customers...</span>
           </div>
         </mat-option>
+
+        <ng-container *ngIf="!isSearching && (searchResults$ | async) as results">
+          <mat-option *ngFor="let customer of results" [value]="customer" class="customer-option">
+            <div class="autocomplete-option">
+              <div class="option-avatar">
+                <mat-icon>person</mat-icon>
+              </div>
+              <div class="option-info">
+                <div class="option-name">
+                  {{ getCustomerName(customer) }}
+                  <span class="option-tier" *ngIf="customer.loyaltyTier">
+                    {{ customer.loyaltyTier }}
+                  </span>
+                </div>
+                <div class="option-details">
+                  <span *ngIf="customer.phone">{{ customer.phone }}</span>
+                  <span *ngIf="customer.email"> • {{ customer.email }}</span>
+                  <span *ngIf="customer.loyaltyPoints"> • {{ customer.loyaltyPoints }} pts</span>
+                </div>
+              </div>
+            </div>
+          </mat-option>
+
+          <mat-option *ngIf="results.length === 0" disabled>
+            <div class="no-results">
+              <mat-icon>search_off</mat-icon>
+              <div class="no-results-text">
+                <span class="title">No customers found</span>
+                <span class="subtitle">Try a different search term</span>
+              </div>
+            </div>
+          </mat-option>
+        </ng-container>
       </mat-autocomplete>
     </div>
 

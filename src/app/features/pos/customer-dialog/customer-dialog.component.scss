@@ -17,8 +17,8 @@
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #d4a574 0%, #c49563 100%);
-      color: #102a43;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
 
       mat-icon {
         font-size: 24px;
@@ -92,25 +92,40 @@
 
   .selected-customer {
     margin-top: 1.5rem;
+    animation: slideIn 0.3s ease-out;
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
     .customer-card {
-      border: 2px solid #d4a574;
-      border-radius: 12px;
+      border: 2px solid #102a43;
+      border-radius: 14px;
       overflow: hidden;
       background: linear-gradient(
         135deg,
-        rgba(212, 165, 116, 0.05) 0%,
-        rgba(212, 165, 116, 0.02) 100%
+        rgba(16, 42, 67, 0.03) 0%,
+        rgba(16, 42, 67, 0.01) 100%
       );
+      box-shadow: 0 4px 12px rgba(16, 42, 67, 0.08);
 
       .card-header {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        background: linear-gradient(135deg, #d4a574 0%, #c49563 100%);
-        color: #102a43;
+        padding: 0.85rem 1.25rem;
+        background: linear-gradient(135deg, #102a43 0%, #0b1c2c 100%);
+        color: white;
         font-weight: 600;
+        font-size: 0.875rem;
+        letter-spacing: 0.3px;
 
         mat-icon {
           font-size: 20px;
@@ -146,34 +161,42 @@
           flex: 1;
 
           h3 {
-            margin: 0 0 1rem;
-            font-size: 1.25rem;
+            margin: 0 0 1.25rem;
+            font-size: 1.35rem;
             font-weight: 600;
             color: #102a43;
+            letter-spacing: -0.3px;
           }
 
           .detail-row {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-            color: #6b7a8d;
+            gap: 0.65rem;
+            margin-bottom: 0.65rem;
+            font-size: 0.9rem;
+            color: #495057;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
 
             mat-icon {
-              font-size: 18px;
-              width: 18px;
-              height: 18px;
-              color: #d4a574;
+              font-size: 19px;
+              width: 19px;
+              height: 19px;
+              color: #102a43;
+              opacity: 0.7;
             }
 
             .tier-badge {
-              padding: 0.25rem 0.75rem;
-              background: #d4a574;
-              color: #102a43;
-              border-radius: 12px;
-              font-weight: 500;
+              padding: 0.3rem 0.85rem;
+              background: linear-gradient(135deg, #102a43 0%, #1a3a52 100%);
+              color: white;
+              border-radius: 14px;
+              font-weight: 600;
+              font-size: 0.8rem;
               text-transform: capitalize;
+              letter-spacing: 0.3px;
             }
           }
         }
@@ -215,11 +238,11 @@
     }
 
     .select-btn {
-      background: linear-gradient(135deg, #d4a574 0%, #c49563 100%);
-      color: #102a43;
+      background: linear-gradient(135deg, #102a43 0%, #0b1c2c 100%);
+      color: white;
 
       &:hover:not(:disabled) {
-        box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+        box-shadow: 0 4px 12px rgba(16, 42, 67, 0.3);
         transform: translateY(-2px);
       }
 
@@ -232,20 +255,77 @@
 }
 
 // Autocomplete panel styles (global)
-::ng-deep .mat-mdc-autocomplete-panel {
+::ng-deep .customer-autocomplete.mat-mdc-autocomplete-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 0.5rem;
   max-height: 400px !important;
 
   .mat-mdc-option {
+    padding: 0 !important;
+    min-height: auto !important;
     height: auto !important;
-    min-height: 48px;
-    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid #f0f0f0;
 
-    &:hover {
-      background: rgba(212, 165, 116, 0.08) !important;
+    &:last-child {
+      border-bottom: none;
     }
 
-    &.mat-mdc-option-active {
-      background: rgba(212, 165, 116, 0.12) !important;
+    &:hover:not(.loading-option):not([disabled]) {
+      background: rgba(16, 42, 67, 0.06) !important;
+    }
+
+    &.mdc-list-item--selected:not(.loading-option) {
+      background: rgba(16, 42, 67, 0.1) !important;
+    }
+
+    .mdc-list-item__primary-text {
+      width: 100%;
+    }
+  }
+
+  .loading-option,
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    gap: 0.75rem;
+    text-align: center;
+    color: #6b7a8d;
+
+    mat-spinner {
+      margin-bottom: 0.5rem;
+    }
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      opacity: 0.4;
+    }
+
+    span {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .no-results-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1a202c;
+      }
+
+      .subtitle {
+        font-size: 0.8rem;
+        color: #6b7a8d;
+      }
     }
   }
 
@@ -253,7 +333,8 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.5rem 0;
+    padding: 0.75rem 1rem;
+    width: 100%;
 
     .option-avatar {
       display: flex;
@@ -263,7 +344,7 @@
       height: 40px;
       border-radius: 50%;
       background: linear-gradient(135deg, #102a43 0%, #1a3a52 100%);
-      color: #d4a574;
+      color: white;
       flex-shrink: 0;
 
       mat-icon {
@@ -288,8 +369,8 @@
 
         .option-tier {
           padding: 0.125rem 0.5rem;
-          background: #d4a574;
-          color: #102a43;
+          background: #102a43;
+          color: white;
           border-radius: 10px;
           font-size: 0.7rem;
           text-transform: capitalize;
@@ -304,6 +385,31 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+    }
+  }
+}
+
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-field {
+  width: 100%;
+
+  .search-icon {
+    color: #102a43;
+    margin-right: 0.5rem;
+  }
+
+  .search-spinner circle {
+    stroke: #102a43;
+  }
+
+  ::ng-deep {
+    .mat-mdc-form-field-hint {
+      font-size: 0.75rem;
+      color: #6b7a8d;
+      margin-top: 0.25rem;
     }
   }
 }

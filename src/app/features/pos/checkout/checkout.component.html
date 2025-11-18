@@ -91,6 +91,17 @@
             <p>Track up to 100+ line items with ease</p>
           </div>
 
+          <!-- Customer Badge -->
+          <div class="customer-badge" *ngIf="selectedCustomer$ | async as customer">
+            <div class="customer-info">
+              <mat-icon>person</mat-icon>
+              <span class="customer-name">{{ customer.name }}</span>
+            </div>
+            <button mat-icon-button (click)="removeCustomer()" matTooltip="Remove customer" class="remove-customer-btn">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
           <div class="header-badge mx-5" *ngIf="cartSummary$ | async as summary">
             <button mat-raised-button color="warn" (click)="clearCart()" [disabled]="(itemCount$ | async) === 0"
               class="clear-all-btn">

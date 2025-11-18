@@ -10,6 +10,7 @@ $accent-gold: #d4a574;
 $soft-silver: #e5e9f2;
 $muted-slate: #6b7a8d;
 $surface: #ffffff;
+$primary-900: #102a43;
 $shadow-soft: 0 4px 20px rgba(15, 23, 42, 0.12);
 $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
 
@@ -117,12 +118,11 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
 
         h1 {
           font-size: 1.75rem;
-          font-weight: 700;
+          font-weight: 500;
           color: #1a202c;
           margin: 0;
           letter-spacing: -0.5px;
         }
-
         p {
           font-size: 0.875rem;
           color: $muted-slate;
@@ -213,7 +213,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         width: 56px;
         height: 56px;
         border-radius: 14px;
-        background: rgba($deep-navy, 0.08);
+        background: $deep-navy;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -222,7 +222,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
           font-size: 28px;
           width: 28px;
           height: 28px;
-          color: $deep-navy;
+          color: white;
         }
       }
 
@@ -240,7 +240,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         .card-value {
           display: block;
           font-size: 1.5rem;
-          font-weight: 700;
+          font-weight: 500;
           color: #12263f;
         }
       }
@@ -313,7 +313,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
 
         h3 {
           font-size: 1.125rem;
-          font-weight: 700;
+          font-weight: 500;
           color: #12263f;
           margin: 0;
         }
@@ -322,6 +322,67 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
           font-size: 0.875rem;
           color: $muted-slate;
           margin: 0.25rem 0 0;
+        }
+      }
+
+      .customer-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.4rem 0.9rem;
+        background: linear-gradient(135deg, #ffe9b3 0%, #ffcf6b 100%);
+        border-radius: 999px;
+        border: 1px solid rgba($accent-gold, 0.45);
+        margin-right: auto;
+        margin-left: 1rem;
+        box-shadow: 0 6px 16px rgba(212, 165, 116, 0.25);
+        animation: slideInCustomer 0.3s ease-out;
+
+        .customer-info {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            color: $primary-900;
+          }
+
+          .customer-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: $primary-900;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+          }
+        }
+
+        .remove-customer-btn {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+            color: rgba($primary-900, 0.65);
+          }
+
+          &:hover {
+            background: rgba($primary-900, 0.12);
+
+            mat-icon {
+              color: $primary-900;
+            }
+          }
         }
       }
 
@@ -341,7 +402,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
 
         .badge-value {
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 500;
           color: $accent-gold;
         }
       }
@@ -635,7 +696,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
 
         h4 {
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 500;
           color: #12263f;
           margin: 0 0 0.5rem;
         }
@@ -693,7 +754,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
           justify-content: space-between;
           padding: 1rem 0;
           font-size: 1.25rem;
-          font-weight: 700;
+          font-weight: 500;
 
           span:first-child {
             color: #12263f;
@@ -711,7 +772,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
           background: linear-gradient(135deg, $deep-navy 0%, $navy-dark 100%);
           color: white;
           font-size: 1rem;
-          font-weight: 700;
+          font-weight: 600;
           margin-top: 1.5rem;
           box-shadow: $shadow-lifted;
           transition: all 0.3s ease;
@@ -791,13 +852,13 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
 
         .label {
           font-size: 1.1rem;
-          font-weight: 700;
+          font-weight: 500;
           color: #12263f;
         }
 
         .value {
           font-size: 1.5rem;
-          font-weight: 800;
+          font-weight: 600;
           color: $accent-gold;
         }
       }
@@ -809,7 +870,7 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         background: linear-gradient(135deg, $deep-navy 0%, $navy-dark 100%);
         color: white;
         font-size: 1rem;
-        font-weight: 700;
+        font-weight: 500;
         box-shadow: $shadow-lifted;
         transition: all 0.3s ease;
 
@@ -843,7 +904,8 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         .action-btn {
           height: 72px;
           border-radius: 12px;
-          border: 2px solid rgba($deep-navy, 0.08);
+          border: none;
+          background: $deep-navy;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -855,18 +917,21 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
             font-size: 28px;
             width: 28px;
             height: 28px;
-            color: $deep-navy;
+            color: white;
           }
 
           span {
             font-size: 0.875rem;
             font-weight: 600;
-            color: #12263f;
+            color: white;
           }
 
           &:hover {
-            background: linear-gradient(135deg, $deep-navy 0%, $navy-dark 100%);
-            border-color: transparent;
+            background: linear-gradient(
+              135deg,
+              lighten($deep-navy, 5%) 0%,
+              $deep-navy 100%
+            );
             transform: translateY(-2px);
             box-shadow: $shadow-lifted;
 
@@ -1260,5 +1325,16 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         width: 100%;
       }
     }
+  }
+}
+
+@keyframes slideInCustomer {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
