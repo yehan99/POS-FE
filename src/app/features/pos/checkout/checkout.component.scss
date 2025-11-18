@@ -737,6 +737,102 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
       }
     }
 
+    // Payment Summary Card
+    .payment-card {
+      .card-body {
+        padding: 1.5rem;
+      }
+
+      .summary-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        .summary-line {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .label {
+            font-size: 0.95rem;
+            color: $muted-slate;
+            font-weight: 500;
+          }
+
+          .value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #12263f;
+
+            &.discount {
+              color: #10b981;
+            }
+          }
+        }
+      }
+
+      .summary-divider {
+        margin: 1.25rem 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba($deep-navy, 0.15),
+          transparent
+        );
+      }
+
+      .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        margin-bottom: 1.5rem;
+
+        .label {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #12263f;
+        }
+
+        .value {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: $accent-gold;
+        }
+      }
+
+      .payment-btn {
+        width: 100%;
+        height: 56px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, $deep-navy 0%, $navy-dark 100%);
+        color: white;
+        font-size: 1rem;
+        font-weight: 700;
+        box-shadow: $shadow-lifted;
+        transition: all 0.3s ease;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+          margin-right: 0.5rem;
+        }
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 18px 32px rgba(15, 23, 42, 0.22);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+      }
+    }
+
     // Quick Actions
     .actions-card {
       .action-buttons {

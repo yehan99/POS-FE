@@ -302,7 +302,7 @@ select,
   border: 1px solid $border-light !important;
 }
 
-// Material Form Field Enhancements - Global Height Reduction
+// Material Form Field Enhancements
 .mat-mdc-form-field {
   .mat-mdc-text-field-wrapper {
     .mat-mdc-form-field-flex {
@@ -314,6 +314,17 @@ select,
         }
       }
     }
+  }
+
+  // Hide placeholder when label is present and not focused
+  &:not(.mat-focused) .mat-mdc-input-element::placeholder {
+    opacity: 0 !important;
+  }
+
+  // Show placeholder only when focused
+  &.mat-focused .mat-mdc-input-element::placeholder {
+    opacity: 1 !important;
+    transition: opacity 0.2s ease;
   }
 }
 

@@ -186,6 +186,49 @@
 
     <!-- Right Section: Summary & Actions -->
     <div class="right-section">
+      <!-- Payment Summary Card -->
+      <div class="luxury-card payment-card">
+        <div class="card-header">
+          <div class="header-icon">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <div class="header-text">
+            <h3>Payment Summary</h3>
+            <p>Review order totals</p>
+          </div>
+        </div>
+
+        <div class="card-body" *ngIf="cartSummary$ | async as summary">
+          <div class="summary-lines">
+            <div class="summary-line">
+              <span class="label">Subtotal</span>
+              <span class="value">{{ formatCurrency(summary.subtotal) }}</span>
+            </div>
+            <div class="summary-line" *ngIf="summary.discountAmount > 0">
+              <span class="label">Discount</span>
+              <span class="value discount">-{{ formatCurrency(summary.discountAmount) }}</span>
+            </div>
+            <div class="summary-line">
+              <span class="label">Tax (8%)</span>
+              <span class="value">{{ formatCurrency(summary.taxAmount) }}</span>
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-total">
+            <span class="label">Total Amount</span>
+            <span class="value">{{ formatCurrency(summary.total) }}</span>
+          </div>
+
+          <button mat-raised-button class="payment-btn" (click)="proceedToCheckout()"
+            [disabled]="(canCheckout$ | async) !== true">
+            <mat-icon>payment</mat-icon>
+            <span>Proceed to Payment</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Quick Actions Card -->
       <div class="luxury-card actions-card">
         <div class="card-header">

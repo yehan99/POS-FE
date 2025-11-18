@@ -23,6 +23,10 @@ import {
   ReceiptDialogComponent,
   ReceiptDialogData,
 } from '../receipt-dialog/receipt-dialog.component';
+import {
+  CustomerDialogComponent,
+  CustomerDialogResult,
+} from '../customer-dialog/customer-dialog.component';
 import { Transaction } from '../models/transaction.model';
 
 @Component({
@@ -393,8 +397,21 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   attachCustomer(): void {
-    // TODO: Open customer selection dialog
-    this.showSnackBar('Customer management coming soon', 'info');
+    const dialogRef = this.dialog.open(CustomerDialogComponent, {
+      width: '560px',
+      maxWidth: '95vw',
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((result: CustomerDialogResult) => {
+      if (result?.customer) {
+        // TODO: Dispatch action to attach customer to cart
+        this.showSnackBar(
+          `Customer ${result.customer.name} added to order`,
+          'success'
+        );
+      }
+    });
   }
 
   applyDiscount(): void {

@@ -21,6 +21,233 @@
     </div>
   </header>
 
+  <app-card variant="elevated" padding="large" class="dashboard-overview">
+    <div class="dashboard-overview__header">
+      <div>
+        <h2>Transaction Insights</h2>
+        <p>Monitor sales mix, payment performance, and recent activity.</p>
+      </div>
+      <div class="period-toggle">
+        <button *ngFor="let option of dashboardPeriods" mat-stroked-button type="button"
+          [ngClass]="{ active: dashboardPeriod === option.value }" (click)="onDashboardPeriodChange(option.value)">
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="dashboardLoading" class="dashboard-overview__loading">
+      <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+    </div>
+
+    <ng-container *ngIf="!dashboardLoading">
+      <ng-container *ngIf="dashboardData; else dashboardFallback">
+        <div class="summary-grid">
+          <div class="summary-card primary">
+            <div class="summary-card__icon">
+              <mat-icon>payments</mat-icon>
+            </div>
+            <div class="summary-card__body">
+              <p>Total Sales</p>
+              <h3>{{ formatCurrency(dashboardData.summary.totalSales) }}</h3>
+              <small>{{ dashboardPeriodLabel }}</small>
+            </div>
+          </div>
+          <div class="summary-card accent">
+            <div class="summary-card__icon">
+              <mat-icon>account_balance_wallet</mat-icon>
+            </div>
+            <div class="summary-card__body">
+              <p>Net Sales</p>
+              <h3>{{ formatCurrency(dashboardData.summary.netSales) }}</h3>
+              <small>After refunds</small>
+            </div>
+          </div>
+          <div class="summary-card neutral">
+            <div class="summary-card__icon">
+              <mat-icon>receipt_long</mat-icon>
+            </div>
+            <div class="summary-card__body">
+              <p>Transactions</p>
+              <h3>{{ dashboardData.summary.totalTransactions | number }}</h3>
+              <small>{{ dashboardData.summary.completedTransactions | number }} completed</small>
+            </div>
+          </div>
+          <div class="summary-card dark">
+            <div class="summary-card__icon">
+              <mat-icon>equalizer</mat-icon>
+            </div>
+            <div class="summary-card__body">
+              <p>Avg Transaction</p>
+              <h3>{{ formatCurrency(dashboardData.summary.averageTransactionValue) }}</h3>
+              <small>Per sale</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-grid">
+          <div class="status-card success">
+            <span>Completed</span>
+            <strong>{{ dashboardData.summary.completedTransactions | number }}</strong>
+          </div>
+          <div class="status-card warning">
+            <span>Pending</span>
+            <strong>{{ dashboardData.summary.pendingTransactions | number }}</strong>
+          </div>
+          <div class="status-card danger">
+            <span>Cancelled</span>
+            <strong>{{ dashboardData.summary.cancelledTransactions | number }}</strong>
+          </div>
+          <div class="status-card info">
+            <span>Refunds</span>
+            <strong>{{ formatCurrency(dashboardData.summary.totalRefunds) }}</strong>
+          </div>
+        </div>
+
+        <div class="insights-grid">
+          <app-card variant="default" padding="large" class="insight-card">
+            <div class="insight-card__header">
+              <h3>Payment Breakdown</h3>
+              <p>Share of completed sales</p>
+            </div>
+            <div class="breakdown-list" *ngIf="dashboardData.paymentBreakdown.length; else emptyPayment">
+              <div class="breakdown-row" *ngFor="let method of dashboardData.paymentBreakdown">
+                <div class="breakdown-row__info">
+                  <p>{{ method.method | titlecase }}</p>
+                  <small>{{ method.transactionCount | number }} transactions</small>
+                </div>
+                <div class="breakdown-row__values">
+                  <span class="amount">{{ formatCurrency(method.amount) }}</span>
+                  <span class="percentage">{{ formatPercentage(method.percentage) }}</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="method.percentage" color="primary"></mat-progress-bar>
+              </div>
+            </div>
+            <ng-template #emptyPayment>
+              <p class="empty-hint">No payment data for this period.</p>
+            </ng-template>
+          </app-card>
+
+          <app-card variant="default" padding="large" class="insight-card">
+            <div class="insight-card__header">
+              <h3>Status Mix</h3>
+              <p>Distribution of all transactions</p>
+            </div>
+            <div class="breakdown-list" *ngIf="dashboardData.statusBreakdown.length; else emptyStatus">
+              <div class="breakdown-row" *ngFor="let status of dashboardData.statusBreakdown">
+                <div class="breakdown-row__info">
+                  <p>{{ status.status | titlecase }}</p>
+                  <small>{{ status.count | number }} records</small>
+                </div>
+                <div class="breakdown-row__values">
+                  <span class="percentage">{{ formatPercentage(status.percentage) }}</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="status.percentage" color="accent"></mat-progress-bar>
+              </div>
+            </div>
+            <ng-template #emptyStatus>
+              <p class="empty-hint">No transactions recorded for this range.</p>
+            </ng-template>
+          </app-card>
+        </div>
+
+        <div class="insights-grid insights-grid--wide">
+          <app-card variant="default" padding="large" class="insight-card">
+            <div class="insight-card__header">
+              <h3>Sales Trend</h3>
+              <p>Daily movement</p>
+            </div>
+            <div class="trend-table" *ngIf="dashboardData.trend.length; else emptyTrend">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Sales</th>
+                    <th>Transactions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let point of dashboardData.trend">
+                    <td>{{ formatTrendDate(point.date) }}</td>
+                    <td>{{ formatCurrency(point.totalSales) }}</td>
+                    <td>{{ point.transactionCount | number }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #emptyTrend>
+              <p class="empty-hint">Trend data not available for this period.</p>
+            </ng-template>
+          </app-card>
+
+          <app-card variant="default" padding="large" class="insight-card">
+            <div class="insight-card__header">
+              <h3>Top Cashiers</h3>
+              <p>Sorted by revenue</p>
+            </div>
+            <div class="cashier-table" *ngIf="dashboardData.topCashiers.length; else emptyCashiers">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cashier</th>
+                    <th>Transactions</th>
+                    <th>Avg Sale</th>
+                    <th>Total Sales</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cashier of dashboardData.topCashiers">
+                    <td>{{ cashier.cashierName || 'Unnamed Cashier' }}</td>
+                    <td>{{ cashier.transactionCount | number }}</td>
+                    <td>{{ formatCurrency(cashier.averageSaleValue) }}</td>
+                    <td>{{ formatCurrency(cashier.totalSales) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #emptyCashiers>
+              <p class="empty-hint">No cashier performance data yet.</p>
+            </ng-template>
+          </app-card>
+        </div>
+
+        <app-card variant="default" padding="large" class="recent-card">
+          <div class="insight-card__header">
+            <h3>Recent Transactions</h3>
+            <p>Latest five sales</p>
+          </div>
+          <div class="recent-list" *ngIf="dashboardData.recentTransactions.length; else emptyRecent">
+            <div class="recent-item" *ngFor="let recent of dashboardData.recentTransactions">
+              <div class="recent-item__meta">
+                <span class="label">{{ recent.transactionNumber }}</span>
+                <small>{{ recent.transactionDate | date: 'short' }}</small>
+              </div>
+              <div class="recent-item__customer">
+                <p>{{ recent.customerName }}</p>
+                <span>{{ recent.itemsCount }} item{{ recent.itemsCount === 1 ? '' : 's' }}</span>
+              </div>
+              <div class="recent-item__values">
+                <span class="amount">{{ formatCurrency(recent.total) }}</span>
+                <mat-chip [color]="getStatusColor(recent.status)">
+                  {{ recent.status | titlecase }}
+                </mat-chip>
+              </div>
+            </div>
+          </div>
+          <ng-template #emptyRecent>
+            <p class="empty-hint">No recent activity.</p>
+          </ng-template>
+        </app-card>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #dashboardFallback>
+      <div class="dashboard-empty-state">
+        <mat-icon>insights</mat-icon>
+        <p>{{ dashboardError || 'No dashboard data available yet.' }}</p>
+      </div>
+    </ng-template>
+  </app-card>
+
   <app-card variant="elevated" padding="large" class="filter-panel">
     <div class="filter-panel__header">
       <div>

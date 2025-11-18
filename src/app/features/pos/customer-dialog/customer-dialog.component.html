@@ -1,0 +1,96 @@
+<div class="customer-dialog">
+  <div class="dialog-header">
+    <div class="header-icon">
+      <mat-icon>person_search</mat-icon>
+    </div>
+    <div class="header-text">
+      <h2>Select Customer</h2>
+      <p>Search by phone or name to attach customer to order</p>
+    </div>
+    <button mat-icon-button (click)="cancel()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <!-- Autocomplete Search Field -->
+    <div class="search-section">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search by phone or name</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="searchControl" [matAutocomplete]="auto"
+          placeholder="Start typing to search customers" autocomplete="off">
+        <mat-spinner matSuffix *ngIf="isLoading" diameter="20"></mat-spinner>
+      </mat-form-field>
+
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayCustomer"
+        (optionSelected)="onCustomerSelected($event)">
+        <mat-option *ngFor="let customer of filteredCustomers$ | async" [value]="customer">
+          <div class="autocomplete-option">
+            <div class="option-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div class="option-info">
+              <div class="option-name">
+                {{ getCustomerName(customer) }}
+                <span class="option-tier" *ngIf="customer.loyaltyTier">
+                  {{ customer.loyaltyTier }}
+                </span>
+              </div>
+              <div class="option-details">
+                <span *ngIf="customer.phone">{{ customer.phone }}</span>
+                <span *ngIf="customer.email"> • {{ customer.email }}</span>
+                <span *ngIf="customer.loyaltyPoints"> • {{ customer.loyaltyPoints }} pts</span>
+              </div>
+            </div>
+          </div>
+        </mat-option>
+      </mat-autocomplete>
+    </div>
+
+    <!-- Selected Customer Display -->
+    <div class="selected-customer" *ngIf="selectedCustomer">
+      <div class="customer-card">
+        <div class="card-header">
+          <mat-icon>check_circle</mat-icon>
+          <span>Selected Customer</span>
+        </div>
+        <div class="card-body">
+          <div class="customer-avatar-large">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="customer-details-large">
+            <h3>{{ getCustomerName(selectedCustomer) }}</h3>
+            <div class="detail-row" *ngIf="selectedCustomer.phone">
+              <mat-icon>phone</mat-icon>
+              <span>{{ selectedCustomer.phone }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedCustomer.email">
+              <mat-icon>email</mat-icon>
+              <span>{{ selectedCustomer.email }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedCustomer.loyaltyPoints">
+              <mat-icon>stars</mat-icon>
+              <span>{{ selectedCustomer.loyaltyPoints }} Loyalty Points</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedCustomer.loyaltyTier">
+              <mat-icon>workspace_premium</mat-icon>
+              <span class="tier-badge">{{ selectedCustomer.loyaltyTier | titlecase }} Tier</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-stroked-button (click)="cancel()" class="cancel-btn">
+      <mat-icon>close</mat-icon>
+      <span>Cancel</span>
+    </button>
+    <button mat-raised-button (click)="confirmSelection()" [disabled]="!selectedCustomer" class="select-btn">
+      <mat-icon>check</mat-icon>
+      <span>Attach Customer</span>
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -5,7 +5,12 @@ import { MatSort } from '@angular/material/sort';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Transaction, TransactionFilter } from '../models/transaction.model';
+import {
+  Transaction,
+  TransactionDashboardData,
+  TransactionDashboardPeriod,
+  TransactionFilter,
+} from '../models/transaction.model';
 import { TransactionService } from '../services/transaction.service';
 import {
   ReceiptDialogComponent,
@@ -36,6 +41,17 @@ export class TransactionHistoryComponent implements OnInit {
   currentPage = 1;
   isLoading = false;
 
+  dashboardData?: TransactionDashboardData;
+  dashboardPeriod: TransactionDashboardPeriod = 'today';
+  dashboardLoading = false;
+  dashboardError = '';
+  dashboardPeriods: { value: TransactionDashboardPeriod; label: string }[] = [
+    { value: 'today', label: 'Today' },
+    { value: 'week', label: 'Last 7 Days' },
+    { value: 'month', label: 'Last 30 Days' },
+    { value: 'year', label: 'Year to Date' },
+  ];
+
   get totalPages(): number {
     return this.calculateTotalPages();
   }
@@ -65,6 +81,7 @@ export class TransactionHistoryComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadDashboardData();
     this.loadTransactions();
     this.setupFilterListener();
   }
@@ -76,6 +93,34 @@ export class TransactionHistoryComponent implements OnInit {
         this.currentPage = 1;
         this.loadTransactions();
       });
+  }
+
+  loadDashboardData(): void {
+    this.dashboardLoading = true;
+    this.dashboardError = '';
+
+    this.transactionService
+      .getTransactionDashboard(this.dashboardPeriod)
+      .subscribe({
+        next: (data) => {
+          this.dashboardData = data;
+          this.dashboardLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading transaction dashboard:', error);
+          this.dashboardError = 'Unable to load dashboard insights.';
+          this.dashboardLoading = false;
+        },
+      });
+  }
+
+  onDashboardPeriodChange(period: TransactionDashboardPeriod): void {
+    if (this.dashboardPeriod === period) {
+      return;
+    }
+
+    this.dashboardPeriod = period;
+    this.loadDashboardData();
   }
 
   loadTransactions(): void {
@@ -267,6 +312,34 @@ export class TransactionHistoryComponent implements OnInit {
       default:
         return 'payment';
     }
+  }
+
+  formatCurrency(value?: number | null): string {
+    const amount = value ?? 0;
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  formatPercentage(value?: number | null): string {
+    return `${(value ?? 0).toFixed(1)}%`;
+  }
+
+  formatTrendDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  get dashboardPeriodLabel(): string {
+    const match = this.dashboardPeriods.find(
+      (option) => option.value === this.dashboardPeriod
+    );
+    return match ? match.label : '';
   }
 
   private calculateTotalPages(): number {

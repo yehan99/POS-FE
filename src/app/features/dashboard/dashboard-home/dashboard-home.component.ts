@@ -23,6 +23,11 @@ export class DashboardHomeComponent implements OnInit {
   quickActions: QuickAction[] = [];
   isLoading = false;
   selectedPeriod: DashboardPeriod = 'today';
+  readonly skeletonQuickActions = Array.from({ length: 4 });
+  readonly skeletonKpis = Array.from({ length: 6 });
+  readonly skeletonCharts = Array.from({ length: 3 });
+  readonly skeletonListItems = Array.from({ length: 4 });
+  readonly skeletonDualPanels = Array.from({ length: 2 });
 
   // Display columns for tables
   transactionColumns = [
@@ -49,24 +54,19 @@ export class DashboardHomeComponent implements OnInit {
   loadDashboardData(): void {
     this.isLoading = true;
 
-    // Using mock data for development
-    // In production, uncomment the service call:
-    // this.dashboardService.getDashboardSummary(this.selectedPeriod).subscribe({
-    //   next: (data) => {
-    //     this.dashboardData = data;
-    //     this.isLoading = false;
-    //   },
-    //   error: (error) => {
-    //     console.error('Error loading dashboard:', error);
-    //     this.loadMockData();
-    //   }
-    // });
-
-    // Using mock data
-    setTimeout(() => {
-      this.dashboardData = this.dashboardService.getMockDashboardData();
-      this.isLoading = false;
-    }, 500);
+    // Call real API
+    this.dashboardService.getDashboardSummary(this.selectedPeriod).subscribe({
+      next: (data) => {
+        this.dashboardData = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading dashboard:', error);
+        // Fallback to mock data on error
+        this.dashboardData = this.dashboardService.getMockDashboardData();
+        this.isLoading = false;
+      },
+    });
   }
 
   loadQuickActions(): void {

@@ -20,8 +20,26 @@
   background: linear-gradient(135deg, $surface 0%, $background 100%);
   border-radius: $radius-xl;
   border: 1px solid $border-light;
-  box-shadow: $shadow-sm;
-  box-shadow: $shadow-sm;
+  box-shadow: 0 4px 24px rgba(16, 42, 67, 0.08),
+    0 2px 8px rgba(16, 42, 67, 0.04);
+  position: relative;
+  overflow: hidden;
+
+  // Decorative gradient accent
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(
+      90deg,
+      $accent-500 0%,
+      $primary-600 50%,
+      $accent-500 100%
+    );
+  }
 
   .header-title {
     h1 {
@@ -30,6 +48,7 @@
       font-weight: $font-weight-bold;
       color: $primary-900;
       font-family: $font-family-display;
+      letter-spacing: -0.5px;
     }
 
     .subtitle {
@@ -37,11 +56,35 @@
       font-size: $font-size-base;
       color: $text-secondary;
       font-weight: $font-weight-normal;
+      display: flex;
+      align-items: center;
+      gap: $spacing-2;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: $accent-500;
+      }
     }
   }
 
   .header-actions {
+    display: flex;
+    gap: $spacing-3;
+
     button {
+      min-width: auto;
+      padding: 0 $spacing-5;
+      height: 40px;
+      box-shadow: 0 2px 8px rgba(16, 42, 67, 0.12);
+      transition: all $transition-base;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(16, 42, 67, 0.18);
+      }
+
       mat-icon {
         margin-right: $spacing-2;
       }
@@ -49,20 +92,143 @@
   }
 }
 
-// ============ LOADING STATE ============
-.loading-container {
-  @include flex-center;
+// ============ LOADING STATE (SKELETON) ============
+.dashboard-skeleton {
+  margin: $spacing-8 0;
+  display: flex;
   flex-direction: column;
-  padding: $spacing-20 $spacing-6;
-  background: $background;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
+  gap: $spacing-7;
 
-  p {
-    margin-top: $spacing-5;
-    color: $text-secondary;
-    font-size: $font-size-base;
-    font-weight: $font-weight-medium;
+  section {
+    margin: 0;
+  }
+}
+
+.skeleton-panel {
+  background: linear-gradient(135deg, $surface 0%, $background 100%);
+  border-radius: $radius-xl;
+  border: 1px solid $border-light;
+  box-shadow: 0 4px 24px rgba(16, 42, 67, 0.08);
+  padding: $spacing-6;
+  min-height: 140px;
+}
+
+.quick-action-skeleton {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: $spacing-3;
+  height: 160px;
+}
+
+.kpi-skeleton {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+}
+
+.chart-skeleton,
+.table-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.skeleton-rows {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+}
+
+.skeleton-row-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+// Skeleton utilities
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    $neutral-200 0%,
+    $neutral-100 50%,
+    $neutral-200 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: $radius-md;
+
+  &-text {
+    height: 16px;
+    margin-bottom: $spacing-2;
+    width: 100%;
+
+    &.title {
+      height: 24px;
+      width: 60%;
+    }
+
+    &.subtitle {
+      height: 14px;
+      width: 80%;
+    }
+
+    &.short {
+      width: 40%;
+    }
+  }
+
+  &-card {
+    border-radius: $radius-xl;
+  }
+
+  &-chart {
+    height: 320px;
+    border-radius: $radius-lg;
+  }
+}
+
+.skeleton-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: $radius-xl;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: $radius-full;
+}
+
+.skeleton-pill {
+  height: 16px;
+  width: 120px;
+  border-radius: $radius-full;
+
+  &.large {
+    height: 32px;
+    width: 80%;
+  }
+
+  &.small {
+    width: 80px;
+  }
+
+  &.tiny {
+    width: 56px;
+    height: 12px;
+  }
+
+  &.rank {
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -162,6 +328,18 @@
     font-weight: $font-weight-semibold;
     color: $primary-900;
     font-family: $font-family-display;
+    display: flex;
+    align-items: center;
+    gap: $spacing-3;
+
+    &::before {
+      content: "";
+      display: block;
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, $accent-500 0%, $primary-600 100%);
+      border-radius: $radius-full;
+    }
   }
 
   .kpi-grid {
@@ -173,14 +351,42 @@
       background: $background;
       border-radius: $radius-xl;
       border: 1px solid $border-light;
-      box-shadow: $shadow-md;
+      box-shadow: 0 2px 12px rgba(16, 42, 67, 0.06);
       transition: all $transition-base;
       overflow: hidden;
+      position: relative;
+
+      // Subtle gradient overlay
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          transparent 0%,
+          rgba(212, 165, 116, 0.02) 100%
+        );
+        opacity: 0;
+        transition: opacity $transition-base;
+        pointer-events: none;
+      }
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: $shadow-lg;
-        border-color: $accent-500;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(16, 42, 67, 0.12),
+          0 4px 16px rgba(212, 165, 116, 0.08);
+        border-color: $accent-400;
+
+        &::before {
+          opacity: 1;
+        }
+
+        .kpi-icon {
+          transform: scale(1.05);
+        }
       }
 
       mat-card-content {
@@ -196,7 +402,21 @@
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          box-shadow: $shadow-md;
+          box-shadow: 0 4px 16px rgba(16, 42, 67, 0.15);
+          transition: all $transition-base;
+          position: relative;
+
+          // Icon glow effect
+          &::after {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: $radius-xl;
+            background: inherit;
+            filter: blur(8px);
+            opacity: 0.3;
+            z-index: -1;
+          }
 
           mat-icon {
             font-size: 36px;
@@ -215,7 +435,7 @@
             color: $text-secondary;
             text-transform: uppercase;
             font-weight: $font-weight-semibold;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
           }
 
           .kpi-value {
@@ -225,6 +445,7 @@
             color: $primary-900;
             line-height: $line-height-tight;
             font-family: $font-family-display;
+            letter-spacing: -1px;
           }
 
           .kpi-change {
@@ -234,19 +455,25 @@
             align-items: center;
             gap: $spacing-1;
             font-weight: $font-weight-semibold;
+            padding: $spacing-1 $spacing-2;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: $radius-md;
+            width: fit-content;
 
             mat-icon {
-              font-size: 20px;
-              width: 20px;
-              height: 20px;
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
             }
 
             &.positive {
               color: $success;
+              background: rgba(76, 175, 80, 0.1);
             }
 
             &.negative {
               color: $error;
+              background: rgba(244, 67, 54, 0.1);
             }
 
             &.warn {
@@ -301,16 +528,23 @@
       background: $background;
       border-radius: $radius-xl;
       border: 1px solid $border-light;
-      box-shadow: $shadow-md;
+      box-shadow: 0 2px 12px rgba(16, 42, 67, 0.06);
       transition: all $transition-base;
+      overflow: hidden;
 
       &:hover {
-        box-shadow: $shadow-lg;
+        box-shadow: 0 8px 32px rgba(16, 42, 67, 0.12);
+        transform: translateY(-2px);
       }
 
       mat-card-header {
         padding: $spacing-6 $spacing-6 $spacing-4;
         border-bottom: 1px solid $border-light;
+        background: linear-gradient(
+          180deg,
+          rgba(212, 165, 116, 0.02) 0%,
+          transparent 100%
+        );
 
         mat-card-title {
           @include flex-start;
@@ -336,15 +570,24 @@
         min-height: 320px;
         @include flex-center;
         flex-direction: column;
-        background: $background-secondary;
+        background: linear-gradient(
+          135deg,
+          $background-secondary 0%,
+          rgba(212, 165, 116, 0.03) 100%
+        );
         border: 2px dashed $border-medium;
         border-radius: $radius-lg;
         padding: $spacing-10;
         transition: all $transition-base;
 
         &:hover {
-          background: $neutral-100;
+          background: linear-gradient(
+            135deg,
+            $neutral-100 0%,
+            rgba(212, 165, 116, 0.05) 100%
+          );
           border-color: $accent-400;
+          border-style: solid;
         }
 
         mat-icon {
@@ -353,6 +596,7 @@
           height: 72px;
           color: $text-tertiary;
           margin-bottom: $spacing-4;
+          opacity: 0.6;
         }
 
         p {
@@ -374,10 +618,19 @@
         .category-item {
           padding: $spacing-5 0;
           border-bottom: 1px solid $border-light;
+          transition: all $transition-fast;
 
           &:last-child {
             border-bottom: none;
             padding-bottom: 0;
+          }
+
+          &:hover {
+            padding-left: $spacing-2;
+
+            .category-bar .bar-fill {
+              filter: brightness(1.1);
+            }
           }
 
           .category-header {
@@ -388,26 +641,39 @@
               font-weight: $font-weight-semibold;
               color: $primary-900;
               font-size: $font-size-base;
+              display: flex;
+              align-items: center;
+              gap: $spacing-2;
+
+              &::before {
+                content: "";
+                display: block;
+                width: 8px;
+                height: 8px;
+                border-radius: $radius-full;
+                background: $accent-500;
+              }
             }
 
             .category-value {
               font-weight: $font-weight-bold;
               color: $success;
               font-size: $font-size-lg;
+              font-family: $font-family-display;
             }
           }
 
           .category-bar {
-            height: 10px;
+            height: 12px;
             background: $neutral-200;
             border-radius: $radius-md;
             overflow: hidden;
             margin-bottom: $spacing-2;
-            box-shadow: $shadow-inner;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
 
             .bar-fill {
               height: 100%;
-              transition: width $transition-slow;
+              transition: width $transition-slow, filter $transition-base;
               box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.1);
             }
           }
@@ -427,7 +693,7 @@
           gap: $spacing-4;
           padding: $spacing-5 0;
           border-bottom: 1px solid $border-light;
-          transition: background $transition-fast;
+          transition: all $transition-fast;
 
           &:last-child {
             border-bottom: none;
@@ -440,6 +706,10 @@
             padding-left: $spacing-6;
             padding-right: $spacing-6;
             border-radius: $radius-md;
+
+            .payment-icon {
+              transform: scale(1.05);
+            }
           }
 
           .payment-icon {
@@ -448,6 +718,8 @@
             border-radius: $radius-lg;
             background: linear-gradient(135deg, $primary-600, $primary-800);
             @include flex-center;
+            box-shadow: 0 4px 12px rgba(16, 42, 67, 0.15);
+            transition: transform $transition-base;
             box-shadow: $shadow-md;
 
             mat-icon {
@@ -501,17 +773,23 @@
       background: $background;
       border-radius: $radius-xl;
       border: 1px solid $border-light;
-      box-shadow: $shadow-md;
+      box-shadow: 0 2px 12px rgba(16, 42, 67, 0.06);
       transition: all $transition-base;
+      overflow: hidden;
 
       &:hover {
-        box-shadow: $shadow-lg;
+        box-shadow: 0 8px 32px rgba(16, 42, 67, 0.12);
       }
 
       mat-card-header {
         @include flex-between;
         padding: $spacing-6;
         border-bottom: 1px solid $border-light;
+        background: linear-gradient(
+          180deg,
+          rgba(212, 165, 116, 0.02) 0%,
+          transparent 100%
+        );
 
         mat-card-title {
           @include flex-start;
@@ -529,6 +807,12 @@
         }
 
         button {
+          transition: all $transition-base;
+
+          &:hover {
+            transform: translateX(4px);
+          }
+
           mat-icon {
             margin-left: $spacing-1;
             font-size: 20px;
@@ -551,14 +835,36 @@
           border-bottom: 1px solid $border-light;
           border-radius: $radius-md;
           transition: all $transition-fast;
+          position: relative;
+
+          &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: $accent-500;
+            border-radius: 0 $radius-full $radius-full 0;
+            transition: height $transition-fast;
+          }
 
           &:last-child {
             border-bottom: none;
           }
 
           &:hover {
-            background: $surface-hover;
-            transform: translateX(4px);
+            background: linear-gradient(
+              90deg,
+              rgba(212, 165, 116, 0.05) 0%,
+              transparent 100%
+            );
+            transform: translateX(8px);
+
+            &::before {
+              height: 70%;
+            }
           }
 
           .transaction-id {
@@ -589,6 +895,15 @@
               margin: 0;
               font-size: $font-size-xs;
               color: $text-secondary;
+              display: flex;
+              align-items: center;
+              gap: $spacing-1;
+
+              mat-icon {
+                font-size: 14px;
+                width: 14px;
+                height: 14px;
+              }
             }
           }
 
@@ -600,15 +915,21 @@
               font-weight: $font-weight-bold;
               color: $success;
               font-size: $font-size-lg;
+              font-family: $font-family-display;
             }
 
             .payment-badge {
               font-size: $font-size-xs;
               padding: $spacing-1 $spacing-3;
-              background: $info-light;
+              background: linear-gradient(
+                135deg,
+                $info-light 0%,
+                rgba(33, 150, 243, 0.15) 100%
+              );
               color: $info-dark;
               border-radius: $radius-md;
               font-weight: $font-weight-semibold;
+              border: 1px solid rgba(33, 150, 243, 0.2);
             }
           }
 
@@ -631,16 +952,45 @@
           align-items: center;
           gap: $spacing-4;
           padding: $spacing-5;
-          background: $warning-light;
+          background: linear-gradient(
+            135deg,
+            $warning-light 0%,
+            rgba(255, 193, 7, 0.08) 100%
+          );
           margin-bottom: $spacing-3;
           border-radius: $radius-lg;
-          border: 1px solid $warning;
-          box-shadow: $shadow-sm;
+          border: 1px solid rgba(255, 193, 7, 0.3);
+          box-shadow: 0 2px 8px rgba(255, 193, 7, 0.15);
           transition: all $transition-fast;
+          position: relative;
+          overflow: hidden;
+
+          &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: $warning;
+          }
 
           &.critical {
-            background: $error-light;
-            border-color: $error;
+            background: linear-gradient(
+              135deg,
+              $error-light 0%,
+              rgba(244, 67, 54, 0.08) 100%
+            );
+            border-color: rgba(244, 67, 54, 0.3);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.15);
+
+            &::before {
+              background: $error;
+            }
+
+            .alert-icon {
+              animation: pulse 2s ease-in-out infinite;
+            }
           }
 
           &:last-child {
@@ -933,6 +1283,27 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
   }
 }
 

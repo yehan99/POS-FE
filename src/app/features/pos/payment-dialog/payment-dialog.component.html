@@ -1,10 +1,15 @@
 <div class="payment-dialog">
   <div class="dialog-header">
-    <h2 mat-dialog-title>
-      <mat-icon>payment</mat-icon>
-      Payment
-    </h2>
-    <button mat-icon-button (click)="cancel()">
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>credit_card</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 mat-dialog-title>Payment</h2>
+        <p>Complete transaction securely</p>
+      </div>
+    </div>
+    <button mat-icon-button (click)="cancel()" class="close-btn">
       <mat-icon>close</mat-icon>
     </button>
   </div>
@@ -12,50 +17,66 @@
   <mat-dialog-content>
     <!-- Order Summary -->
     <div class="order-summary">
-      <div class="summary-row">
-        <span>Subtotal:</span>
-        <span class="amount">{{ formatCurrency(data.subtotal) }}</span>
+      <div class="summary-header">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Order Summary</span>
       </div>
-      <div class="summary-row" *ngIf="data.discount > 0">
-        <span>Discount:</span>
-        <span class="amount discount">-{{ formatCurrency(data.discount) }}</span>
+      <div class="summary-lines">
+        <div class="summary-row">
+          <span class="label">Subtotal:</span>
+          <span class="value">{{ formatCurrency(data.subtotal) }}</span>
+        </div>
+        <div class="summary-row" *ngIf="data.discount > 0">
+          <span class="label">Discount:</span>
+          <span class="value discount">-{{ formatCurrency(data.discount) }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Tax:</span>
+          <span class="value">{{ formatCurrency(data.tax) }}</span>
+        </div>
       </div>
-      <div class="summary-row">
-        <span>Tax:</span>
-        <span class="amount">{{ formatCurrency(data.tax) }}</span>
-      </div>
-      <mat-divider></mat-divider>
-      <div class="summary-row total">
-        <span>Total Amount:</span>
-        <span class="amount">{{ formatCurrency(data.total) }}</span>
+      <div class="summary-divider"></div>
+      <div class="summary-total">
+        <span class="label">Total Amount:</span>
+        <span class="value">{{ formatCurrency(data.total) }}</span>
       </div>
     </div>
 
     <!-- Payment Method Selection -->
     <div class="payment-methods">
-      <button mat-raised-button [color]="selectedMethod === 'cash' ? 'primary' : ''" (click)="selectMethod('cash')"
-        class="method-btn">
-        <mat-icon>payments</mat-icon>
-        <span>Cash</span>
-      </button>
+      <div class="methods-header">
+        <mat-icon>payment</mat-icon>
+        <span>Select Payment Method</span>
+      </div>
+      <div class="methods-grid">
+        <button [class.active]="selectedMethod === 'cash'" (click)="selectMethod('cash')" class="method-btn">
+          <div class="method-icon">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <span>Cash</span>
+        </button>
 
-      <button mat-raised-button [color]="selectedMethod === 'card' ? 'primary' : ''" (click)="selectMethod('card')"
-        class="method-btn">
-        <mat-icon>credit_card</mat-icon>
-        <span>Card</span>
-      </button>
+        <button [class.active]="selectedMethod === 'card'" (click)="selectMethod('card')" class="method-btn">
+          <div class="method-icon">
+            <mat-icon>credit_card</mat-icon>
+          </div>
+          <span>Card</span>
+        </button>
 
-      <button mat-raised-button [color]="selectedMethod === 'mobile' ? 'primary' : ''" (click)="selectMethod('mobile')"
-        class="method-btn">
-        <mat-icon>phone_android</mat-icon>
-        <span>Mobile</span>
-      </button>
+        <button [class.active]="selectedMethod === 'mobile'" (click)="selectMethod('mobile')" class="method-btn">
+          <div class="method-icon">
+            <mat-icon>phone_android</mat-icon>
+          </div>
+          <span>Mobile</span>
+        </button>
 
-      <button mat-raised-button [color]="selectedMethod === 'multiple' ? 'primary' : ''"
-        (click)="selectMethod('multiple')" class="method-btn">
-        <mat-icon>call_split</mat-icon>
-        <span>Split</span>
-      </button>
+        <button [class.active]="selectedMethod === 'multiple'" (click)="selectMethod('multiple')" class="method-btn">
+          <div class="method-icon">
+            <mat-icon>call_split</mat-icon>
+          </div>
+          <span>Split</span>
+        </button>
+      </div>
     </div>
 
     <form [formGroup]="paymentForm">
@@ -193,12 +214,14 @@
     </form>
   </mat-dialog-content>
 
-  <mat-dialog-actions align="end">
-    <button mat-stroked-button (click)="cancel()">Cancel</button>
-    <button mat-raised-button color="primary" (click)="completePayment()" [disabled]="!canCompletePayment()"
-      class="complete-btn">
+  <mat-dialog-actions>
+    <button mat-stroked-button (click)="cancel()" class="cancel-btn">
+      <mat-icon>close</mat-icon>
+      <span>Cancel</span>
+    </button>
+    <button mat-raised-button (click)="completePayment()" [disabled]="!canCompletePayment()" class="complete-btn">
       <mat-icon>check_circle</mat-icon>
-      Complete Payment
+      <span>Complete Payment</span>
     </button>
   </mat-dialog-actions>
 </div>

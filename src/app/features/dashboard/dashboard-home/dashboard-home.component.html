@@ -3,20 +3,101 @@
   <div class="dashboard-header">
     <div class="header-title">
       <h1>Dashboard</h1>
-      <p class="subtitle">Welcome back! Here's what's happening with your store today.</p>
+      <p class="subtitle">
+        <mat-icon>schedule</mat-icon>
+        Welcome back! Here's what's happening with your store today.
+      </p>
     </div>
     <div class="header-actions">
-      <!-- <button mat-raised-button color="primary" (click)="refreshDashboard()">
+      <button mat-raised-button color="primary" (click)="refreshDashboard()">
         <mat-icon>refresh</mat-icon>
         Refresh
-      </button> -->
+      </button>
     </div>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-    <p>Loading dashboard data...</p>
+  <div *ngIf="isLoading" class="dashboard-skeleton">
+    <!-- Quick Actions Skeleton -->
+    <section class="quick-actions-section">
+      <div class="quick-actions-grid">
+        <div class="quick-action-skeleton skeleton-panel" *ngFor="let _ of skeletonQuickActions">
+          <div class="skeleton skeleton-pill large"></div>
+          <div class="skeleton skeleton-pill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Skeleton -->
+    <section class="kpi-section">
+      <div class="kpi-grid">
+        <div class="kpi-card skeleton-panel" *ngFor="let _ of skeletonKpis">
+          <div class="kpi-skeleton">
+            <div class="skeleton skeleton-icon"></div>
+            <div class="skeleton-lines">
+              <div class="skeleton skeleton-text title"></div>
+              <div class="skeleton skeleton-text"></div>
+              <div class="skeleton skeleton-pill small"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts Skeleton -->
+    <section class="charts-section">
+      <div class="charts-grid">
+        <div class="chart-card skeleton-panel" *ngFor="let _ of skeletonCharts">
+          <div class="chart-skeleton">
+            <div class="skeleton skeleton-text title"></div>
+            <div class="skeleton skeleton-text subtitle"></div>
+            <div class="skeleton skeleton-chart"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tables Skeleton -->
+    <section class="data-tables-section">
+      <div class="tables-grid">
+        <div class="table-card skeleton-panel" *ngFor="let _ of skeletonDualPanels">
+          <div class="table-skeleton">
+            <div class="skeleton skeleton-text title"></div>
+            <div class="skeleton-rows">
+              <div class="skeleton-row" *ngFor="let _ of skeletonListItems">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-row-lines">
+                  <div class="skeleton skeleton-text"></div>
+                  <div class="skeleton skeleton-text short"></div>
+                </div>
+                <div class="skeleton skeleton-pill tiny"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top Items Skeleton -->
+    <section class="top-items-section">
+      <div class="top-items-grid">
+        <div class="top-card skeleton-panel" *ngFor="let _ of skeletonDualPanels">
+          <div class="table-skeleton">
+            <div class="skeleton skeleton-text title"></div>
+            <div class="skeleton-rows">
+              <div class="skeleton-row" *ngFor="let _ of skeletonListItems">
+                <div class="skeleton skeleton-pill rank"></div>
+                <div class="skeleton-row-lines">
+                  <div class="skeleton skeleton-text"></div>
+                  <div class="skeleton skeleton-text short"></div>
+                </div>
+                <div class="skeleton skeleton-pill small"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Dashboard Content -->

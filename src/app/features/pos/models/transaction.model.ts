@@ -71,3 +71,64 @@ export interface TransactionSummary {
   mobileSales: number;
   averageTransactionValue: number;
 }
+
+export type TransactionDashboardPeriod =
+  | 'today'
+  | 'yesterday'
+  | 'week'
+  | 'month'
+  | 'year'
+  | 'custom';
+
+export interface TransactionDashboardSummary extends TransactionSummary {
+  completedTransactions: number;
+  pendingTransactions: number;
+  cancelledTransactions: number;
+  netSales: number;
+}
+
+export interface TransactionTrendPoint {
+  date: string;
+  totalSales: number;
+  transactionCount: number;
+}
+
+export interface TransactionPaymentBreakdown {
+  method: string;
+  amount: number;
+  transactionCount: number;
+  percentage: number;
+}
+
+export interface TransactionStatusBreakdown {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CashierPerformance {
+  cashierId: string;
+  cashierName: string;
+  transactionCount: number;
+  totalSales: number;
+  averageSaleValue: number;
+}
+
+export interface TransactionSnapshot {
+  transactionNumber: string;
+  transactionDate: string;
+  customerName: string;
+  total: number;
+  paymentMethod: string;
+  status: string;
+  itemsCount: number;
+}
+
+export interface TransactionDashboardData {
+  summary: TransactionDashboardSummary;
+  trend: TransactionTrendPoint[];
+  paymentBreakdown: TransactionPaymentBreakdown[];
+  statusBreakdown: TransactionStatusBreakdown[];
+  topCashiers: CashierPerformance[];
+  recentTransactions: TransactionSnapshot[];
+}

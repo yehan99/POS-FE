@@ -1,9 +1,9 @@
 <div class="product-search-lookup">
   <mat-form-field class="search-field" appearance="outline">
     <mat-icon matPrefix class="search-icon">search</mat-icon>
-    <mat-label>Search products</mat-label>
+    <mat-label>Search product name, SKU, or barcode</mat-label>
     <input type="text" matInput [formControl]="searchControl" [matAutocomplete]="auto"
-      (input)="onSearchChange(searchControl.value)" placeholder="Start typing product name, SKU, or barcode..." />
+      (input)="onSearchChange(searchControl.value)" />
     <mat-spinner *ngIf="isSearching && searchControl.value && searchControl.value.length >= 2" diameter="20" matSuffix
       class="search-spinner"></mat-spinner>
     <button *ngIf="searchControl.value && !isSearching" mat-icon-button matSuffix (click)="clearSearch()"

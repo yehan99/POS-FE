@@ -4,6 +4,8 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import {
   Transaction,
+  TransactionDashboardData,
+  TransactionDashboardPeriod,
   TransactionFilter,
   TransactionSummary,
 } from '../models/transaction.model';
@@ -148,6 +150,30 @@ export class TransactionService {
       startDate: today,
       endDate: tomorrow,
     }).pipe(map((response) => response.transactions));
+  }
+
+  // Get dashboard data for transactions
+  getTransactionDashboard(
+    period: TransactionDashboardPeriod = 'today',
+    startDate?: Date,
+    endDate?: Date
+  ): Observable<TransactionDashboardData> {
+    let params = new HttpParams().set('period', period);
+
+    if (startDate) {
+      params = params.set('startDate', startDate.toISOString());
+    }
+
+    if (endDate) {
+      params = params.set('endDate', endDate.toISOString());
+    }
+
+    return this.http
+      .get<{ success: boolean; data: TransactionDashboardData }>(
+        `${environment.apiUrl}/transactions/dashboard`,
+        { params }
+      )
+      .pipe(map((response) => response.data));
   }
 
   // Get transaction summary

@@ -12,6 +12,7 @@ import { cartReducer } from './store/cart.reducer';
 import { ReceiptDialogComponent } from './receipt-dialog/receipt-dialog.component';
 import { TransactionHistoryComponent } from './transaction-history/transaction-history.component';
 import { ProductSearchLookupComponent } from './product-search-lookup/product-search-lookup.component';
+import { CustomerDialogComponent } from './customer-dialog/customer-dialog.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { ProductSearchLookupComponent } from './product-search-lookup/product-se
     ReceiptDialogComponent,
     TransactionHistoryComponent,
     ProductSearchLookupComponent,
+    CustomerDialogComponent,
   ],
   imports: [
     CommonModule,
