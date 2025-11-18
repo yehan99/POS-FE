@@ -1,0 +1,60 @@
+<div class="product-search-lookup">
+  <mat-form-field class="search-field" appearance="outline">
+    <mat-icon matPrefix class="search-icon">search</mat-icon>
+    <mat-label>Search products</mat-label>
+    <input type="text" matInput [formControl]="searchControl" [matAutocomplete]="auto"
+      (input)="onSearchChange(searchControl.value)" placeholder="Start typing product name, SKU, or barcode..." />
+    <mat-spinner *ngIf="isSearching && searchControl.value && searchControl.value.length >= 2" diameter="20" matSuffix
+      class="search-spinner"></mat-spinner>
+    <button *ngIf="searchControl.value && !isSearching" mat-icon-button matSuffix (click)="clearSearch()"
+      aria-label="Clear search">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayProduct"
+    (optionSelected)="onOptionSelected($event.option.value)" class="product-autocomplete">
+    <mat-option *ngIf="isSearching" disabled>
+      <div class="loading-option">
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>Searching products...</span>
+      </div>
+    </mat-option>
+
+    <ng-container *ngIf="!isSearching && (searchResults$ | async) as results">
+      <mat-option *ngFor="let product of results" [value]="product" class="product-option">
+        <div class="product-option-content">
+          <div class="product-icon-wrapper">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <div class="product-details">
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-sku">
+              <mat-icon>tag</mat-icon>
+              <span>{{ product.sku }}</span>
+            </div>
+          </div>
+          <div class="product-stock-badge"
+            [class.low-stock]="product.reorderLevel && product.stockQuantity < product.reorderLevel"
+            [class.out-of-stock]="product.stockQuantity === 0">
+            <mat-icon>{{ product.stockQuantity > 0 ? 'inventory' : 'inventory_2' }}</mat-icon>
+            <span>{{ product.stockQuantity }}</span>
+          </div>
+          <div class="product-price-badge">
+            {{ formatCurrency(product.price) }}
+          </div>
+        </div>
+      </mat-option>
+
+      <mat-option *ngIf="results.length === 0" disabled>
+        <div class="no-results">
+          <mat-icon>search_off</mat-icon>
+          <div class="no-results-text">
+            <span class="title">No products found</span>
+            <span class="subtitle">Try a different search term</span>
+          </div>
+        </div>
+      </mat-option>
+    </ng-container>
+  </mat-autocomplete>
+</div>

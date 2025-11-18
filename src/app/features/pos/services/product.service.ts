@@ -24,7 +24,7 @@ export class ProductService {
   constructor(private http: HttpClient) {
     // Set up debounced search
     this.searchResults$ = this.searchSubject.pipe(
-      debounceTime(500), // Wait 500ms after user stops typing
+      debounceTime(600), // Wait 600ms after user stops typing
       distinctUntilChanged(), // Only emit if value has changed
       switchMap((searchTerm) => this.searchProducts(searchTerm))
     );

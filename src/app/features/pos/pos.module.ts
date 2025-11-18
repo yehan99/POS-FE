@@ -11,6 +11,7 @@ import { PaymentDialogComponent } from './payment-dialog/payment-dialog.componen
 import { cartReducer } from './store/cart.reducer';
 import { ReceiptDialogComponent } from './receipt-dialog/receipt-dialog.component';
 import { TransactionHistoryComponent } from './transaction-history/transaction-history.component';
+import { ProductSearchLookupComponent } from './product-search-lookup/product-search-lookup.component';
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import { TransactionHistoryComponent } from './transaction-history/transaction-h
     PaymentDialogComponent,
     ReceiptDialogComponent,
     TransactionHistoryComponent,
+    ProductSearchLookupComponent,
   ],
   imports: [
     CommonModule,

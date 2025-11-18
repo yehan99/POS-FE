@@ -44,11 +44,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   canCheckout$: Observable<boolean>;
   cartSummary$: Observable<any>;
 
-  // Search
-  searchTerm: string = '';
-  searchResults$: Observable<Product[]>;
-  isSearching: boolean = false;
-
   constructor(
     private store: Store,
     private productService: ProductService,
@@ -70,9 +65,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.itemCount$ = this.store.select(CartSelectors.selectCartItemCount);
     this.canCheckout$ = this.store.select(CartSelectors.selectCanCheckout);
     this.cartSummary$ = this.store.select(CartSelectors.selectCartSummary);
-
-    // Initialize search
-    this.searchResults$ = this.productService.searchResults$;
   }
 
   ngOnInit(): void {
@@ -90,37 +82,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  // Product Search
-  onSearchChange(term: string): void {
-    this.searchTerm = term;
-    if (term.length >= 2) {
-      this.isSearching = true;
-      this.productService.search(term);
-
-      // Subscribe to results to stop loading spinner
-      this.searchResults$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-        this.isSearching = false;
-      });
-    } else {
-      this.isSearching = false;
-    }
-  }
-
-  selectProduct(product: Product): void {
-    this.addProductToCart(product);
-    this.searchTerm = '';
-    this.isSearching = false;
-  }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.isSearching = false;
-  }
-
-  displayProductName(product: Product | null): string {
-    return product ? product.name : '';
   }
 
   // Navigation
