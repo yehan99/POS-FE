@@ -27,6 +27,7 @@ export class SalesReportsComponent implements OnInit {
   filterForm!: FormGroup;
   salesReport!: SalesReport;
   isLoading = false;
+  readonly skeletonTiles = Array.from({ length: 4 });
 
   // Table data sources
   topProductsDataSource = new MatTableDataSource<TopProduct>([]);

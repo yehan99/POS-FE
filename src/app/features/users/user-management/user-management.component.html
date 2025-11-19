@@ -1,4 +1,4 @@
-<section class="user-management">
+<section class="user-dashboard">
   <header class="page-header">
     <div class="page-header__title">
       <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
@@ -6,13 +6,14 @@
       </button>
       <div>
         <p class="eyebrow">Settings &amp; Admin</p>
-        <h1>User Management</h1>
+        <h1>People Operations</h1>
+        <p class="subtitle">Unified control over access, lifecycle status, and invites.</p>
       </div>
     </div>
     <div class="page-header__actions">
       <button mat-stroked-button type="button" (click)="refreshUsers()" [disabled]="isLoadingUsers">
         <mat-icon>refresh</mat-icon>
-        Refresh Users
+        Sync Directory
       </button>
       <button mat-flat-button color="primary" type="button" class="action-primary" (click)="scrollToInviteForm()">
         <mat-icon>person_add</mat-icon>
@@ -21,213 +22,266 @@
     </div>
   </header>
 
-  <div class="content-grid">
-    <app-card variant="elevated" padding="large" class="form-card" #inviteFormRef>
-      <div class="form-card__header">
-        <div>
-          <h2>Invite New User</h2>
-          <p>Provision access with Google SSO by assigning a role and site.</p>
-        </div>
-        <div class="form-card__meta" *ngIf="isLoadingOptions">
-          <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
-          <span>Loading options…</span>
-        </div>
+  <app-card variant="elevated" padding="large" class="snapshot-card" *ngIf="overviewCards.length">
+    <div class="snapshot-card__header">
+      <div>
+        <h2>Team Snapshot</h2>
+        <p>Key lifecycle metrics across all authenticated users.</p>
       </div>
-
-      <form [formGroup]="userForm" (ngSubmit)="submit()" class="user-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>First Name</mat-label>
-            <input matInput formControlName="firstName" autocomplete="given-name" />
-            <mat-error *ngIf="userForm.get('firstName')?.hasError('required')">
-              First name is required
-            </mat-error>
-            <mat-error *ngIf="userForm.get('firstName')?.hasError('minlength')">
-              Minimum 2 characters required
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Last Name</mat-label>
-            <input matInput formControlName="lastName" autocomplete="family-name" />
-            <mat-error *ngIf="userForm.get('lastName')?.hasError('required')">
-              Last name is required
-            </mat-error>
-            <mat-error *ngIf="userForm.get('lastName')?.hasError('minlength')">
-              Minimum 2 characters required
-            </mat-error>
-          </mat-form-field>
+      <div class="snapshot-card__meta">
+        <mat-icon color="primary">schedule</mat-icon>
+        <span>{{ lastUpdatedLabel }}</span>
+      </div>
+    </div>
+    <div class="snapshot-grid">
+      <article class="snapshot-tile" *ngFor="let card of overviewCards">
+        <div class="snapshot-tile__icon" [ngClass]="'snapshot-tile__icon--' + card.accent">
+          <mat-icon>{{ card.icon }}</mat-icon>
         </div>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Email Address</mat-label>
-          <input matInput type="email" formControlName="email" autocomplete="email" />
-          <mat-error *ngIf="userForm.get('email')?.hasError('required')">
-            Email address is required
-          </mat-error>
-          <mat-error *ngIf="userForm.get('email')?.hasError('email')">
-            Please enter a valid email address
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Phone Number</mat-label>
-          <input matInput type="tel" formControlName="phone" autocomplete="tel" />
-        </mat-form-field>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Role</mat-label>
-            <mat-select formControlName="roleId" [disabled]="isLoadingOptions">
-              <mat-option *ngFor="let role of roles" [value]="role.id">
-                {{ role.name }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="userForm.get('roleId')?.hasError('required')">
-              Please choose a role for this user
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Site / Branch</mat-label>
-            <mat-select formControlName="siteId" [disabled]="isLoadingOptions">
-              <mat-option *ngFor="let site of sites" [value]="site.id">
-                {{ site.name }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="userForm.get('siteId')?.hasError('required')">
-              Please choose a site
-            </mat-error>
-          </mat-form-field>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">{{ card.label }}</span>
+          <span class="snapshot-tile__value">{{ card.value }}</span>
+          <span class="snapshot-tile__helper">{{ card.helper }}</span>
         </div>
-
-        <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
-          <mat-progress-spinner *ngIf="isSubmitting" diameter="20" mode="indeterminate"></mat-progress-spinner>
-          <span *ngIf="!isSubmitting">Invite User</span>
+      </article>
+    </div>
+  </app-card>
+  <app-card variant="elevated" padding="large" class="filters-card">
+    <div class="filters-card__header">
+      <div>
+        <h3>Directory Filters</h3>
+        <p>Focus by lifecycle status or search key people.</p>
+      </div>
+      <button mat-stroked-button type="button" (click)="refreshUsers()" [disabled]="isLoadingUsers">
+        <mat-icon>sync</mat-icon>
+        Refresh
+      </button>
+    </div>
+    <div class="filters-card__chips">
+      <button type="button" class="status-pill" *ngFor="let filter of statusFilters"
+        [class.status-pill--active]="filter.value === activeStatusFilter" (click)="setStatusFilter(filter.value)">
+        <mat-icon>{{ filter.icon }}</mat-icon>
+        <span>{{ filter.label }}</span>
+      </button>
+    </div>
+    <div class="filters-card__search mt-3">
+      <mat-form-field appearance="outline">
+        <mat-label>Search users</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Name or email" autocomplete="off" />
+        <button mat-icon-button matSuffix type="button" aria-label="Clear search" *ngIf="searchControl.value"
+          (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
         </button>
-      </form>
-    </app-card>
+      </mat-form-field>
+    </div>
+  </app-card>
 
-    <app-card variant="default" padding="none" class="table-card">
-      <div class="table-card__header">
-        <div class="table-card__heading">
-          <h2>Team Members</h2>
-          <p>Users listed here can access the system via Google login.</p>
-        </div>
-        <div class="table-card__controls">
-          <div class="table-card__meta" *ngIf="totalUsers">
-            <mat-icon color="primary">group</mat-icon>
-            <span>{{ totalUsers | number }} user{{ totalUsers === 1 ? '' : 's' }}</span>
+  <div class="dashboard-grid">
+    <div class="dashboard-grid__column dashboard-grid__column--controls">
+
+
+      <app-card variant="elevated" padding="large" class="invite-card" #inviteFormRef>
+        <div class="invite-card__header">
+          <div>
+            <h2>Invite New User</h2>
+            <p>Provision access with Google SSO by assigning a role and site.</p>
           </div>
-          <mat-form-field appearance="outline" class="table-card__search">
-            <mat-label>Search users</mat-label>
-            <input matInput [formControl]="searchControl" placeholder="Name or email" autocomplete="off" />
-            <button mat-icon-button matSuffix type="button" aria-label="Clear search" *ngIf="searchControl.value"
-              (click)="clearSearch()">
-              <mat-icon>close</mat-icon>
-            </button>
+          <div class="invite-card__meta" *ngIf="isLoadingOptions">
+            <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+            <span>Loading options</span>
+          </div>
+        </div>
+
+        <form [formGroup]="userForm" (ngSubmit)="submit()" class="user-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="firstName" autocomplete="given-name" />
+              <mat-error *ngIf="userForm.get('firstName')?.hasError('required')">
+                First name is required
+              </mat-error>
+              <mat-error *ngIf="userForm.get('firstName')?.hasError('minlength')">
+                Minimum 2 characters required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="lastName" autocomplete="family-name" />
+              <mat-error *ngIf="userForm.get('lastName')?.hasError('required')">
+                Last name is required
+              </mat-error>
+              <mat-error *ngIf="userForm.get('lastName')?.hasError('minlength')">
+                Minimum 2 characters required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email Address</mat-label>
+            <input matInput type="email" formControlName="email" autocomplete="email" />
+            <mat-error *ngIf="userForm.get('email')?.hasError('required')">
+              Email address is required
+            </mat-error>
+            <mat-error *ngIf="userForm.get('email')?.hasError('email')">
+              Please enter a valid email address
+            </mat-error>
           </mat-form-field>
-        </div>
-      </div>
 
-      <div class="table-container" *ngIf="!isLoadingUsers; else loadingBlock">
-        <table mat-table class="user-table" [dataSource]="users" *ngIf="users.length; else emptyState">
-          <ng-container matColumnDef="user">
-            <th mat-header-cell *matHeaderCellDef>User</th>
-            <td mat-cell *matCellDef="let user">
-              <div class="user-cell">
-                <span class="user-name">{{ user.fullName || (user.firstName + ' ' + user.lastName) }}</span>
-                <span class="user-email">{{ user.email }}</span>
-              </div>
-            </td>
-          </ng-container>
+          <mat-form-field appearance="outline">
+            <mat-label>Phone Number</mat-label>
+            <input matInput type="tel" formControlName="phone" autocomplete="tel" />
+          </mat-form-field>
 
-          <ng-container matColumnDef="role">
-            <th mat-header-cell *matHeaderCellDef>Role</th>
-            <td mat-cell *matCellDef="let user">
-              <mat-chip color="primary" selected>
-                {{ getRoleDisplay(user) }}
-              </mat-chip>
-            </td>
-          </ng-container>
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Role</mat-label>
+              <mat-select formControlName="roleId" [disabled]="isLoadingOptions">
+                <mat-option *ngFor="let role of roles" [value]="role.id">
+                  {{ role.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="userForm.get('roleId')?.hasError('required')">
+                Please choose a role for this user
+              </mat-error>
+            </mat-form-field>
 
-          <ng-container matColumnDef="site">
-            <th mat-header-cell *matHeaderCellDef>Site</th>
-            <td mat-cell *matCellDef="let user">
-              {{ getSiteLabel(user) }}
-            </td>
-          </ng-container>
+            <mat-form-field appearance="outline">
+              <mat-label>Site / Branch</mat-label>
+              <mat-select formControlName="siteId" [disabled]="isLoadingOptions">
+                <mat-option *ngFor="let site of sites" [value]="site.id">
+                  {{ site.name }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="userForm.get('siteId')?.hasError('required')">
+                Please choose a site
+              </mat-error>
+            </mat-form-field>
+          </div>
 
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
-            <td mat-cell *matCellDef="let user">
-              <mat-chip [ngClass]="['status-chip', getStatus(user)]">
-                {{ getStatus(user) | titlecase }}
-              </mat-chip>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="lastLogin">
-            <th mat-header-cell *matHeaderCellDef>Last Login</th>
-            <td mat-cell *matCellDef="let user">
-              {{ user.lastLoginAt ? (user.lastLoginAt | date: 'medium') : 'Never' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
-            <td mat-cell *matCellDef="let user" class="actions-cell">
-              <button mat-icon-button [matMenuTriggerFor]="userActions" [disabled]="isActionPending(user.id)"
-                aria-label="User actions">
-                <mat-icon>more_vert</mat-icon>
-              </button>
-
-              <mat-menu #userActions="matMenu">
-                <button mat-menu-item (click)="setUserStatus(user, true)" *ngIf="!user.isActive">
-                  <mat-icon>check_circle</mat-icon>
-                  <span>Activate</span>
-                </button>
-                <button mat-menu-item (click)="setUserStatus(user, false)" *ngIf="user.isActive">
-                  <mat-icon>pause_circle</mat-icon>
-                  <span>Deactivate</span>
-                </button>
-                <mat-divider></mat-divider>
-                <button mat-menu-item (click)="archiveUser(user)">
-                  <mat-icon color="warn">archive</mat-icon>
-                  <span>Archive</span>
-                </button>
-              </mat-menu>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackByUser"></tr>
-        </table>
-      </div>
-
-      <ng-template #loadingBlock>
-        <div class="loading-block">
-          <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
-          <p>Loading users...</p>
-        </div>
-      </ng-template>
-
-      <ng-template #emptyState>
-        <div class="empty-state">
-          <mat-icon>group_add</mat-icon>
-          <h3>No users found</h3>
-          <p>Invite your first team member to get started.</p>
-          <button mat-stroked-button color="primary" type="button" (click)="scrollToInviteForm()">
-            Add your first user
+          <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
+            <mat-progress-spinner *ngIf="isSubmitting" diameter="20" mode="indeterminate"></mat-progress-spinner>
+            <span *ngIf="!isSubmitting">Invite User</span>
           </button>
-        </div>
-      </ng-template>
+        </form>
+      </app-card>
+    </div>
 
-      <div class="table-card__footer" *ngIf="totalUsers > 0">
-        <mat-paginator [length]="totalUsers" [pageSize]="pageSize" [pageIndex]="pageIndex"
-          [pageSizeOptions]="pageSizeOptions" [showFirstLastButtons]="true" aria-label="User pagination"
-          (page)="handlePageEvent($event)"></mat-paginator>
-      </div>
-    </app-card>
+    <div class="dashboard-grid__column">
+      <app-card variant="elevated" padding="none" class="table-card">
+        <div class="table-card__header">
+          <div>
+            <h2>People Directory</h2>
+            <p>Every team member authorized for Paradise POS.</p>
+          </div>
+          <div class="table-card__meta" *ngIf="totalUsers || lastRefreshedAt">
+            <div class="table-card__count" *ngIf="totalUsers">
+              <mat-icon color="primary">group</mat-icon>
+              <span>{{ totalUsers | number }} total</span>
+            </div>
+            <span class="table-card__timestamp">{{ lastUpdatedLabel }}</span>
+          </div>
+        </div>
+
+        <div class="table-container" *ngIf="!isLoadingUsers; else loadingBlock">
+          <table mat-table class="user-table" [dataSource]="users" *ngIf="users.length; else emptyState">
+            <ng-container matColumnDef="user">
+              <th mat-header-cell *matHeaderCellDef>User</th>
+              <td mat-cell *matCellDef="let user">
+                <div class="user-cell">
+                  <span class="user-name">{{ user.fullName || (user.firstName + ' ' + user.lastName) }}</span>
+                  <span class="user-email">{{ user.email }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="role">
+              <th mat-header-cell *matHeaderCellDef>Role</th>
+              <td mat-cell *matCellDef="let user">
+                <mat-chip color="primary" selected>
+                  {{ getRoleDisplay(user) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="site">
+              <th mat-header-cell *matHeaderCellDef>Site</th>
+              <td mat-cell *matCellDef="let user">
+                {{ getSiteLabel(user) }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let user">
+                <mat-chip [ngClass]="['status-chip', getStatus(user)]">
+                  {{ getStatus(user) | titlecase }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="lastLogin">
+              <th mat-header-cell *matHeaderCellDef>Last Login</th>
+              <td mat-cell *matCellDef="let user">
+                {{ user.lastLoginAt ? (user.lastLoginAt | date: 'medium') : 'Never' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+              <td mat-cell *matCellDef="let user" class="actions-cell">
+                <button mat-icon-button [matMenuTriggerFor]="userActions" [disabled]="isActionPending(user.id)"
+                  aria-label="User actions">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+
+                <mat-menu #userActions="matMenu">
+                  <button mat-menu-item (click)="setUserStatus(user, true)" *ngIf="!user.isActive">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Activate</span>
+                  </button>
+                  <button mat-menu-item (click)="setUserStatus(user, false)" *ngIf="user.isActive">
+                    <mat-icon>pause_circle</mat-icon>
+                    <span>Deactivate</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="archiveUser(user)">
+                    <mat-icon color="warn">archive</mat-icon>
+                    <span>Archive</span>
+                  </button>
+                </mat-menu>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackByUser"></tr>
+          </table>
+        </div>
+
+        <ng-template #loadingBlock>
+          <div class="loading-block">
+            <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+            <p>Loading users...</p>
+          </div>
+        </ng-template>
+
+        <ng-template #emptyState>
+          <div class="empty-state">
+            <mat-icon>group_add</mat-icon>
+            <h3>No users found</h3>
+            <p>Invite your first team member to get started.</p>
+            <button mat-stroked-button color="primary" type="button" (click)="scrollToInviteForm()">
+              Add your first user
+            </button>
+          </div>
+        </ng-template>
+
+        <div class="table-card__footer" *ngIf="totalUsers > 0">
+          <mat-paginator [length]="totalUsers" [pageSize]="pageSize" [pageIndex]="pageIndex"
+            [pageSizeOptions]="pageSizeOptions" [showFirstLastButtons]="true" aria-label="User pagination"
+            (page)="handlePageEvent($event)"></mat-paginator>
+        </div>
+      </app-card>
+    </div>
   </div>
 </section>

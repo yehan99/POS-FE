@@ -23,6 +23,7 @@ export class CustomerReportsComponent implements OnInit {
   filterForm!: FormGroup;
   customerReport!: CustomerReport;
   isLoading = false;
+  readonly skeletonTiles = Array.from({ length: 4 });
 
   topCustomersDataSource = new MatTableDataSource<TopCustomer>([]);
 

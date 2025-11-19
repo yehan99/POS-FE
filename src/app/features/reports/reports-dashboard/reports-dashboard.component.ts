@@ -12,6 +12,8 @@ import { ReportsDashboardSummary } from '../models/report.model';
 export class ReportsDashboardComponent implements OnInit {
   summary!: ReportsDashboardSummary;
   isLoading = false;
+  readonly skeletonTiles = Array.from({ length: 6 });
+  readonly skeletonCategories = Array.from({ length: 4 });
 
   reportCategories = [
     {

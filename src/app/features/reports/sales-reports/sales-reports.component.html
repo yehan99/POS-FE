@@ -1,33 +1,42 @@
-<div class="sales-reports-container">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <button mat-icon-button routerLink="/reports">
+<section class="sales-reports">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/reports" matTooltip="Back to reports hub" class="ghost-button">
         <mat-icon>arrow_back</mat-icon>
       </button>
       <div>
-        <h1>Sales Reports</h1>
-        <p class="subtitle">Comprehensive sales analytics and performance metrics</p>
+        <p class="eyebrow">Revenue Intelligence</p>
+        <h1>Sales Performance</h1>
+        <p class="subtitle">Drill into sales velocity, conversion, and product profitability.</p>
       </div>
     </div>
-    <div class="action-buttons">
-      <button mat-raised-button (click)="exportReport('pdf')">
-        <mat-icon>picture_as_pdf</mat-icon>
-        PDF
-      </button>
-      <button mat-raised-button (click)="exportReport('excel')">
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="exportReport('excel')">
         <mat-icon>table_chart</mat-icon>
-        Excel
+        Export Excel
       </button>
-      <button mat-raised-button (click)="exportReport('csv')">
+      <button mat-stroked-button type="button" (click)="exportReport('pdf')">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Export PDF
+      </button>
+      <button mat-flat-button color="primary" class="action-primary" type="button" (click)="exportReport('csv')">
         <mat-icon>file_download</mat-icon>
-        CSV
+        Quick CSV
       </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Filters -->
-  <mat-card class="filters-card">
+  <app-card variant="elevated" padding="large" class="filters-panel">
+    <div class="filters-panel__header">
+      <div>
+        <h2>Report Filters</h2>
+        <p>Adjust timeframe and segmentation for a tailored snapshot.</p>
+      </div>
+      <div class="filters-panel__meta" *ngIf="salesReport">
+        <mat-icon color="primary">event</mat-icon>
+        <span>As of {{ salesReport.reportDate | date: 'MMM d, y' }}</span>
+      </div>
+    </div>
     <form [formGroup]="filterForm" class="filters-form">
       <mat-form-field appearance="outline">
         <mat-label>Period</mat-label>
@@ -52,227 +61,225 @@
         <mat-datepicker #endPicker></mat-datepicker>
       </mat-form-field>
     </form>
-  </mat-card>
+  </app-card>
 
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading sales data...</p>
+  <div class="sales-skeleton" *ngIf="isLoading && !salesReport">
+    <app-card variant="elevated" padding="large" class="skeleton-card">
+      <div class="skeleton-header">
+        <span class="skeleton-line skeleton-line--title"></span>
+        <span class="skeleton-line skeleton-line--subtitle"></span>
+      </div>
+      <div class="skeleton-grid">
+        <div class="skeleton-tile" *ngFor="let _ of skeletonTiles">
+          <span class="skeleton-avatar"></span>
+          <div class="skeleton-text">
+            <span class="skeleton-line skeleton-line--label"></span>
+            <span class="skeleton-line skeleton-line--value"></span>
+            <span class="skeleton-line skeleton-line--meta"></span>
+          </div>
+        </div>
+      </div>
+    </app-card>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-grid" *ngIf="!isLoading && salesReport">
-    <mat-card class="summary-card">
-      <mat-card-content>
-        <div class="card-icon sales">
-          <mat-icon>payments</mat-icon>
+  <ng-container *ngIf="!isLoading && salesReport as report">
+    <app-card variant="elevated" padding="large" class="insight-card">
+      <div class="insight-card__header">
+        <div>
+          <h2>Revenue Highlights</h2>
+          <p>High-level KPIs across volume, conversion, and profitability.</p>
         </div>
-        <div class="card-info">
-          <p class="card-label">Total Sales</p>
-          <p class="card-value">{{ formatCurrency(salesReport.totalSales) }}</p>
-          <p class="card-subtitle">Net: {{ formatCurrency(salesReport.netSales) }}</p>
+        <span class="badge">Live data</span>
+      </div>
+      <div class="insight-tiles">
+        <div class="insight-tile">
+          <div class="insight-icon insight-icon--sales">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <div>
+            <p class="label">Total Sales</p>
+            <p class="value">{{ formatCurrency(report.totalSales) }}</p>
+            <p class="meta">Net {{ formatCurrency(report.netSales) }}</p>
+          </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+        <div class="insight-tile">
+          <div class="insight-icon insight-icon--transactions">
+            <mat-icon>receipt_long</mat-icon>
+          </div>
+          <div>
+            <p class="label">Transactions</p>
+            <p class="value">{{ report.totalTransactions }}</p>
+            <p class="meta">{{ report.totalItems }} items sold</p>
+          </div>
+        </div>
+        <div class="insight-tile">
+          <div class="insight-icon insight-icon--average">
+            <mat-icon>account_balance_wallet</mat-icon>
+          </div>
+          <div>
+            <p class="label">Avg Transaction</p>
+            <p class="value">{{ formatCurrency(report.averageTransactionValue) }}</p>
+            <p class="meta">Per transaction</p>
+          </div>
+        </div>
+        <div class="insight-tile">
+          <div class="insight-icon insight-icon--profit">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div>
+            <p class="label">Gross Profit</p>
+            <p class="value">{{ formatCurrency(report.grossProfit) }}</p>
+            <p class="meta">{{ formatPercentage(report.grossProfitMargin) }} margin</p>
+          </div>
+        </div>
+      </div>
+    </app-card>
 
-    <mat-card class="summary-card">
-      <mat-card-content>
-        <div class="card-icon transactions">
-          <mat-icon>receipt</mat-icon>
+    <div class="analytics-grid">
+      <app-card variant="elevated" padding="large" class="chart-card">
+        <div class="chart-card__header">
+          <div>
+            <h3>Sales by Category</h3>
+            <span class="meta">Share of wallet across key categories.</span>
+          </div>
         </div>
-        <div class="card-info">
-          <p class="card-label">Transactions</p>
-          <p class="card-value">{{ salesReport.totalTransactions }}</p>
-          <p class="card-subtitle">{{ salesReport.totalItems }} items sold</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card">
-      <mat-card-content>
-        <div class="card-icon average">
-          <mat-icon>account_balance_wallet</mat-icon>
-        </div>
-        <div class="card-info">
-          <p class="card-label">Avg Transaction</p>
-          <p class="card-value">{{ formatCurrency(salesReport.averageTransactionValue) }}</p>
-          <p class="card-subtitle">Per transaction</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card">
-      <mat-card-content>
-        <div class="card-icon profit">
-          <mat-icon>trending_up</mat-icon>
-        </div>
-        <div class="card-info">
-          <p class="card-label">Gross Profit</p>
-          <p class="card-value">{{ formatCurrency(salesReport.grossProfit) }}</p>
-          <p class="card-subtitle">{{ formatPercentage(salesReport.grossProfitMargin) }} margin</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-  <!-- Charts Section -->
-  <div class="charts-section" *ngIf="!isLoading && salesReport">
-    <!-- Sales by Category Chart -->
-    <mat-card class="chart-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>category</mat-icon>
-          Sales by Category
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
         <div class="chart-placeholder">
           <mat-icon>pie_chart</mat-icon>
           <p>Chart visualization placeholder</p>
-          <p class="chart-note">Integrate with Chart.js or ng2-charts for visual display</p>
+          <p class="chart-note">Hook up Chart.js to display category mix.</p>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </app-card>
 
-    <!-- Sales by Payment Method Chart -->
-    <mat-card class="chart-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>credit_card</mat-icon>
-          Payment Methods
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
+      <app-card variant="elevated" padding="large" class="chart-card">
+        <div class="chart-card__header">
+          <div>
+            <h3>Payment Methods</h3>
+            <span class="meta">Breakdown by tender type and adoption.</span>
+          </div>
+        </div>
         <div class="chart-placeholder">
           <mat-icon>donut_large</mat-icon>
           <p>Chart visualization placeholder</p>
-          <p class="chart-note">Integrate with Chart.js or ng2-charts for visual display</p>
+          <p class="chart-note">Integrate line/donut chart for method split.</p>
         </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+      </app-card>
+    </div>
 
-  <!-- Daily Sales Trend -->
-  <mat-card class="trend-card" *ngIf="!isLoading && salesReport && salesReport.dailyBreakdown">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>show_chart</mat-icon>
-        Daily Sales Trend
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+    <app-card variant="elevated" padding="large" class="trend-card" *ngIf="report.dailyBreakdown">
+      <div class="chart-card__header">
+        <div>
+          <h3>Daily Sales Trend</h3>
+          <span class="meta">Rolling 30-day trajectory and transaction cadence.</span>
+        </div>
+      </div>
       <div class="chart-placeholder large">
         <mat-icon>timeline</mat-icon>
         <p>Line chart visualization placeholder</p>
-        <p class="chart-note">Integrate with Chart.js or ng2-charts for trend visualization</p>
+        <p class="chart-note">Connect to ng2-charts for full fidelity trend.</p>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </app-card>
 
-  <!-- Top Selling Products Table -->
-  <mat-card class="table-card" *ngIf="!isLoading && salesReport">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>star</mat-icon>
-        Top Selling Products
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="topProductsDataSource" matSort #topProductsSort="matSort">
-          <ng-container matColumnDef="productName">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
-            <td mat-cell *matCellDef="let product">
-              <div class="product-info">
-                <span class="product-name">{{ product.productName }}</span>
-              </div>
-            </td>
-          </ng-container>
+    <div class="tables-grid">
+      <app-card variant="elevated" padding="large" class="table-card">
+        <div class="table-card__header">
+          <div>
+            <h3>Top Selling Products</h3>
+            <span class="meta">High velocity SKUs by revenue and margin.</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table mat-table [dataSource]="topProductsDataSource" matSort #topProductsSort="matSort">
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Product</th>
+              <td mat-cell *matCellDef="let product">
+                <div class="product-info">
+                  <span class="product-name">{{ product.productName }}</span>
+                </div>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="sku">
-            <th mat-header-cell *matHeaderCellDef>SKU</th>
-            <td mat-cell *matCellDef="let product">
-              <span class="sku">{{ product.sku }}</span>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="sku">
+              <th mat-header-cell *matHeaderCellDef>SKU</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="sku">{{ product.sku }}</span>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="quantitySold">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Qty Sold</th>
-            <td mat-cell *matCellDef="let product">
-              <span class="quantity">{{ product.quantitySold }}</span>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="quantitySold">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Qty Sold</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="quantity">{{ product.quantitySold }}</span>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="revenue">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
-            <td mat-cell *matCellDef="let product">
-              <span class="revenue">{{ formatCurrency(product.revenue) }}</span>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="revenue">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="revenue">{{ formatCurrency(product.revenue) }}</span>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="profit">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Profit</th>
-            <td mat-cell *matCellDef="let product">
-              <span class="profit">{{ formatCurrency(product.profit) }}</span>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="profit">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Profit</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="profit">{{ formatCurrency(product.profit) }}</span>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="profitMargin">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Margin</th>
-            <td mat-cell *matCellDef="let product">
-              <span class="margin">{{ formatPercentage(product.profitMargin) }}</span>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="profitMargin">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Margin</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="margin">{{ formatPercentage(product.profitMargin) }}</span>
+              </td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedProductColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedProductColumns;"></tr>
-        </table>
-      </div>
-      <mat-paginator #topProductsPaginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons>
-      </mat-paginator>
-    </mat-card-content>
-  </mat-card>
+            <tr mat-header-row *matHeaderRowDef="displayedProductColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedProductColumns;"></tr>
+          </table>
+        </div>
+        <mat-paginator #topProductsPaginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons>
+        </mat-paginator>
+      </app-card>
 
-  <!-- Category Sales Table -->
-  <mat-card class="table-card" *ngIf="!isLoading && salesReport">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>category</mat-icon>
-        Sales by Category
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="table-container">
-        <table mat-table [dataSource]="categorySalesDataSource">
-          <ng-container matColumnDef="categoryName">
-            <th mat-header-cell *matHeaderCellDef>Category</th>
-            <td mat-cell *matCellDef="let category">{{ category.categoryName }}</td>
-          </ng-container>
+      <app-card variant="elevated" padding="large" class="table-card">
+        <div class="table-card__header">
+          <div>
+            <h3>Sales by Category</h3>
+            <span class="meta">Contribution and penetration by assortment tier.</span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table mat-table [dataSource]="categorySalesDataSource">
+            <ng-container matColumnDef="categoryName">
+              <th mat-header-cell *matHeaderCellDef>Category</th>
+              <td mat-cell *matCellDef="let category">{{ category.categoryName }}</td>
+            </ng-container>
 
-          <ng-container matColumnDef="totalSales">
-            <th mat-header-cell *matHeaderCellDef>Sales</th>
-            <td mat-cell *matCellDef="let category">{{ formatCurrency(category.totalSales) }}</td>
-          </ng-container>
+            <ng-container matColumnDef="totalSales">
+              <th mat-header-cell *matHeaderCellDef>Sales</th>
+              <td mat-cell *matCellDef="let category">{{ formatCurrency(category.totalSales) }}</td>
+            </ng-container>
 
-          <ng-container matColumnDef="totalQuantity">
-            <th mat-header-cell *matHeaderCellDef>Quantity</th>
-            <td mat-cell *matCellDef="let category">{{ category.totalQuantity }}</td>
-          </ng-container>
+            <ng-container matColumnDef="totalQuantity">
+              <th mat-header-cell *matHeaderCellDef>Quantity</th>
+              <td mat-cell *matCellDef="let category">{{ category.totalQuantity }}</td>
+            </ng-container>
 
-          <ng-container matColumnDef="percentage">
-            <th mat-header-cell *matHeaderCellDef>Percentage</th>
-            <td mat-cell *matCellDef="let category">
-              <div class="percentage-bar">
-                <div class="bar-fill" [style.width.%]="category.percentage"></div>
-                <span class="bar-text">{{ formatPercentage(category.percentage) }}</span>
-              </div>
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="percentage">
+              <th mat-header-cell *matHeaderCellDef>Percentage</th>
+              <td mat-cell *matCellDef="let category">
+                <div class="percentage-bar">
+                  <div class="bar-fill" [style.width.%]="category.percentage"></div>
+                  <span class="bar-text">{{ formatPercentage(category.percentage) }}</span>
+                </div>
+              </td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedCategoryColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedCategoryColumns;"></tr>
-        </table>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+            <tr mat-header-row *matHeaderRowDef="displayedCategoryColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedCategoryColumns;"></tr>
+          </table>
+        </div>
+      </app-card>
+    </div>
+  </ng-container>
+</section>

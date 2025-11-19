@@ -24,14 +24,51 @@ export class InventoryReportsComponent implements OnInit {
   filterForm!: FormGroup;
   inventoryReport!: InventoryReport;
   isLoading = false;
+  readonly skeletonTiles = Array.from({ length: 4 });
 
   stockMovementDataSource = new MatTableDataSource<StockMovementReport>([]);
   stockValuationDataSource = new MatTableDataSource<StockValuationReport>([]);
 
-  @ViewChild('movementPaginator') movementPaginator!: MatPaginator;
-  @ViewChild('valuationPaginator') valuationPaginator!: MatPaginator;
-  @ViewChild('movementSort') movementSort!: MatSort;
-  @ViewChild('valuationSort') valuationSort!: MatSort;
+  private movementPaginatorRef?: MatPaginator;
+  private valuationPaginatorRef?: MatPaginator;
+  private movementSortRef?: MatSort;
+  private valuationSortRef?: MatSort;
+
+  @ViewChild('movementPaginator')
+  set movementPaginator(paginator: MatPaginator | undefined) {
+    if (!paginator) {
+      return;
+    }
+    this.movementPaginatorRef = paginator;
+    this.stockMovementDataSource.paginator = paginator;
+  }
+
+  @ViewChild('valuationPaginator')
+  set valuationPaginator(paginator: MatPaginator | undefined) {
+    if (!paginator) {
+      return;
+    }
+    this.valuationPaginatorRef = paginator;
+    this.stockValuationDataSource.paginator = paginator;
+  }
+
+  @ViewChild('movementSort')
+  set movementSort(sort: MatSort | undefined) {
+    if (!sort) {
+      return;
+    }
+    this.movementSortRef = sort;
+    this.stockMovementDataSource.sort = sort;
+  }
+
+  @ViewChild('valuationSort')
+  set valuationSort(sort: MatSort | undefined) {
+    if (!sort) {
+      return;
+    }
+    this.valuationSortRef = sort;
+    this.stockValuationDataSource.sort = sort;
+  }
 
   displayedMovementColumns = [
     'productName',
@@ -240,12 +277,8 @@ export class InventoryReportsComponent implements OnInit {
     this.stockMovementDataSource.data = this.inventoryReport.stockMovement;
     this.stockValuationDataSource.data = this.inventoryReport.stockValuation;
 
-    setTimeout(() => {
-      this.stockMovementDataSource.paginator = this.movementPaginator;
-      this.stockMovementDataSource.sort = this.movementSort;
-      this.stockValuationDataSource.paginator = this.valuationPaginator;
-      this.stockValuationDataSource.sort = this.valuationSort;
-    });
+    this.movementPaginatorRef?.firstPage();
+    this.valuationPaginatorRef?.firstPage();
   }
 
   exportReport(format: ExportFormat): void {

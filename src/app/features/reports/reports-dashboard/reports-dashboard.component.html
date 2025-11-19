@@ -1,158 +1,199 @@
-<div class="reports-dashboard-container">
-  <!-- Header -->
-  <div class="header">
-    <div class="title-section">
-      <h1>Reports & Analytics</h1>
-      <p class="subtitle">Comprehensive business insights and performance metrics</p>
+<section class="reports-dashboard">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Insights & Intelligence</p>
+        <h1>Reports & Analytics</h1>
+        <p class="subtitle">Unified reporting workspace for revenue, inventory, and customer trends.</p>
+      </div>
     </div>
-  </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button">
+        <mat-icon>file_download</mat-icon>
+        Export snapshot
+      </button>
+      <button mat-flat-button color="primary" type="button" class="action-primary"
+        (click)="navigateTo('/reports/schedules')">
+        <mat-icon>schedule</mat-icon>
+        Schedule report
+      </button>
+    </div>
+  </header>
 
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading reports data...</p>
-  </div>
+  <app-card variant="elevated" padding="large" class="snapshot-card" *ngIf="summary as dashboardSummary">
+    <div class="snapshot-card__header">
+      <div>
+        <h2>Performance Snapshot</h2>
+        <p>Live KPIs spanning commerce revenue, stock health, and customer engagement.</p>
+      </div>
+      <div class="snapshot-card__meta">
+        <mat-icon color="primary">bolt</mat-icon>
+        <span>Auto-refreshed hourly</span>
+      </div>
+    </div>
+    <div class="snapshot-grid" *ngIf="!isLoading">
+      <div class="snapshot-tile">
+        <div class="snapshot-tile__icon snapshot-tile__icon--primary">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">Today's Sales</span>
+          <span class="snapshot-tile__value">{{ formatCurrency(dashboardSummary.salesSummary.todaySales) }}</span>
+          <span class="snapshot-tile__meta positive">
+            <mat-icon>trending_up</mat-icon>
+            {{ dashboardSummary.salesSummary.salesGrowth }}% vs yesterday
+          </span>
+        </div>
+      </div>
 
-  <!-- Report Categories Grid -->
-  <div class="reports-grid" *ngIf="!isLoading && summary">
-    <mat-card *ngFor="let category of reportCategories" class="report-category-card"
-      (click)="navigateTo(category.route)">
-      <mat-card-content>
-        <div class="category-header" [style.background]="category.color">
+      <div class="snapshot-tile">
+        <div class="snapshot-tile__icon snapshot-tile__icon--accent">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">Monthly Run Rate</span>
+          <span class="snapshot-tile__value">{{ formatCurrency(dashboardSummary.salesSummary.monthSales) }}</span>
+          <span class="snapshot-tile__meta">
+            <mat-icon>flag</mat-icon>
+            On track for target
+          </span>
+        </div>
+      </div>
+
+      <div class="snapshot-tile">
+        <div class="snapshot-tile__icon snapshot-tile__icon--info">
+          <mat-icon>inventory</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">Stock Value</span>
+          <span class="snapshot-tile__value">{{ formatCurrency(dashboardSummary.inventorySummary.totalValue) }}</span>
+          <span class="snapshot-tile__meta" [class.warning]="dashboardSummary.inventorySummary.lowStockCount > 0">
+            <mat-icon>warning</mat-icon>
+            {{ dashboardSummary.inventorySummary.lowStockCount }} low stock items
+          </span>
+        </div>
+      </div>
+
+      <div class="snapshot-tile">
+        <div class="snapshot-tile__icon snapshot-tile__icon--warn">
+          <mat-icon>groups</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">Active Customers</span>
+          <span class="snapshot-tile__value">{{ dashboardSummary.customerSummary.activeCustomers }}</span>
+          <span class="snapshot-tile__meta positive">
+            <mat-icon>trending_up</mat-icon>
+            {{ dashboardSummary.customerSummary.retentionRate }}% retention
+          </span>
+        </div>
+      </div>
+
+      <div class="snapshot-tile">
+        <div class="snapshot-tile__icon snapshot-tile__icon--success">
+          <mat-icon>category</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">Top Performers</span>
+          <span class="snapshot-tile__value">{{ dashboardSummary.productSummary.topPerformers }}</span>
+          <span class="snapshot-tile__meta">
+            <mat-icon>insights</mat-icon>
+            {{ dashboardSummary.productSummary.averageMargin }}% avg margin
+          </span>
+        </div>
+      </div>
+
+      <div class="snapshot-tile">
+        <div class="snapshot-tile__icon snapshot-tile__icon--deep">
+          <mat-icon>timeline</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">Yearly Revenue</span>
+          <span class="snapshot-tile__value">{{ formatCurrency(dashboardSummary.salesSummary.yearSales) }}</span>
+          <span class="snapshot-tile__meta positive">
+            <mat-icon>trending_up</mat-icon>
+            {{ dashboardSummary.salesSummary.salesGrowth }}% YoY growth
+          </span>
+        </div>
+      </div>
+    </div>
+  </app-card>
+
+  <app-card variant="elevated" padding="large" class="categories-card" *ngIf="!isLoading && summary">
+    <div class="categories-card__header">
+      <div>
+        <h3>Report Collections</h3>
+        <span class="meta">Launch specialized report packs for deeper diagnostics.</span>
+      </div>
+      <button mat-button color="primary" type="button" (click)="navigateTo('/reports/all')">
+        View all reports
+      </button>
+    </div>
+    <div class="categories-grid">
+      <button type="button" class="category-card" *ngFor="let category of reportCategories"
+        (click)="navigateTo(category.route)" (keydown.enter)="navigateTo(category.route)"
+        (keydown.space)="$event.preventDefault(); navigateTo(category.route)">
+        <div class="category-card__icon" [style.background]="category.color">
           <mat-icon>{{ category.icon }}</mat-icon>
         </div>
+        <div class="category-card__body">
+          <div class="category-card__title">
+            <h4>{{ category.title }}</h4>
+            <p>{{ category.description }}</p>
+          </div>
+          <div class="category-card__stats">
+            <div class="category-card__stat" *ngFor="let stat of category.stats">
+              <span class="label">{{ stat.label }}</span>
+              <span class="value">{{ stat.value }}</span>
+            </div>
+          </div>
+          <div class="category-card__footer">
+            <span>Open collection</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+        </div>
+      </button>
+    </div>
+  </app-card>
 
-        <div class="category-body">
-          <h2>{{ category.title }}</h2>
-          <p class="description">{{ category.description }}</p>
+  <div class="reports-skeleton" *ngIf="isLoading">
+    <app-card variant="elevated" padding="large" class="snapshot-card skeleton-card">
+      <div class="skeleton-header">
+        <span class="skeleton-line skeleton-line--title"></span>
+        <span class="skeleton-line skeleton-line--subtitle"></span>
+      </div>
+      <div class="snapshot-grid skeleton-grid">
+        <div class="skeleton-tile" *ngFor="let _ of skeletonTiles">
+          <span class="skeleton-avatar"></span>
+          <div class="skeleton-text">
+            <span class="skeleton-line skeleton-line--label"></span>
+            <span class="skeleton-line skeleton-line--value"></span>
+            <span class="skeleton-line skeleton-line--meta"></span>
+          </div>
+        </div>
+      </div>
+    </app-card>
 
-          <div class="stats-row">
-            <div class="stat-item" *ngFor="let stat of category.stats">
-              <span class="stat-label">{{ stat.label }}</span>
-              <span class="stat-value">{{ stat.value }}</span>
+    <app-card variant="elevated" padding="large" class="categories-card skeleton-card">
+      <div class="skeleton-header">
+        <span class="skeleton-line skeleton-line--title"></span>
+        <span class="skeleton-line skeleton-line--subtitle"></span>
+      </div>
+      <div class="skeleton-category-grid">
+        <div class="skeleton-category-card" *ngFor="let _ of skeletonCategories">
+          <span class="skeleton-badge"></span>
+          <div class="skeleton-category-body">
+            <span class="skeleton-line skeleton-line--label"></span>
+            <span class="skeleton-line skeleton-line--value"></span>
+            <div class="skeleton-chip-row">
+              <span class="skeleton-chip"></span>
+              <span class="skeleton-chip"></span>
             </div>
           </div>
         </div>
-
-        <div class="category-footer">
-          <button mat-button color="primary">
-            View Details
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </app-card>
   </div>
-
-  <!-- Quick Stats Overview -->
-  <div class="quick-stats-section" *ngIf="!isLoading && summary">
-    <h2 class="section-title">
-      <mat-icon>dashboard</mat-icon>
-      Quick Overview
-    </h2>
-
-    <div class="quick-stats-grid">
-      <!-- Sales Quick Stats -->
-      <mat-card class="quick-stat-card sales">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>payments</mat-icon>
-          </div>
-          <div class="stat-info">
-            <p class="stat-label">Today's Sales</p>
-            <p class="stat-value">{{ formatCurrency(summary.salesSummary.todaySales) }}</p>
-            <p class="stat-change positive">
-              <mat-icon>trending_up</mat-icon>
-              {{ summary.salesSummary.salesGrowth }}% vs yesterday
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Monthly Sales -->
-      <mat-card class="quick-stat-card revenue">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>account_balance_wallet</mat-icon>
-          </div>
-          <div class="stat-info">
-            <p class="stat-label">Monthly Sales</p>
-            <p class="stat-value">{{ formatCurrency(summary.salesSummary.monthSales) }}</p>
-            <p class="stat-change positive">
-              <mat-icon>trending_up</mat-icon>
-              On track for target
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Inventory Value -->
-      <mat-card class="quick-stat-card inventory">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>inventory</mat-icon>
-          </div>
-          <div class="stat-info">
-            <p class="stat-label">Stock Value</p>
-            <p class="stat-value">{{ formatCurrency(summary.inventorySummary.totalValue) }}</p>
-            <p class="stat-change" [class.warning]="summary.inventorySummary.lowStockCount > 0">
-              <mat-icon>warning</mat-icon>
-              {{ summary.inventorySummary.lowStockCount }} low stock items
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Active Customers -->
-      <mat-card class="quick-stat-card customers">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>people</mat-icon>
-          </div>
-          <div class="stat-info">
-            <p class="stat-label">Active Customers</p>
-            <p class="stat-value">{{ summary.customerSummary.activeCustomers }}</p>
-            <p class="stat-change positive">
-              <mat-icon>trending_up</mat-icon>
-              {{ summary.customerSummary.retentionRate }}% retention
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Product Performance -->
-      <mat-card class="quick-stat-card products">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>category</mat-icon>
-          </div>
-          <div class="stat-info">
-            <p class="stat-label">Top Performers</p>
-            <p class="stat-value">{{ summary.productSummary.topPerformers }}</p>
-            <p class="stat-change">
-              <mat-icon>insights</mat-icon>
-              {{ summary.productSummary.averageMargin }}% avg margin
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Yearly Revenue -->
-      <mat-card class="quick-stat-card yearly">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>timeline</mat-icon>
-          </div>
-          <div class="stat-info">
-            <p class="stat-label">Yearly Revenue</p>
-            <p class="stat-value">{{ formatCurrency(summary.salesSummary.yearSales) }}</p>
-            <p class="stat-change positive">
-              <mat-icon>trending_up</mat-icon>
-              {{ summary.salesSummary.salesGrowth }}% YoY growth
-            </p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  </div>
-</div>
+</section>

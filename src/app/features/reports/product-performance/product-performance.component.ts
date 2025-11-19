@@ -24,6 +24,7 @@ import {
 export class ProductPerformanceComponent implements OnInit {
   filterForm!: FormGroup;
   productReport: ProductPerformanceReport | null = null;
+  readonly skeletonTiles = Array.from({ length: 4 });
 
   // Top Performers Table
   topPerformersDataSource = new MatTableDataSource<ProductPerformance>();

@@ -47,6 +47,26 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   sites: SiteOption[] = [];
   searchControl = new FormControl<string>('', { nonNullable: true });
 
+  overviewCards: Array<{
+    key: string;
+    label: string;
+    value: string;
+    helper: string;
+    icon: string;
+    accent: 'indigo' | 'teal' | 'amber' | 'rose';
+  }> = [];
+
+  statusFilters: Array<{
+    label: string;
+    value: UserQueryParams['status'] | 'all';
+    icon: string;
+  }> = [
+    { label: 'All users', value: 'all', icon: 'all_inclusive' },
+    { label: 'Active', value: 'active', icon: 'verified_user' },
+    { label: 'Pending invites', value: 'invited', icon: 'drafts' },
+    { label: 'Inactive', value: 'inactive', icon: 'pause_circle' },
+  ];
+
   displayedColumns = ['user', 'role', 'site', 'status', 'lastLogin', 'actions'];
 
   isSubmitting = false;
@@ -56,6 +76,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   pageSize = 25;
   pageIndex = 0;
   readonly pageSizeOptions = [10, 25, 50, 100];
+  activeStatusFilter: UserQueryParams['status'] | 'all' = 'all';
+  lastRefreshedAt?: Date;
 
   private destroy$ = new Subject<void>();
   private pendingActionIds = new Set<string>();
@@ -96,12 +118,18 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       query.search = sanitizedSearch;
     }
 
+    if (this.activeStatusFilter !== 'all') {
+      query.status = this.activeStatusFilter;
+    }
+
     this.isLoadingUsers = true;
     this.cdr.markForCheck();
 
     this.userService.loadUsers(query).subscribe({
       next: () => {
         this.isLoadingUsers = false;
+        this.lastRefreshedAt = new Date();
+        this.updateOverviewMetrics();
         this.cdr.markForCheck();
       },
       error: (error) => {
@@ -307,8 +335,15 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   getStatus(user: UserListItem): string {
     if (user.status) {
-      return user.status;
+      const normalized = user.status.toLowerCase();
+
+      if (normalized === 'pending' || normalized === 'pending_invite') {
+        return 'invited';
+      }
+
+      return normalized;
     }
+
     return user.isActive ? 'active' : 'inactive';
   }
 
@@ -343,6 +378,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           this.pageIndex = nextPageIndex;
         }
 
+        this.updateOverviewMetrics();
         this.cdr.markForCheck();
       });
   }
@@ -433,5 +469,87 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       panelClass: ['error-snackbar'],
     });
     this.cdr.markForCheck();
+  }
+
+  setStatusFilter(filter: UserQueryParams['status'] | 'all'): void {
+    if (this.activeStatusFilter === filter) {
+      return;
+    }
+
+    this.activeStatusFilter = filter;
+    this.pageIndex = 0;
+    this.refreshUsers();
+  }
+
+  get activeUsersOnPage(): number {
+    return this.users.filter((user) => this.getStatus(user) === 'active')
+      .length;
+  }
+
+  get invitedUsersOnPage(): number {
+    return this.users.filter((user) => this.getStatus(user) === 'invited')
+      .length;
+  }
+
+  get inactiveUsersOnPage(): number {
+    return this.users.filter((user) => this.getStatus(user) === 'inactive')
+      .length;
+  }
+
+  get lastUpdatedLabel(): string {
+    if (!this.lastRefreshedAt) {
+      return 'Live data';
+    }
+
+    return `Updated ${this.lastRefreshedAt.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`;
+  }
+
+  private updateOverviewMetrics(): void {
+    const formattedTotal = this.formatNumber(this.totalUsers);
+    const active = this.activeUsersOnPage;
+    const invited = this.invitedUsersOnPage;
+    const inactive = this.inactiveUsersOnPage;
+
+    this.overviewCards = [
+      {
+        key: 'total',
+        label: 'Total Users',
+        value: formattedTotal,
+        helper: this.lastUpdatedLabel,
+        icon: 'groups',
+        accent: 'indigo',
+      },
+      {
+        key: 'active',
+        label: 'Active',
+        value: this.formatNumber(active),
+        helper: 'Enabled on this view',
+        icon: 'shield_moon',
+        accent: 'teal',
+      },
+      {
+        key: 'invited',
+        label: 'Pending Invites',
+        value: this.formatNumber(invited),
+        helper: 'Awaiting activation',
+        icon: 'mark_email_unread',
+        accent: 'amber',
+      },
+      {
+        key: 'inactive',
+        label: 'Inactive',
+        value: this.formatNumber(inactive),
+        helper: 'Suspended access',
+        icon: 'block',
+        accent: 'rose',
+      },
+    ];
+  }
+
+  private formatNumber(value: number): string {
+    return new Intl.NumberFormat('en-US').format(value);
   }
 }
