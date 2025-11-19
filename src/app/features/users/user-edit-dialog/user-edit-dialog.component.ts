@@ -11,7 +11,11 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -160,8 +164,14 @@ export class UserEditDialogComponent {
     const user = this.data.user;
 
     const form = this.fb.group({
-      firstName: [user.firstName ?? '', [Validators.required, Validators.minLength(2)]],
-      lastName: [user.lastName ?? '', [Validators.required, Validators.minLength(2)]],
+      firstName: [
+        user.firstName ?? '',
+        [Validators.required, Validators.minLength(2)],
+      ],
+      lastName: [
+        user.lastName ?? '',
+        [Validators.required, Validators.minLength(2)],
+      ],
       email: [user.email ?? '', [Validators.required, Validators.email]],
       phone: [user.phone ?? ''],
       roleId: [this.resolveRoleId(user), Validators.required],

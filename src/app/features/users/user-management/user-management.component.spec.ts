@@ -40,9 +40,7 @@ class MockUserService {
   updateUserStatus = jasmine
     .createSpy('updateUserStatus')
     .and.returnValue(of({} as UserListItem));
-  archiveUser = jasmine
-    .createSpy('archiveUser')
-    .and.returnValue(of(void 0));
+  archiveUser = jasmine.createSpy('archiveUser').and.returnValue(of(void 0));
 }
 
 class MockAuthService {
