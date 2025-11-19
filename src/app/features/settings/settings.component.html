@@ -1,0 +1,242 @@
+<section class="settings-page">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Settings &amp; Admin</p>
+        <h1>Organization Settings</h1>
+        <p class="subtitle">Align branding, localization, and alerts across every site.</p>
+      </div>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="submitNotifications()" [disabled]="isSavingNotifications">
+        <mat-icon>notifications_active</mat-icon>
+        Save Notifications
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="submitGeneral()" [disabled]="isSavingGeneral">
+        <mat-icon>save</mat-icon>
+        Save General
+      </button>
+    </div>
+  </header>
+
+  <app-card variant="elevated" padding="large" class="snapshot-card" *ngIf="overviewCards.length">
+    <div class="snapshot-card__header">
+      <div>
+        <h2>Tenant Snapshot</h2>
+        <p>Key profile and alert metrics pulled from your settings.</p>
+      </div>
+      <div class="snapshot-card__meta">
+        <mat-icon color="primary">schedule</mat-icon>
+        <span>{{ lastUpdatedLabel }}</span>
+      </div>
+    </div>
+    <div class="snapshot-grid">
+      <article class="snapshot-tile" *ngFor="let card of overviewCards">
+        <div class="snapshot-tile__icon" [ngClass]="'snapshot-tile__icon--' + card.accent">
+          <mat-icon>{{ card.icon }}</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">{{ card.label }}</span>
+          <span class="snapshot-tile__value">{{ card.value }}</span>
+          <span class="snapshot-tile__helper">{{ card.helper }}</span>
+        </div>
+      </article>
+    </div>
+  </app-card>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-grid__column dashboard-grid__column--controls">
+      <app-card variant="elevated" padding="large" class="settings-card">
+        <div class="settings-card__header">
+          <div>
+            <h2>General Settings</h2>
+            <p>Company identity, localization, and numbering rules.</p>
+          </div>
+          <div class="settings-card__meta" *ngIf="isSavingGeneral || isLoading">
+            <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+            <span>{{ isLoading ? 'Loading state' : 'Saving changes' }}</span>
+          </div>
+        </div>
+
+        <form class="settings-form" [formGroup]="generalForm" (ngSubmit)="submitGeneral()">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Business name</mat-label>
+              <input matInput formControlName="businessName" />
+              <mat-error *ngIf="generalForm.get('businessName')?.hasError('required')">
+                Business name is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Support email</mat-label>
+              <input matInput formControlName="businessEmail" type="email" />
+              <mat-error *ngIf="generalForm.get('businessEmail')?.hasError('email')">
+                Please provide a valid email address
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Support phone</mat-label>
+              <input matInput formControlName="businessPhone" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Default site</mat-label>
+              <mat-select formControlName="defaultSiteId">
+                <mat-option value="">All sites</mat-option>
+                <mat-option *ngFor="let site of siteOptions; trackBy: trackSiteOption" [value]="site.id">
+                  {{ site.name }}
+                </mat-option>
+              </mat-select>
+              <mat-hint *ngIf="!siteOptions.length">Sites sync automatically from your access list</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Timezone</mat-label>
+              <mat-select formControlName="timezone">
+                <mat-option *ngFor="let option of timezoneOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Currency</mat-label>
+              <mat-select formControlName="currency">
+                <mat-option *ngFor="let option of currencyOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Locale</mat-label>
+              <mat-select formControlName="locale">
+                <mat-option *ngFor="let option of localeOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Invoice prefix</mat-label>
+              <input matInput formControlName="invoicePrefix" maxlength="6" />
+              <mat-hint align="end">Max 6 characters</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Invoice start number</mat-label>
+              <input matInput type="number" formControlName="invoiceStartNumber" />
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="generalForm.reset(generalForm.value)">
+              Reset changes
+            </button>
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSavingGeneral">
+              <mat-progress-spinner *ngIf="isSavingGeneral" diameter="20" mode="indeterminate"></mat-progress-spinner>
+              <span *ngIf="!isSavingGeneral">Save general settings</span>
+            </button>
+          </div>
+        </form>
+      </app-card>
+    </div>
+
+    <div class="dashboard-grid__column">
+      <app-card variant="elevated" padding="large" class="settings-card">
+        <div class="settings-card__header">
+          <div>
+            <h2>Notification Preferences</h2>
+            <p>Control alerts, digests, and escalation recipients.</p>
+          </div>
+          <div class="settings-card__meta" *ngIf="isSavingNotifications">
+            <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+            <span>Saving preferences</span>
+          </div>
+        </div>
+
+        <form class="settings-form" [formGroup]="notificationsForm" (ngSubmit)="submitNotifications()">
+          <div class="toggle-grid">
+            <mat-slide-toggle formControlName="sendDailySummary">Daily performance summary</mat-slide-toggle>
+            <mat-slide-toggle formControlName="lowStockAlerts">Low stock alerts</mat-slide-toggle>
+            <mat-slide-toggle formControlName="newOrderAlerts">New online order alerts</mat-slide-toggle>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Digest frequency</mat-label>
+              <mat-select formControlName="digestFrequency">
+                <mat-option *ngFor="let option of digestOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Escalation email</mat-label>
+              <input matInput type="email" formControlName="escalationEmail" />
+              <mat-hint>Optional recipient for critical alerts</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="notificationsForm.reset(notificationsForm.value)">
+              Reset changes
+            </button>
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSavingNotifications">
+              <mat-progress-spinner *ngIf="isSavingNotifications" diameter="20"
+                mode="indeterminate"></mat-progress-spinner>
+              <span *ngIf="!isSavingNotifications">Save notification preferences</span>
+            </button>
+          </div>
+        </form>
+      </app-card>
+
+      <app-card variant="outlined" padding="large" class="audit-card">
+        <div class="audit-card__header">
+          <div>
+            <h3>Change history</h3>
+            <p>Latest summary of configuration updates.</p>
+          </div>
+          <mat-chip color="primary" selected>Live</mat-chip>
+        </div>
+        <ul class="audit-list">
+          <li>
+            <mat-icon color="primary">schedule</mat-icon>
+            <div>
+              <p class="audit-list__title">{{ lastUpdatedLabel }}</p>
+              <p class="audit-list__body">Saved from this console</p>
+            </div>
+          </li>
+          <li>
+            <mat-icon color="primary">verified_user</mat-icon>
+            <div>
+              <p class="audit-list__title">Access Control</p>
+              <p class="audit-list__body">Only users with <code>settings.update</code> may apply changes</p>
+            </div>
+          </li>
+          <li>
+            <mat-icon color="primary">sync_alt</mat-icon>
+            <div>
+              <p class="audit-list__title">Site Propagation</p>
+              <p class="audit-list__body">Updates broadcast instantly to {{ siteOptions.length || 'all' }} sites</p>
+            </div>
+          </li>
+        </ul>
+      </app-card>
+    </div>
+  </div>
+</section>

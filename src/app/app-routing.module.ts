@@ -77,6 +77,14 @@ const routes: Routes = [
       import('./features/users/users.module').then((m) => m.UsersModule),
   },
   {
+    path: 'settings',
+    //canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/settings/settings.module').then(
+        (m) => m.SettingsModule
+      ),
+  },
+  {
     path: '**',
     redirectTo: '/auth/login',
   },

@@ -10,6 +10,9 @@ export * from './sale.model';
 // User management models
 export * from './user-management.model';
 
+// Settings models
+export * from './settings.model';
+
 // Import types for internal use
 import { User } from './auth.model';
 import { TaxClass } from './product.model';
