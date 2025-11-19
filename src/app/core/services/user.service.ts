@@ -13,6 +13,7 @@ import {
   UserOptionsResponse,
   UserPaginationMeta,
   UserQueryParams,
+  UpdateUserRequest,
 } from '../models/user-management.model';
 
 interface ApiCollectionResponse<T> {
@@ -94,6 +95,21 @@ export class UserService {
       map((response) => this.normalizeUserResponse(response)),
       tap(() => this.refreshUsersAfterMutation())
     );
+  }
+
+  updateUser(
+    userId: string,
+    payload: UpdateUserRequest
+  ): Observable<UserListItem> {
+    return this.http
+      .put<UserItemApiResponse>(`${this.baseUrl}/${userId}`, payload)
+      .pipe(
+        map((response) => this.normalizeUserResponse(response)),
+        tap((user) => {
+          this.updateUserInState(user);
+          this.refreshUsersAfterMutation();
+        })
+      );
   }
 
   updateUserStatus(
@@ -255,6 +271,7 @@ export class UserService {
     const rawSearch = (query.search ?? '').trim();
     const search = rawSearch ? rawSearch.slice(0, 120) : undefined;
     const status = this.sanitizeStatus(query.status);
+    const siteId = this.sanitizeSiteId(query.siteId);
 
     const nextQuery: UserQueryParams = {
       perPage,
@@ -267,6 +284,10 @@ export class UserService {
 
     if (status) {
       nextQuery.status = status;
+    }
+
+    if (siteId) {
+      nextQuery.siteId = siteId;
     }
 
     return nextQuery;
@@ -283,6 +304,10 @@ export class UserService {
 
     if (query.status) {
       params = params.set('status', query.status);
+    }
+
+    if (query.siteId) {
+      params = params.set('siteId', query.siteId);
     }
 
     return params;
@@ -302,6 +327,15 @@ export class UserService {
     ];
 
     return allowed.includes(status) ? status : undefined;
+  }
+
+  private sanitizeSiteId(siteId?: string): string | undefined {
+    if (!siteId) {
+      return undefined;
+    }
+
+    const trimmed = siteId.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
   }
 
   private normalizePaginationMeta(

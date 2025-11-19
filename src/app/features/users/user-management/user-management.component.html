@@ -148,7 +148,7 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Site / Branch</mat-label>
-              <mat-select formControlName="siteId" [disabled]="isLoadingOptions">
+              <mat-select formControlName="siteId" [disabled]="isLoadingOptions || isSiteSelectionLocked">
                 <mat-option *ngFor="let site of sites" [value]="site.id">
                   {{ site.name }}
                 </mat-option>
@@ -156,6 +156,9 @@
               <mat-error *ngIf="userForm.get('siteId')?.hasError('required')">
                 Please choose a site
               </mat-error>
+              <mat-hint *ngIf="isSiteSelectionLocked && activeSiteName">
+                Assigned to {{ activeSiteName }}
+              </mat-hint>
             </mat-form-field>
           </div>
 
@@ -236,6 +239,11 @@
                 </button>
 
                 <mat-menu #userActions="matMenu">
+                  <button mat-menu-item (click)="openEditUser(user)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Edit Details</span>
+                  </button>
+                  <mat-divider></mat-divider>
                   <button mat-menu-item (click)="setUserStatus(user, true)" *ngIf="!user.isActive">
                     <mat-icon>check_circle</mat-icon>
                     <span>Activate</span>

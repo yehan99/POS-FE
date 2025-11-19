@@ -20,6 +20,7 @@ import {
   debounceTime,
   distinctUntilChanged,
   finalize,
+  take,
   takeUntil,
 } from 'rxjs/operators';
 
@@ -30,7 +31,11 @@ import {
   UserListItem,
   UserQueryParams,
 } from '../../../core/models/user-management.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { SiteService } from '../../../core/services/site.service';
 import { UserService } from '../../../core/services/user.service';
+import { MatDialog } from '@angular/material/dialog';
+import { UserEditDialogComponent } from '../user-edit-dialog/user-edit-dialog.component';
 
 @Component({
   selector: 'app-user-management',
@@ -81,18 +86,28 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private pendingActionIds = new Set<string>();
+  private currentSiteId: string | null = null;
+  isSuperAdmin = false;
+  isSiteSelectionLocked = true;
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService,
+    private siteService: SiteService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
+    this.isSuperAdmin = this.authService.hasRole('super_admin');
+    this.isSiteSelectionLocked = !this.isSuperAdmin;
     this.initializeForm();
     this.observeUsers();
     this.observeSearch();
+    this.observeSiteOptions();
+    this.observeActiveSite();
     this.loadOptions();
     this.refreshUsers();
   }
@@ -120,6 +135,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
     if (this.activeStatusFilter !== 'all') {
       query.status = this.activeStatusFilter;
+    }
+
+    if (this.currentSiteId) {
+      query.siteId = this.currentSiteId;
     }
 
     this.isLoadingUsers = true;
@@ -297,6 +316,30 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       });
   }
 
+  openEditUser(user: UserListItem): void {
+    const dialogRef = this.dialog.open(UserEditDialogComponent, {
+      width: '640px',
+      data: {
+        user,
+        roles: this.roles,
+        sites: this.sites,
+        isSuperAdmin: this.isSuperAdmin,
+        lockedSiteId: this.currentSiteId,
+      },
+      disableClose: true,
+      autoFocus: false,
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(take(1))
+      .subscribe((updated) => {
+        if (updated) {
+          this.refreshUsers();
+        }
+      });
+  }
+
   getRoleName(roleId: string): string {
     const role = this.roles.find((r) => r.id === roleId);
     return role?.name ?? '—';
@@ -360,6 +403,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       roleId: ['', Validators.required],
       siteId: ['', Validators.required],
     });
+
+    if (this.isSiteSelectionLocked) {
+      this.userForm.get('siteId')?.disable({ emitEvent: false });
+    }
   }
 
   private observeUsers(): void {
@@ -411,7 +458,9 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ roles, sites }) => {
           this.roles = roles;
-          this.sites = sites;
+          if (sites?.length) {
+            this.sites = sites;
+          }
           this.cdr.markForCheck();
         },
         error: (error) => {
@@ -427,6 +476,61 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
       });
+  }
+
+  private observeSiteOptions(): void {
+    this.siteService.sites$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((sites) => {
+        if (sites.length) {
+          this.sites = sites;
+          this.patchSiteControl();
+        }
+        this.cdr.markForCheck();
+      });
+  }
+
+  private observeActiveSite(): void {
+    this.siteService.activeSite$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((site) => {
+        const nextSiteId = site?.id ?? null;
+
+        if (this.currentSiteId === nextSiteId) {
+          return;
+        }
+
+        this.currentSiteId = nextSiteId;
+        this.patchSiteControl();
+        this.refreshUsers();
+      });
+  }
+
+  private patchSiteControl(): void {
+    if (!this.userForm) {
+      return;
+    }
+
+    const control = this.userForm.get('siteId');
+    if (!control) {
+      return;
+    }
+
+    if (this.isSuperAdmin) {
+      control.enable({ emitEvent: false });
+
+      if (this.currentSiteId && !control.dirty) {
+        control.setValue(this.currentSiteId, { emitEvent: false });
+      }
+
+      return;
+    }
+
+    control.disable({ emitEvent: false });
+
+    if (this.currentSiteId && control.value !== this.currentSiteId) {
+      control.setValue(this.currentSiteId, { emitEvent: false });
+    }
   }
 
   private getSiteNameFromId(id?: string): string | undefined {
@@ -505,6 +609,16 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit',
     })}`;
+  }
+
+  get activeSiteName(): string {
+    if (!this.currentSiteId) {
+      return '';
+    }
+
+    return (
+      this.sites.find((site) => site.id === this.currentSiteId)?.name ?? ''
+    );
   }
 
   private updateOverviewMetrics(): void {

@@ -6,21 +6,61 @@ import { of, BehaviorSubject } from 'rxjs';
 
 import { UserManagementComponent } from './user-management.component';
 import { UserService } from '../../../core/services/user.service';
-import { RoleService } from '../../../core/services/role.service';
-import { UserListItem } from '../../../core/models/user-management.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { SiteService } from '../../../core/services/site.service';
+import {
+  UserListItem,
+  UserListState,
+  UserOptionsResponse,
+} from '../../../core/models/user-management.model';
+import { MatDialog } from '@angular/material/dialog';
 
 class MockUserService {
-  private usersSubject = new BehaviorSubject<UserListItem[]>([]);
-  users$ = this.usersSubject.asObservable();
-  loadUsers = jasmine.createSpy('loadUsers').and.returnValue(of([]));
+  private usersStateSubject = new BehaviorSubject<UserListState>({
+    items: [],
+    meta: {
+      total: 0,
+      perPage: 25,
+      currentPage: 1,
+      lastPage: 1,
+      from: null,
+      to: null,
+      hasNextPage: false,
+    },
+  });
+
+  usersState$ = this.usersStateSubject.asObservable();
+  loadUsers = jasmine.createSpy('loadUsers').and.returnValue(of({}));
   createUser = jasmine
     .createSpy('createUser')
     .and.returnValue(of({} as UserListItem));
+  loadUserOptions = jasmine
+    .createSpy('loadUserOptions')
+    .and.returnValue(of({ roles: [], sites: [] } as UserOptionsResponse));
+  updateUserStatus = jasmine
+    .createSpy('updateUserStatus')
+    .and.returnValue(of({} as UserListItem));
+  archiveUser = jasmine
+    .createSpy('archiveUser')
+    .and.returnValue(of(void 0));
 }
 
-class MockRoleService {
-  getActiveRoles() {
-    return of([]);
+class MockAuthService {
+  hasRole() {
+    return false;
+  }
+}
+
+class MockSiteService {
+  sites$ = of([]);
+  activeSite$ = of(null);
+}
+
+class MatDialogStub {
+  open() {
+    return {
+      afterClosed: () => of(false),
+    } as any;
   }
 }
 
@@ -34,7 +74,9 @@ describe('UserManagementComponent', () => {
       imports: [ReactiveFormsModule, MatSnackBarModule],
       providers: [
         { provide: UserService, useClass: MockUserService },
-        { provide: RoleService, useClass: MockRoleService },
+        { provide: AuthService, useClass: MockAuthService },
+        { provide: SiteService, useClass: MockSiteService },
+        { provide: MatDialog, useClass: MatDialogStub },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();

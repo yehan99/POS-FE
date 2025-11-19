@@ -165,6 +165,50 @@
         color: rgba(255, 255, 255, 0.75);
       }
     }
+
+    .site-button,
+    .site-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-2;
+      padding: $spacing-2 $spacing-3;
+      border-radius: $radius-lg;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-inverse;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
+
+    .site-button {
+      cursor: pointer;
+      transition: all $transition-fast;
+
+      &:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .site-pill {
+      background: rgba(255, 255, 255, 0.08);
+
+      &.skeleton {
+        opacity: 0.65;
+      }
+    }
   }
 }
 
@@ -435,6 +479,20 @@
       .mat-icon {
         margin-right: $spacing-2;
         color: $text-secondary;
+      }
+    }
+  }
+
+  .site-switcher-menu {
+    .mat-mdc-menu-content {
+      padding: $spacing-1;
+    }
+
+    .mat-mdc-menu-item {
+      border-radius: $radius-md;
+
+      &:hover {
+        background: $surface-hover;
       }
     }
   }

@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dialog-subtitle {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-muted, rgba(0, 0, 0, 0.6));
+  font-size: 0.95rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-slide-toggle {
+  margin-top: 0.5rem;
+}
+
+mat-dialog-actions {
+  gap: 0.5rem;
+}
+
+mat-progress-spinner {
+  margin-right: 0.5rem;
+}

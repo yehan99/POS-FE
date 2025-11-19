@@ -21,6 +21,37 @@
           notifications
         </mat-icon>
       </button>
+      <ng-container *ngIf="(siteOptions$ | async) as siteOptions; else siteLoading">
+        <ng-container *ngIf="(activeSite$ | async) as activeSite">
+          <ng-container *ngIf="(canSwitchSites$ | async); else lockedSite">
+            <button class="site-button" [matMenuTriggerFor]="siteSwitcherMenu"
+              [disabled]="(isLoadingSites$ | async) === true">
+              <mat-icon>storefront</mat-icon>
+              <span>{{ activeSite?.name || 'Select site' }}</span>
+              <mat-icon>arrow_drop_down</mat-icon>
+            </button>
+          </ng-container>
+          <ng-template #lockedSite>
+            <div class="site-pill">
+              <mat-icon>storefront</mat-icon>
+              <span>{{ activeSite?.name || 'Site not assigned' }}</span>
+            </div>
+          </ng-template>
+
+          <mat-menu #siteSwitcherMenu="matMenu" class="site-switcher-menu">
+            <button mat-menu-item *ngFor="let site of siteOptions" (click)="setActiveSite(site.id)"
+              [disabled]="site.id === (activeSite?.id || '')">
+              <span>{{ site.name }}</span>
+            </button>
+          </mat-menu>
+        </ng-container>
+      </ng-container>
+      <ng-template #siteLoading>
+        <div class="site-pill skeleton">
+          <mat-icon>storefront</mat-icon>
+          <span>Loading site…</span>
+        </div>
+      </ng-template>
       <button class="user-menu" [matMenuTriggerFor]="userMenu">
         <div class="user-avatar">{{ userInitials }}</div>
         <div class="user-info">

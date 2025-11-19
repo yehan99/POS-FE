@@ -5,7 +5,8 @@ import { BehaviorSubject, of } from 'rxjs';
 
 import { MainLayoutComponent } from './main-layout.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { User } from '../../../core/models';
+import { SiteSummary, User } from '../../../core/models';
+import { SiteService } from '../../../core/services/site.service';
 
 class MockAuthService {
   private userSubject = new BehaviorSubject<User | null>(null);
@@ -23,7 +24,23 @@ class MockAuthService {
     return of(null);
   }
 
-  forceLogout(): void {}
+  forceLogout(): void {
+    this.setUser(null);
+  }
+}
+
+class MockSiteService {
+  private sitesSubject = new BehaviorSubject<SiteSummary[]>([]);
+  private activeSiteSubject = new BehaviorSubject<SiteSummary | null>(null);
+
+  sites$ = this.sitesSubject.asObservable();
+  activeSite$ = this.activeSiteSubject.asObservable();
+  canSwitchSites$ = of(false);
+  isLoading$ = of(false);
+
+  setActiveSite(): void {
+    // noop
+  }
 }
 
 describe('MainLayoutComponent', () => {
@@ -34,7 +51,10 @@ describe('MainLayoutComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [MainLayoutComponent],
       imports: [RouterTestingModule],
-      providers: [{ provide: AuthService, useClass: MockAuthService }],
+      providers: [
+        { provide: AuthService, useClass: MockAuthService },
+        { provide: SiteService, useClass: MockSiteService },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 

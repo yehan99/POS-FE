@@ -1,9 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
-import { User } from '../../../core/models';
+import { SiteService } from '../../../core/services/site.service';
+import { SiteSummary, User } from '../../../core/models';
 
 interface Breadcrumb {
   label: string;
@@ -34,6 +35,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // Breadcrumbs
   breadcrumbs: Breadcrumb[] = [];
 
+  private readonly siteService = inject(SiteService);
+
+  // Site context
+  siteOptions$: Observable<SiteSummary[]> = this.siteService.sites$;
+  activeSite$: Observable<SiteSummary | null> = this.siteService.activeSite$;
+  canSwitchSites$: Observable<boolean> = this.siteService.canSwitchSites$;
+  isLoadingSites$: Observable<boolean> = this.siteService.isLoading$;
+
   private destroy$ = new Subject<void>();
 
   constructor(private router: Router, private authService: AuthService) {}
@@ -62,6 +71,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  setActiveSite(siteId: string): void {
+    this.siteService.setActiveSite(siteId);
   }
 
   toggleSidebar(): void {

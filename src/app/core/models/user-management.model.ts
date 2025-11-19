@@ -10,6 +10,17 @@ export interface CreateUserRequest {
   metadata?: Record<string, any>;
 }
 
+export interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  roleId?: string;
+  siteId?: string;
+  phone?: string;
+  metadata?: Record<string, any>;
+  isActive?: boolean;
+}
+
 export interface UserListItem extends User {
   site?: SiteSummary;
   status?: string;
@@ -56,4 +67,5 @@ export interface UserQueryParams {
   perPage?: number;
   search?: string;
   status?: 'active' | 'inactive' | 'invited';
+  siteId?: string;
 }
