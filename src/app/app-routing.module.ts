@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from './core/guards/auth.guard';
 import { LocalizationDemoComponent } from './shared/components/localization-demo/localization-demo.component';
 
 const routes: Routes = [
@@ -83,6 +82,12 @@ const routes: Routes = [
       import('./features/settings/settings.module').then(
         (m) => m.SettingsModule
       ),
+  },
+  {
+    path: 'profile',
+    //canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/profile/profile.module').then((m) => m.ProfileModule),
   },
   {
     path: '**',

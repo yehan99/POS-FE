@@ -1,0 +1,317 @@
+<ng-container *ngIf="user && profileDetails; else loadingState">
+  <section class="profile-page">
+    <header class="page-header">
+      <div class="page-header__title">
+        <mat-icon class="page-header__icon">shield_person</mat-icon>
+        <div>
+          <p class="eyebrow">Account Center</p>
+          <h1>My Profile</h1>
+          <p class="subtitle">
+            Keep your contact details and notification preferences aligned across every Paradise POS surface.
+          </p>
+        </div>
+      </div>
+      <div class="page-header__actions">
+        <button mat-stroked-button type="button" (click)="refreshProfile()" [disabled]="isRefreshing">
+          <mat-icon>refresh</mat-icon>
+          Sync profile
+        </button>
+      </div>
+    </header>
+
+    <mat-progress-bar *ngIf="isRefreshing" mode="indeterminate"></mat-progress-bar>
+
+    <app-card variant="elevated" padding="large" class="profile-hero">
+      <div class="profile-hero__identity">
+        <div class="profile-avatar" [class.profile-avatar--image]="profileDetails?.avatarUrl"
+          [style.background-image]="profileDetails?.avatarUrl ? 'url(' + profileDetails?.avatarUrl + ')' : null">
+          <span *ngIf="!profileDetails?.avatarUrl">{{ userInitials }}</span>
+        </div>
+        <div>
+          <h2>{{ user?.fullName || (user?.firstName + ' ' + user?.lastName) }}</h2>
+          <p>{{ profileDetails?.jobTitle || 'Add your role title so team members recognize you.' }}</p>
+          <div class="profile-hero__chips">
+            <mat-chip color="primary" selected *ngIf="user?.role?.name">{{ user?.role?.name }}</mat-chip>
+            <mat-chip *ngIf="user?.site?.name">{{ user?.site?.name }}</mat-chip>
+          </div>
+        </div>
+      </div>
+      <div class="profile-hero__meta">
+        <div>
+          <span class="label">Email</span>
+          <span class="value">{{ user?.email }}</span>
+        </div>
+        <div>
+          <span class="label">Assigned site</span>
+          <span class="value">{{ user?.site?.name || 'Not assigned' }}</span>
+        </div>
+        <div>
+          <span class="label">Role</span>
+          <span class="value">{{ user?.role?.name || 'Unassigned' }}</span>
+        </div>
+        <div>
+          <span class="label">Last sync</span>
+          <span class="value">{{ lastSyncedLabel }}</span>
+        </div>
+      </div>
+    </app-card>
+
+    <app-card variant="elevated" padding="large" class="snapshot-card" *ngIf="overviewCards.length">
+      <div class="snapshot-card__header">
+        <div>
+          <h2>Access snapshot</h2>
+          <p>High-level context about how you are scoped within the workspace.</p>
+        </div>
+        <div class="snapshot-card__meta">
+          <mat-icon color="primary">schedule</mat-icon>
+          <span>{{ lastSyncedLabel }}</span>
+        </div>
+      </div>
+      <div class="snapshot-grid">
+        <article class="snapshot-tile" *ngFor="let card of overviewCards">
+          <div class="snapshot-tile__icon" [ngClass]="'snapshot-tile__icon--' + card.accent">
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <div class="snapshot-tile__content">
+            <span class="snapshot-tile__label">{{ card.label }}</span>
+            <span class="snapshot-tile__value">{{ card.value }}</span>
+            <span class="snapshot-tile__helper">{{ card.helper }}</span>
+          </div>
+        </article>
+      </div>
+    </app-card>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-grid__column dashboard-grid__column--controls">
+        <app-card variant="elevated" padding="large" class="profile-card">
+          <div class="profile-card__header">
+            <div>
+              <h2>Personal details</h2>
+              <p>Names, contact information, and how teammates recognize you.</p>
+            </div>
+            <div class="profile-card__meta" *ngIf="isSavingPersonal">
+              <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
+              <span>Saving…</span>
+            </div>
+          </div>
+
+          <form class="profile-form" [formGroup]="personalForm" (ngSubmit)="savePersonalInfo()">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>First name</mat-label>
+                <input matInput formControlName="firstName" />
+                <mat-error *ngIf="personalForm.get('firstName')?.hasError('required')">
+                  First name is required
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Last name</mat-label>
+                <input matInput formControlName="lastName" />
+                <mat-error *ngIf="personalForm.get('lastName')?.hasError('required')">
+                  Last name is required
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Mobile number</mat-label>
+                <input matInput formControlName="phone" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Job title</mat-label>
+                <input matInput formControlName="jobTitle" />
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Department</mat-label>
+                <input matInput formControlName="department" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="bio-field">
+                <mat-label>Short bio</mat-label>
+                <textarea matInput rows="3" formControlName="bio"></textarea>
+                <mat-hint align="end">{{ personalForm.get('bio')?.value?.length || 0 }}/280</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-actions">
+              <button mat-stroked-button type="button" (click)="resetPersonalForm()">
+                Reset changes
+              </button>
+              <button mat-flat-button color="primary" type="submit" [disabled]="isSavingPersonal">
+                <mat-progress-spinner *ngIf="isSavingPersonal" diameter="20"
+                  mode="indeterminate"></mat-progress-spinner>
+                <span *ngIf="!isSavingPersonal">Save personal info</span>
+              </button>
+            </div>
+          </form>
+        </app-card>
+
+        <app-card variant="outlined" padding="large" class="profile-card">
+          <div class="profile-card__header">
+            <div>
+              <h2>Account &amp; access</h2>
+              <p>Role and site assignments are managed by administrators.</p>
+            </div>
+          </div>
+
+          <div class="account-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput [value]="user?.email" disabled />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Role</mat-label>
+              <input matInput [value]="user?.role?.name || 'Unassigned'" disabled />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Assigned site</mat-label>
+              <input matInput [value]="user?.site?.name || 'Not assigned'" disabled />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Tenant</mat-label>
+              <input matInput [value]="user?.tenant?.name || 'Paradise POS'" disabled />
+            </mat-form-field>
+          </div>
+
+          <div class="account-callout">
+            <mat-icon color="primary">lock</mat-icon>
+            <p>Need to change your role or site access? Contact a workspace administrator — self-serve edits are
+              disabled to protect auditing.</p>
+          </div>
+        </app-card>
+      </div>
+
+      <div class="dashboard-grid__column">
+        <app-card variant="elevated" padding="large" class="profile-card">
+          <div class="profile-card__header">
+            <div>
+              <h2>Preferences</h2>
+              <p>Localization, appearance, and notification cadence.</p>
+            </div>
+            <div class="profile-card__meta" *ngIf="isSavingPreferences">
+              <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
+              <span>Saving…</span>
+            </div>
+          </div>
+
+          <form class="profile-form" [formGroup]="preferencesForm" (ngSubmit)="savePreferences()">
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Timezone</mat-label>
+                <mat-select formControlName="timezone">
+                  <mat-option *ngFor="let option of timezoneOptions" [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Language</mat-label>
+                <mat-select formControlName="language">
+                  <mat-option *ngFor="let option of languageOptions" [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Theme</mat-label>
+                <mat-select formControlName="theme">
+                  <mat-option *ngFor="let option of themeOptions" [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="toggle-tile">
+                <mat-slide-toggle formControlName="digestEmails">
+                  Weekly performance digest
+                </mat-slide-toggle>
+                <p>Summary email on Mondays covering KPIs from your assigned site.</p>
+              </div>
+            </div>
+
+            <div formGroupName="notifications" class="toggle-grid">
+              <mat-slide-toggle formControlName="newOrders">New order alerts</mat-slide-toggle>
+              <mat-slide-toggle formControlName="lowStock">Low stock alerts</mat-slide-toggle>
+              <mat-slide-toggle formControlName="productUpdates">Product update digest</mat-slide-toggle>
+            </div>
+
+            <div class="form-actions">
+              <button mat-stroked-button type="button" (click)="resetPreferencesForm()">
+                Reset changes
+              </button>
+              <button mat-flat-button color="primary" type="submit" [disabled]="isSavingPreferences">
+                <mat-progress-spinner *ngIf="isSavingPreferences" diameter="20"
+                  mode="indeterminate"></mat-progress-spinner>
+                <span *ngIf="!isSavingPreferences">Save preferences</span>
+              </button>
+            </div>
+          </form>
+        </app-card>
+
+        <app-card variant="outlined" padding="large" class="activity-card">
+          <div class="activity-card__header">
+            <div>
+              <h3>Activity &amp; context</h3>
+              <p>Signals that help security &amp; compliance teams trace actions.</p>
+            </div>
+            <mat-chip color="primary" selected>Live</mat-chip>
+          </div>
+          <ul class="activity-list">
+            <li>
+              <mat-icon color="primary">schedule</mat-icon>
+              <div>
+                <p class="activity-title">Last login</p>
+                <p class="activity-body">{{ formatDate(user?.lastLoginAt) || 'User has not logged in yet.' }}</p>
+              </div>
+            </li>
+            <li>
+              <mat-icon color="primary">mail</mat-icon>
+              <div>
+                <p class="activity-title">Digest emails</p>
+                <p class="activity-body">
+                  {{ profileDetails.preferences.digestEmails ? 'Weekly digest is enabled.' : 'Digest emails are paused.'
+                  }}
+                </p>
+              </div>
+            </li>
+            <li>
+              <mat-icon color="primary">notifications</mat-icon>
+              <div>
+                <p class="activity-title">Notification coverage</p>
+                <p class="activity-body">{{ notificationSummary }}</p>
+              </div>
+            </li>
+          </ul>
+        </app-card>
+      </div>
+    </div>
+  </section>
+</ng-container>
+
+<ng-template #loadingState>
+  <div class="loading-state">
+    <ng-container *ngIf="isLoading; else profileEmptyState">
+      <mat-progress-spinner diameter="48" mode="indeterminate"></mat-progress-spinner>
+      <p>Loading your profile…</p>
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template #profileEmptyState>
+  <mat-icon color="primary">info</mat-icon>
+  <p>Profile data is unavailable. Try syncing again.</p>
+  <button mat-stroked-button type="button" (click)="refreshProfile()">Retry sync</button>
+</ng-template>

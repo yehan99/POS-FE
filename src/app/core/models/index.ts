@@ -13,6 +13,9 @@ export * from './user-management.model';
 // Settings models
 export * from './settings.model';
 
+// Profile models
+export * from './profile.model';
+
 // Import types for internal use
 import { User } from './auth.model';
 import { TaxClass } from './product.model';
