@@ -7,6 +7,8 @@ export interface CartItem {
   discountAmount: number; // Calculated discount amount
   subtotal: number; // Price * quantity
   total: number; // Subtotal - discount
+  unitPrice: number; // Applied unit price after loyalty rules
+  pricingType: 'standard' | 'loyalty';
   notes?: string;
 }
 

@@ -33,14 +33,25 @@ export const selectCartTotal = createSelector(
   (state) => state.total
 );
 
-export const selectCartCustomer = createSelector(selectCartState, (state) => ({
-  customerId: state.customerId,
-  customerName: state.customerName,
-}));
+export const selectCartCustomer = createSelector(selectCartState, (state) =>
+  state.customerId
+    ? {
+        id: state.customerId,
+        name: state.customerName,
+        customerId: state.customerId,
+        customerName: state.customerName,
+      }
+    : null
+);
 
 export const selectCartNotes = createSelector(
   selectCartState,
   (state) => state.notes
+);
+
+export const selectIsLoyaltyPricingActive = createSelector(
+  selectCartState,
+  (state) => Boolean(state.customerId)
 );
 
 export const selectIsCartEmpty = createSelector(
@@ -77,20 +88,20 @@ export const selectCartItemQuantity = (productId: string) =>
   );
 
 // Derived selectors
-export const selectCartSummary = createSelector(
-  selectCartItemCount,
-  selectCartSubtotal,
-  selectCartDiscountAmount,
-  selectCartTaxAmount,
-  selectCartTotal,
-  (itemCount, subtotal, discountAmount, taxAmount, total) => ({
-    itemCount,
-    subtotal,
-    discountAmount,
-    taxAmount,
-    total,
-  })
-);
+export const selectCartSummary = createSelector(selectCartState, (state) => ({
+  itemCount: state.items.reduce((count, item) => count + item.quantity, 0),
+  subtotal: state.subtotal,
+  discountAmount: state.discountAmount,
+  taxAmount: state.taxAmount,
+  total: state.total,
+  discountType: state.discountType,
+  discountValue: state.discountValue,
+  taxRate: state.taxRate,
+  items: state.items,
+  customerId: state.customerId,
+  customerName: state.customerName,
+  isLoyaltyPricingActive: Boolean(state.customerId),
+}));
 
 export const selectCanCheckout = createSelector(
   selectIsCartEmpty,

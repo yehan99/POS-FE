@@ -2,6 +2,7 @@
 // POS Checkout Dashboard - Luxury Theme
 // Modern, refined interface with gradient backgrounds
 // ================================================================
+@use "variables" as *;
 
 $deep-navy: #102a43;
 $navy-dark: #0b1c2c;
@@ -325,6 +326,14 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         }
       }
 
+      .customer-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: 1rem;
+        margin-right: auto;
+      }
+
       .customer-badge {
         display: inline-flex;
         align-items: center;
@@ -333,8 +342,6 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
         background: linear-gradient(135deg, #ffe9b3 0%, #ffcf6b 100%);
         border-radius: 999px;
         border: 1px solid rgba($accent-gold, 0.45);
-        margin-right: auto;
-        margin-left: 1rem;
         box-shadow: 0 6px 16px rgba(212, 165, 116, 0.25);
         animation: slideInCustomer 0.3s ease-out;
 
@@ -383,6 +390,25 @@ $shadow-lifted: 0 14px 30px rgba(15, 23, 42, 0.16);
               color: $primary-900;
             }
           }
+        }
+      }
+
+      .loyalty-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        background: rgba($success, 0.12);
+        border: 1px solid rgba($success, 0.35);
+        color: $success-dark;
+        font-weight: 600;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          color: inherit;
         }
       }
 

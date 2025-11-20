@@ -3,13 +3,13 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import * as CartActions from '../store/cart.actions';
 import * as CartSelectors from '../store/cart.selectors';
-import { CartItem, CartState } from '../store/cart.state';
+import { CartItem } from '../store/cart.state';
 import { Product } from '../../../core/models';
 import { ProductService } from '../services/product.service';
 import { BarcodeScannerService } from '../services/barcode-scanner.service';
@@ -28,6 +28,7 @@ import {
   CustomerDialogResult,
 } from '../customer-dialog/customer-dialog.component';
 import { Transaction } from '../models/transaction.model';
+import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
   selector: 'app-checkout',
@@ -48,6 +49,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   canCheckout$: Observable<boolean>;
   cartSummary$: Observable<any>;
   selectedCustomer$: Observable<{ id?: string; name?: string } | null>;
+  loyaltyPricingActive$: Observable<boolean>;
 
   constructor(
     private store: Store,
@@ -57,7 +59,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router,
-    private location: Location
+    private location: Location,
+    private settingsService: SettingsService
   ) {
     // Initialize cart observables
     this.cartItems$ = this.store.select(CartSelectors.selectCartItems);
@@ -70,17 +73,29 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.itemCount$ = this.store.select(CartSelectors.selectCartItemCount);
     this.canCheckout$ = this.store.select(CartSelectors.selectCanCheckout);
     this.cartSummary$ = this.store.select(CartSelectors.selectCartSummary);
-    this.selectedCustomer$ = this.store.select((state: any) => {
-      const cart = state.cart as CartState;
-      return cart.customerId
-        ? { id: cart.customerId, name: cart.customerName }
-        : null;
-    });
+    this.selectedCustomer$ = this.store.select(
+      CartSelectors.selectCartCustomer
+    );
+    this.loyaltyPricingActive$ = this.store.select(
+      CartSelectors.selectIsLoyaltyPricingActive
+    );
   }
 
   ngOnInit(): void {
-    // Set default tax rate (get from environment or settings)
-    this.store.dispatch(CartActions.setTaxRate({ taxRate: 8 })); // 8% tax
+    this.settingsService.settings$
+      .pipe(
+        takeUntil(this.destroy$),
+        map((state) => state.general.taxRate ?? 0),
+        distinctUntilChanged()
+      )
+      .subscribe((taxRate) => {
+        this.store.dispatch(CartActions.setTaxRate({ taxRate }));
+      });
+
+    this.settingsService
+      .loadSettings()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
 
     // Listen for barcode scans
     this.barcodeScanner.barcode$
@@ -346,6 +361,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   // Format currency
   formatCurrency(amount: number): string {
     return `LKR ${amount.toFixed(2)}`;
+  }
+
+  getPricingLabel(item: CartItem): string {
+    return item.pricingType === 'loyalty' ? 'Loyalty price' : 'Retail price';
   }
 
   // Quick Actions

@@ -245,9 +245,16 @@
         </ng-container>
 
         <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Price</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Prices</th>
           <td mat-cell *matCellDef="let product">
-            <span class="price-value">LKR {{ product.price | number:'1.2-2' }}</span>
+            <div class="price-stack">
+              <span class="price-pill price-pill--retail">
+                Retail · LKR {{ product.price | number:'1.2-2' }}
+              </span>
+              <span class="price-pill price-pill--loyalty">
+                Loyalty · LKR {{ product.loyaltyPrice | number:'1.2-2' }}
+              </span>
+            </div>
           </td>
         </ng-container>
 

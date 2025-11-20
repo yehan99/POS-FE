@@ -1,4 +1,5 @@
 import { createReducer, on } from '@ngrx/store';
+import { Product } from '../../../core/models';
 import * as CartActions from './cart.actions';
 import { CartState, initialCartState, CartItem } from './cart.state';
 
@@ -32,6 +33,8 @@ export const cartReducer = createReducer(
         discountAmount: 0,
         subtotal: 0,
         total: 0,
+        unitPrice: product.price,
+        pricingType: 'standard',
       };
       updatedItems = [...state.items, newItem];
     }
@@ -109,17 +112,22 @@ export const cartReducer = createReducer(
   }),
 
   // Set Customer
-  on(CartActions.setCustomer, (state, { customerId, customerName }) => ({
-    ...state,
-    customerId,
-    customerName,
-  })),
+  on(CartActions.setCustomer, (state, { customerId, customerName }) =>
+    calculateCartTotals({
+      ...state,
+      customerId,
+      customerName,
+    })
+  ),
 
   // Remove Customer
-  on(CartActions.removeCustomer, (state) => {
-    const { customerId, customerName, ...rest } = state;
-    return rest;
-  }),
+  on(CartActions.removeCustomer, (state) =>
+    calculateCartTotals({
+      ...state,
+      customerId: undefined,
+      customerName: undefined,
+    })
+  ),
 
   // Set Cart Notes
   on(CartActions.setCartNotes, (state, { notes }) => ({
@@ -147,10 +155,12 @@ export const cartReducer = createReducer(
   })),
 
   // Recall Cart
-  on(CartActions.recallCart, (state, { cart }) => ({
-    ...cart,
-    isProcessing: false,
-  })),
+  on(CartActions.recallCart, (state, { cart }) =>
+    calculateCartTotals({
+      ...cart,
+      isProcessing: false,
+    })
+  ),
 
   // Checkout
   on(CartActions.startCheckout, (state) => ({
@@ -173,14 +183,21 @@ export const cartReducer = createReducer(
  * Calculate all cart totals including item subtotals, discounts, tax, and final total
  */
 function calculateCartTotals(state: CartState): CartState {
-  // Calculate item totals
+  const loyaltyPricingActive = Boolean(state.customerId);
+
   const itemsWithTotals = state.items.map((item) => {
-    const subtotal = item.product.price * item.quantity;
+    const { unitPrice, pricingType } = resolveUnitPrice(
+      item.product,
+      loyaltyPricingActive
+    );
+    const subtotal = unitPrice * item.quantity;
     const discountAmount = (subtotal * item.discount) / 100;
     const total = subtotal - discountAmount;
 
     return {
       ...item,
+      unitPrice,
+      pricingType,
       subtotal,
       discountAmount,
       total,
@@ -214,5 +231,26 @@ function calculateCartTotals(state: CartState): CartState {
     discountAmount: cartDiscountAmount,
     taxAmount,
     total: Math.max(0, total), // Ensure total is never negative
+  };
+}
+
+function resolveUnitPrice(
+  product: Product,
+  loyaltyPricingActive: boolean
+): { unitPrice: number; pricingType: 'standard' | 'loyalty' } {
+  if (loyaltyPricingActive) {
+    const loyaltyPrice =
+      typeof product.loyaltyPrice === 'number'
+        ? product.loyaltyPrice
+        : product.price;
+    return {
+      unitPrice: loyaltyPrice ?? product.price,
+      pricingType: 'loyalty',
+    };
+  }
+
+  return {
+    unitPrice: product.price,
+    pricingType: 'standard',
   };
 }

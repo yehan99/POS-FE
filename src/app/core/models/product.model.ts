@@ -7,6 +7,7 @@ export interface Product {
   brand?: string;
   barcode?: string;
   price: number;
+  loyaltyPrice: number;
   costPrice: number;
   taxClass: TaxClass;
   isActive: boolean;

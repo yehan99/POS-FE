@@ -92,14 +92,22 @@
           </div>
 
           <!-- Customer Badge -->
-          <div class="customer-badge" *ngIf="selectedCustomer$ | async as customer">
-            <div class="customer-info">
-              <mat-icon>person</mat-icon>
-              <span class="customer-name">{{ customer.name }}</span>
+          <div class="customer-meta" *ngIf="selectedCustomer$ | async as customer">
+            <div class="customer-badge">
+              <div class="customer-info">
+                <mat-icon>person</mat-icon>
+                <span class="customer-name">{{ customer.name }}</span>
+              </div>
+              <button mat-icon-button (click)="removeCustomer()" matTooltip="Remove customer"
+                class="remove-customer-btn">
+                <mat-icon>close</mat-icon>
+              </button>
             </div>
-            <button mat-icon-button (click)="removeCustomer()" matTooltip="Remove customer" class="remove-customer-btn">
-              <mat-icon>close</mat-icon>
-            </button>
+
+            <div class="loyalty-chip" *ngIf="loyaltyPricingActive$ | async">
+              <mat-icon>stars</mat-icon>
+              <span>Loyalty pricing active</span>
+            </div>
           </div>
 
           <div class="header-badge mx-5" *ngIf="cartSummary$ | async as summary">
@@ -128,7 +136,7 @@
               <span>Product</span>
               <span class="sku-col">SKU</span>
               <span class="qty-col">Quantity</span>
-              <span class="price-col">Price</span>
+              <span class="price-col">Unit Price</span>
               <span class="total-col">Line Total</span>
               <span class="actions-col">Actions</span>
             </div>
@@ -150,7 +158,7 @@
 
                 <div class="item-sku">
                   <span>{{ item.product.sku }}</span>
-                  <small>{{ formatCurrency(item.product.price) }} each</small>
+                  <small>{{ formatCurrency(item.unitPrice) }} each · {{ getPricingLabel(item) }}</small>
                 </div>
 
                 <div class="item-quantity">
@@ -168,7 +176,7 @@
                 </div>
 
                 <div class="item-price">
-                  {{ formatCurrency(item.product.price) }}
+                  {{ formatCurrency(item.unitPrice) }}
                 </div>
 
                 <div class="item-total">
@@ -220,7 +228,7 @@
               <span class="value discount">-{{ formatCurrency(summary.discountAmount) }}</span>
             </div>
             <div class="summary-line">
-              <span class="label">Tax (8%)</span>
+              <span class="label">Tax ({{ summary.taxRate | number: '1.0-2' }}%)</span>
               <span class="value">{{ formatCurrency(summary.taxAmount) }}</span>
             </div>
           </div>

@@ -126,6 +126,12 @@ export class ReceiptService {
             margin-top: 2px;
           }
 
+          .item-pricing-context {
+            font-size: ${isThermal ? '10px' : '12px'};
+            color: #555;
+            margin-top: 2px;
+          }
+
           .totals {
             margin: 10px 0;
           }
@@ -216,8 +222,15 @@ export class ReceiptService {
         <div class="item">
           <div class="item-name">${item.product.name}</div>
           <div class="item-details">
-            <span>${item.quantity} x LKR ${item.product.price.toFixed(2)}</span>
+            <span>${item.quantity} x LKR ${item.unitPrice.toFixed(2)}</span>
             <span>LKR ${item.subtotal.toFixed(2)}</span>
+          </div>
+          <div class="item-pricing-context">
+            ${
+              item.pricingType === 'loyalty'
+                ? 'Loyalty price applied'
+                : 'Retail price'
+            }
           </div>
       `;
       if (receiptConfig.showItemCodes && item.product.sku) {

@@ -396,9 +396,32 @@
   font-size: 0.85rem;
 }
 
-.price-value {
+.price-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.price-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: $radius-full;
+  font-size: 0.85rem;
   font-weight: $font-weight-semibold;
-  color: rgba($text-primary, 0.92);
+  letter-spacing: 0.01em;
+
+  &--retail {
+    background: rgba($text-primary, 0.08);
+    color: rgba($text-primary, 0.95);
+  }
+
+  &--loyalty {
+    background: rgba($accent-500, 0.12);
+    color: $accent-700;
+  }
 }
 
 .stock-chip {

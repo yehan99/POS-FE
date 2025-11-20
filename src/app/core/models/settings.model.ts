@@ -10,6 +10,7 @@ export interface GeneralSettings {
   invoicePrefix: string;
   invoiceStartNumber: number;
   defaultSiteId?: string | null;
+  taxRate: number;
 }
 
 export interface NotificationSettings {

@@ -219,6 +219,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       locale: ['', Validators.required],
       invoicePrefix: ['', [Validators.required, Validators.maxLength(6)]],
       invoiceStartNumber: [1000, [Validators.required, Validators.min(1)]],
+      taxRate: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(100)],
+      ],
       defaultSiteId: [''],
     });
 
@@ -276,6 +280,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         locale: settings.locale,
         invoicePrefix: settings.invoicePrefix,
         invoiceStartNumber: settings.invoiceStartNumber,
+        taxRate: settings.taxRate,
         defaultSiteId: settings.defaultSiteId ?? '',
       },
       { emitEvent: false }
@@ -364,6 +369,17 @@ export class SettingsComponent implements OnInit, OnDestroy {
           : 'Awaiting site sync',
         icon: 'storefront',
         accent: 'rose',
+      },
+      {
+        key: 'tax',
+        label: 'Tax Policy',
+        value: `${general.taxRate.toFixed(2)}%`,
+        helper:
+          general.taxRate > 0
+            ? 'Applied automatically at checkout'
+            : 'Tax disabled until configured',
+        icon: 'percent',
+        accent: 'indigo',
       },
     ];
   }

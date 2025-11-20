@@ -142,14 +142,24 @@
             <mat-icon color="primary">sell</mat-icon>
           </div>
 
-          <div class="field-grid field-grid--three">
+          <div class="field-grid field-grid--two">
             <mat-form-field appearance="outline">
-              <mat-label>Sale Price</mat-label>
+              <mat-label>Walk-in Price</mat-label>
               <input matInput type="number" formControlName="price" placeholder="0.00" step="0.01">
               <span matPrefix>LKR&nbsp;</span>
               <mat-error>{{ getErrorMessage('price') }}</mat-error>
             </mat-form-field>
 
+            <mat-form-field appearance="outline">
+              <mat-label>Loyalty Price</mat-label>
+              <input matInput type="number" formControlName="loyaltyPrice" placeholder="0.00" step="0.01">
+              <span matPrefix>LKR&nbsp;</span>
+              <mat-hint>Applied when a registered customer is attached</mat-hint>
+              <mat-error>{{ getErrorMessage('loyaltyPrice') }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="field-grid field-grid--two">
             <mat-form-field appearance="outline">
               <mat-label>Cost Price</mat-label>
               <input matInput type="number" formControlName="costPrice" placeholder="0.00" step="0.01">
@@ -167,13 +177,24 @@
             </mat-form-field>
           </div>
 
-          <div class="price-summary" *ngIf="productForm.get('price')?.value > 0">
-            <div class="price-summary__row">
-              <span>Base price</span>
+          <div class="price-summary"
+            *ngIf="productForm.get('price')?.value > 0 || productForm.get('loyaltyPrice')?.value > 0">
+            <div class="price-summary__row" *ngIf="productForm.get('price')?.value > 0">
+              <span>Walk-in price</span>
               <span>LKR {{ productForm.get('price')?.value | number:'1.2-2' }}</span>
             </div>
+            <div class="price-summary__row" *ngIf="productForm.get('loyaltyPrice')?.value > 0">
+              <span>Loyalty price</span>
+              <span>
+                LKR {{ productForm.get('loyaltyPrice')?.value | number:'1.2-2' }}
+                <ng-container *ngIf="productForm.get('price')?.value">
+                  ({{ ((1 - (productForm.get('loyaltyPrice')?.value / productForm.get('price')?.value)) * 100) |
+                  number:'1.0-1' }}% below retail)
+                </ng-container>
+              </span>
+            </div>
             <div class="price-summary__row" *ngIf="productForm.get('costPrice')?.value">
-              <span>Margin</span>
+              <span>Margin (vs. walk-in)</span>
               <span>
                 LKR {{ (productForm.get('price')?.value - productForm.get('costPrice')?.value) | number:'1.2-2' }}
                 ({{ ((productForm.get('price')?.value - productForm.get('costPrice')?.value) /

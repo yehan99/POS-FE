@@ -26,6 +26,7 @@ const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   invoicePrefix: 'INV',
   invoiceStartNumber: 1000,
   defaultSiteId: null,
+  taxRate: 0,
 };
 
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {

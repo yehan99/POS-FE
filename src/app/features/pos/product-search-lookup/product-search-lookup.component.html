@@ -2,7 +2,7 @@
   <mat-form-field class="search-field" appearance="outline">
     <mat-icon matPrefix class="search-icon">search</mat-icon>
     <mat-label>Search product name, SKU, or barcode</mat-label>
-    <input type="text" matInput [formControl]="searchControl" [matAutocomplete]="auto"
+    <input type="text" matInput [formControl]="searchControl" [matAutocomplete]="auto" matAutocompletePosition="below"
       (input)="onSearchChange(searchControl.value)" />
     <mat-spinner *ngIf="isSearching && searchControl.value && searchControl.value.length >= 2" diameter="20" matSuffix
       class="search-spinner"></mat-spinner>
@@ -41,7 +41,14 @@
             <span>{{ product.stockQuantity }}</span>
           </div>
           <div class="product-price-badge">
-            {{ formatCurrency(product.price) }}
+            <div class="price-line">
+              <small>Retail</small>
+              <strong>{{ formatCurrency(product.price) }}</strong>
+            </div>
+            <div class="price-line loyalty">
+              <small>Loyalty</small>
+              <strong>{{ formatCurrency(product.loyaltyPrice || product.price) }}</strong>
+            </div>
           </div>
         </div>
       </mat-option>

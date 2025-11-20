@@ -94,6 +94,14 @@ export class ProductFormComponent implements OnInit {
         this.productForm.get('maxStockLevel')?.disable();
       }
     });
+
+    // Keep loyalty price aligned with base price for new products until edited manually
+    this.productForm.get('price')?.valueChanges.subscribe((price) => {
+      const loyaltyControl = this.productForm.get('loyaltyPrice');
+      if (!this.isEditMode && loyaltyControl && !loyaltyControl.dirty) {
+        loyaltyControl.setValue(price, { emitEvent: false });
+      }
+    });
   }
 
   createForm(): FormGroup {
@@ -112,6 +120,7 @@ export class ProductFormComponent implements OnInit {
       brand: [''],
       barcode: [''],
       price: [0, [Validators.required, Validators.min(0)]],
+      loyaltyPrice: [0, [Validators.required, Validators.min(0)]],
       costPrice: [0, [Validators.min(0)]],
       taxClass: ['1', Validators.required],
       isActive: [true],
@@ -181,6 +190,7 @@ export class ProductFormComponent implements OnInit {
       brand: product.brand,
       barcode: product.barcode,
       price: product.price,
+      loyaltyPrice: product.loyaltyPrice ?? product.price,
       costPrice: product.costPrice,
       taxClass: product.taxClass.id,
       isActive: product.isActive,
@@ -281,6 +291,7 @@ export class ProductFormComponent implements OnInit {
       brand: formValue.brand,
       barcode: formValue.barcode,
       price: formValue.price,
+      loyaltyPrice: formValue.loyaltyPrice ?? formValue.price,
       costPrice: formValue.costPrice,
       taxClass: taxClass!,
       isActive: formValue.isActive,

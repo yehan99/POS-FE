@@ -80,12 +80,14 @@ $muted-slate: #6b7a8d;
 }
 
 // Autocomplete Panel Styling (global)
-::ng-deep .product-autocomplete.mat-mdc-autocomplete-panel {
+:host ::ng-deep .product-autocomplete.mat-mdc-autocomplete-panel {
   background: white;
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
-  margin-top: 0.5rem;
+  margin-top: 4.25rem;
+  margin-left: 4.5rem;
   max-height: 420px;
+  width: calc(100% + 2rem);
 
   // Override Material's default icon margins
   .mat-mdc-option .mat-icon {
@@ -241,14 +243,43 @@ $muted-slate: #6b7a8d;
       }
 
       .product-price-badge {
-        font-size: 1.05rem;
-        font-weight: 700;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.9rem;
+        font-weight: 600;
         color: $accent-gold;
         white-space: nowrap;
-        padding: 0.4rem 0.9rem;
-        border-radius: 9px;
-        background: rgba($accent-gold, 0.1);
-        border: 1px solid rgba($accent-gold, 0.2);
+        padding: 0.45rem 1rem;
+        border-radius: 12px;
+        background: rgba($accent-gold, 0.08);
+        border: 1px solid rgba($accent-gold, 0.25);
+        min-width: 150px;
+
+        .price-line {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.65rem;
+
+          small {
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            color: rgba($deep-navy, 0.6);
+          }
+
+          strong {
+            font-size: 0.95rem;
+            color: $accent-gold;
+          }
+
+          &.loyalty {
+            strong {
+              color: $deep-navy;
+            }
+          }
+        }
       }
     }
 
