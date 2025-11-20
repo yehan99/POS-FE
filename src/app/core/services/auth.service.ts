@@ -10,6 +10,7 @@ import {
   LoginRequest,
   RegisterRequest,
   AuthResponse,
+  KeepAliveResponse,
 } from '../models';
 
 @Injectable({
@@ -194,6 +195,23 @@ export class AuthService {
       }),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Keep the current session alive by updating last activity server-side.
+   */
+  keepAlive(): Observable<KeepAliveResponse> {
+    return this.http
+      .post<KeepAliveResponse>(`${environment.apiUrl}/auth/keep-alive`, {})
+      .pipe(
+        catchError((error) => {
+          if (error.status === 401) {
+            this.forceLogout();
+          }
+
+          return throwError(() => error);
+        })
+      );
   }
 
   /**

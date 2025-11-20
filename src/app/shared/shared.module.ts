@@ -44,6 +44,7 @@ import { FormErrorComponent } from './components/form-error/form-error.component
 import { EmptyStateComponent } from './components/empty-state/empty-state.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { CardComponent } from './components/card/card.component';
+import { SessionTimeoutDialogComponent } from './components/session-timeout-dialog/session-timeout-dialog.component';
 
 const MATERIAL_MODULES = [
   MatButtonModule,
@@ -85,6 +86,7 @@ const MATERIAL_MODULES = [
     EmptyStateComponent,
     MainLayoutComponent,
     CardComponent,
+    SessionTimeoutDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -107,6 +109,7 @@ const MATERIAL_MODULES = [
     EmptyStateComponent,
     MainLayoutComponent,
     CardComponent,
+    SessionTimeoutDialogComponent,
   ],
 })
 export class SharedModule {}

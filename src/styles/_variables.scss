@@ -217,6 +217,17 @@ $button-primary-background: $sidebar-background;
 $button-primary-hover: mix(#ffffff, $button-primary-background, 12%);
 $button-primary-active: mix(#000000, $button-primary-background, 12%);
 
+// Form controls & toggles
+$control-active-color: $sidebar-background;
+$control-active-hover: lighten($control-active-color, 6%);
+$control-active-pressed: darken($control-active-color, 4%);
+$control-focus-outline: rgba($control-active-color, 0.45);
+$toggle-track-color: lighten($control-active-color, 12%);
+$toggle-track-hover: lighten($control-active-color, 16%);
+$toggle-track-pressed: lighten($control-active-color, 8%);
+$toggle-handle-hover: lighten($control-active-color, 4%);
+$toggle-handle-pressed: darken($control-active-color, 6%);
+
 // Inputs
 $input-height: 48px;
 $input-padding-y: $spacing-3;

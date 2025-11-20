@@ -53,6 +53,15 @@ export interface AuthResponse extends AuthTokens {
   user?: User;
 }
 
+export interface KeepAliveResponse {
+  ok: boolean;
+  tokenId: string;
+  expiresIn: number;
+  idleTimeoutSeconds: number;
+  warningSeconds: number;
+  serverTime: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

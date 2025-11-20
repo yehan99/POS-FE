@@ -178,12 +178,13 @@ input[type="checkbox"] {
   flex-shrink: 0;
 
   &:hover:not(:disabled) {
-    border-color: $accent-500;
+    border-color: $control-active-color;
+    background-color: rgba($control-active-color, 0.08);
   }
 
   &:checked {
-    background-color: $accent-500;
-    border-color: $accent-500;
+    background-color: $control-active-color;
+    border-color: $control-active-color;
 
     &::after {
       content: "";
@@ -206,8 +207,69 @@ input[type="checkbox"] {
   }
 
   &:focus-visible {
-    outline: 2px solid $accent-500;
+    outline: 2px solid $control-focus-outline;
     outline-offset: 2px;
+  }
+}
+
+// Material checkbox overrides aligned with sidebar branding
+.mat-mdc-checkbox {
+  &.mat-accent,
+  &.mat-primary {
+    --mdc-checkbox-selected-icon-color: #{$control-active-color};
+    --mdc-checkbox-selected-checkmark-color: #{$text-inverse};
+    --mdc-checkbox-selected-focus-icon-color: #{$control-active-hover};
+    --mdc-checkbox-selected-hover-icon-color: #{$control-active-hover};
+    --mdc-checkbox-selected-pressed-icon-color: #{$control-active-pressed};
+    --mdc-checkbox-selected-focus-state-layer-color: #{rgba(
+        $control-active-color,
+        0.18
+      )};
+    --mdc-checkbox-selected-hover-state-layer-color: #{rgba(
+        $control-active-color,
+        0.14
+      )};
+    --mdc-checkbox-selected-pressed-state-layer-color: #{rgba(
+        $control-active-color,
+        0.24
+      )};
+    --mat-checkbox-checked-ripple-color: #{rgba($control-active-color, 0.25)};
+    --mat-checkbox-disabled-checked-ripple-color: #{rgba(
+        $control-active-color,
+        0.12
+      )};
+  }
+}
+
+// Material slide toggle overrides for consistent interactions
+:root {
+  .mat-mdc-slide-toggle {
+    &.mat-accent,
+    &.mat-primary {
+      --mdc-switch-selected-track-color: #{$toggle-track-color};
+      --mdc-switch-selected-hover-track-color: #{$toggle-track-hover};
+      --mdc-switch-selected-focus-track-color: #{$toggle-track-hover};
+      --mdc-switch-selected-pressed-track-color: #{$toggle-track-pressed};
+      --mdc-switch-selected-track-outline-color: #{$toggle-track-color};
+      --mdc-switch-selected-handle-color: #{$control-active-color};
+      --mdc-switch-selected-hover-handle-color: #{$toggle-handle-hover};
+      --mdc-switch-selected-focus-handle-color: #{$toggle-handle-hover};
+      --mdc-switch-selected-pressed-handle-color: #{$toggle-handle-pressed};
+      --mdc-switch-selected-icon-color: #{$text-inverse};
+      --mdc-switch-disabled-selected-icon-color: #{$text-inverse};
+      --mdc-switch-selected-focus-state-layer-color: #{rgba(
+          $control-active-color,
+          0.18
+        )};
+      --mdc-switch-selected-hover-state-layer-color: #{rgba(
+          $control-active-color,
+          0.14
+        )};
+      --mdc-switch-selected-pressed-state-layer-color: #{rgba(
+          $control-active-color,
+          0.24
+        )};
+    }
   }
 }
 

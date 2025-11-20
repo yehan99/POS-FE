@@ -30,7 +30,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
     if (authToken && !this.isAuthUrl(request.url)) {
       request = this.addTokenToRequest(request, authToken);
-      this.sessionTimeout.touch();
+      this.sessionTimeout.touch('http');
     }
 
     return next.handle(request).pipe(
@@ -79,7 +79,7 @@ export class AuthInterceptor implements HttpInterceptor {
         switchMap((tokens) => {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(tokens.accessToken);
-          this.sessionTimeout.touch();
+          this.sessionTimeout.touch('http');
           return next.handle(
             this.addTokenToRequest(request, tokens.accessToken)
           );
@@ -97,7 +97,7 @@ export class AuthInterceptor implements HttpInterceptor {
       take(1),
       switchMap((token) => {
         const accessToken = token as string;
-        this.sessionTimeout.touch();
+        this.sessionTimeout.touch('http');
         return next.handle(this.addTokenToRequest(request, accessToken));
       }),
       catchError((error) => {
