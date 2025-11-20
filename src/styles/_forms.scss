@@ -325,7 +325,7 @@ input[type="radio"] {
   text-align: center;
   white-space: nowrap;
   border: 2px solid transparent;
-  border-radius: $radius-lg;
+  border-radius: $button-radius;
   cursor: pointer;
   transition: all $transition-fast;
   outline: none;
@@ -355,15 +355,18 @@ input[type="radio"] {
 // Primary Button
 .btn-primary {
   color: $text-inverse;
-  background: linear-gradient(135deg, $primary-600, $primary-800);
+  background-color: $button-primary-background;
+  border-color: transparent;
   box-shadow: $shadow-sm;
 
   &:hover:not(:disabled) {
+    background-color: $button-primary-hover;
     transform: translateY(-2px);
     box-shadow: $shadow-md;
   }
 
   &:active:not(:disabled) {
+    background-color: $button-primary-active;
     transform: translateY(0);
   }
 }

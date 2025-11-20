@@ -244,7 +244,7 @@ select,
 // Material Button Enhancements
 .mat-mdc-raised-button,
 .mat-mdc-unelevated-button {
-  border-radius: $radius-lg !important;
+  border-radius: $button-radius !important;
   box-shadow: $shadow-sm !important;
   font-weight: $font-weight-semibold !important;
   letter-spacing: 0.025em !important;
@@ -262,8 +262,29 @@ select,
   }
 }
 
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-flat-button.mat-primary {
+  background-color: $button-primary-background !important;
+  color: $text-inverse !important;
+  border-color: transparent !important;
+
+  &:hover:not([disabled]) {
+    background-color: $button-primary-hover !important;
+  }
+
+  &:active:not([disabled]) {
+    background-color: $button-primary-active !important;
+  }
+
+  &:disabled {
+    background-color: rgba($button-primary-background, 0.5) !important;
+    color: rgba($text-inverse, 0.75) !important;
+  }
+}
+
 .mat-mdc-outlined-button {
-  border-radius: $radius-lg !important;
+  border-radius: $button-radius !important;
   font-weight: $font-weight-semibold !important;
   letter-spacing: 0.025em !important;
   text-transform: none !important;
@@ -276,9 +297,23 @@ select,
   }
 }
 
+.mat-mdc-outlined-button.mat-primary {
+  color: $button-primary-background !important;
+  border-color: rgba($button-primary-background, 0.6) !important;
+
+  &:hover:not([disabled]) {
+    background-color: rgba($button-primary-background, 0.08) !important;
+    border-color: $button-primary-background !important;
+  }
+
+  &:active:not([disabled]) {
+    border-color: mix(#000000, $button-primary-background, 12%) !important;
+  }
+}
+
 .mat-mdc-flat-button,
 .mat-mdc-button {
-  border-radius: $radius-lg !important;
+  border-radius: $button-radius !important;
   font-weight: $font-weight-semibold !important;
   letter-spacing: 0.025em !important;
   text-transform: none !important;
@@ -286,9 +321,21 @@ select,
   min-height: 40px !important;
 }
 
+.mat-mdc-button.mat-primary {
+  color: $button-primary-background !important;
+
+  &:hover:not([disabled]) {
+    background-color: rgba($button-primary-background, 0.08) !important;
+  }
+
+  &:active:not([disabled]) {
+    background-color: rgba($button-primary-background, 0.12) !important;
+  }
+}
+
 // Icon buttons
 .mat-mdc-icon-button {
-  border-radius: $radius-md !important;
+  border-radius: $button-radius !important;
 
   &:hover:not([disabled]) {
     background-color: rgba($primary-500, 0.08) !important;

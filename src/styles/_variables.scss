@@ -212,6 +212,10 @@ $button-padding-y: $spacing-3;
 $button-padding-x: $spacing-6;
 $button-padding-x-sm: $spacing-4;
 $button-padding-x-lg: $spacing-8;
+$button-radius: 0.2rem;
+$button-primary-background: $sidebar-background;
+$button-primary-hover: mix(#ffffff, $button-primary-background, 12%);
+$button-primary-active: mix(#000000, $button-primary-background, 12%);
 
 // Inputs
 $input-height: 48px;

@@ -90,7 +90,7 @@
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
   line-height: 1;
-  border-radius: $radius-md;
+  border-radius: $button-radius;
   border: none;
   cursor: pointer;
   transition: all $transition-base;
@@ -104,15 +104,19 @@
 
 @mixin button-primary {
   @include button-base;
-  background: $primary-600;
+  background-color: $button-primary-background;
   color: $text-inverse;
+  box-shadow: $shadow-sm;
 
   &:hover:not(:disabled) {
-    background: $primary-700;
+    background-color: $button-primary-hover;
+    box-shadow: $shadow-md;
+    transform: translateY(-1px);
   }
 
   &:active:not(:disabled) {
-    background: $primary-800;
+    background-color: $button-primary-active;
+    transform: translateY(0);
   }
 }
 
