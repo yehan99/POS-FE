@@ -16,8 +16,10 @@
       <button class="icon-button" aria-label="Search" (click)="openSearch()">
         <mat-icon>search</mat-icon>
       </button>
-      <button class="icon-button" aria-label="Notifications" (click)="openNotifications()">
-        <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" matBadgeSize="small">
+      <button class="icon-button notification-button" aria-label="Notifications" (click)="toggleNotificationsPanel()"
+        [attr.aria-expanded]="notificationsOpen">
+        <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" matBadgeSize="small"
+          [matBadgeHidden]="notificationCount === 0">
           notifications
         </mat-icon>
       </button>
@@ -250,4 +252,115 @@
       </div>
     </div>
   </footer>
+</div>
+
+<div class="notification-workspace" *ngIf="notificationsOpen">
+  <button type="button" class="workspace-overlay" aria-label="Close notifications workspace"
+    (click)="closeNotificationsPanel()"></button>
+  <aside class="workspace-panel" role="dialog" aria-modal="true" aria-label="Notifications workspace" tabindex="-1">
+    <div class="workspace-hero">
+      <div class="hero-icon">
+        <mat-icon>notifications_active</mat-icon>
+      </div>
+      <div class="hero-copy">
+        <p class="hero-title">Notifications</p>
+        <p class="hero-subtitle">Stock and supplier updates in real time</p>
+        <p class="hero-updated" *ngIf="lastNotificationsRefresh">
+          Updated {{ lastNotificationsRefresh | date: 'shortTime' }}
+        </p>
+      </div>
+      <div class="hero-actions">
+        <button type="button" class="link-button" (click)="refreshNotifications()" [disabled]="notificationsLoading">
+          {{ notificationsLoading ? 'Refreshing...' : 'Refresh' }}
+        </button>
+        <button type="button" class="link-button" (click)="markAllNotificationsAsRead()"
+          [disabled]="notificationCount === 0">
+          Mark all as read
+        </button>
+        <button type="button" class="close-button" aria-label="Close notifications" (click)="closeNotificationsPanel()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="workspace-body">
+      <div class="workspace-state" *ngIf="notificationsLoading">
+        <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+        <p>Loading your notifications...</p>
+      </div>
+
+      <div class="workspace-state" *ngIf="!notificationsLoading && notificationsError">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ notificationsError }}</p>
+        <button type="button" class="link-button" (click)="refreshNotifications()">Try again</button>
+      </div>
+
+      <div class="workspace-state"
+        *ngIf="!notificationsLoading && !notificationsError && notificationGroups.length === 0">
+        <mat-icon>mark_email_read</mat-icon>
+        <p>You're all caught up.</p>
+      </div>
+
+      <ng-container *ngIf="!notificationsLoading && !notificationsError && notificationGroups.length">
+        <div class="notification-group" *ngFor="let group of notificationGroups">
+          <div class="group-header">
+            <div class="group-title">
+              <div class="group-icon">
+                <mat-icon>{{ group.accentIcon }}</mat-icon>
+              </div>
+              <div>
+                <p>{{ group.title }}</p>
+                <span>{{ group.subtitle }}</span>
+              </div>
+            </div>
+            <span class="group-badge" *ngIf="countUnread(group.items) > 0">
+              {{ countUnread(group.items) }} new
+            </span>
+          </div>
+
+          <div class="notification-item" *ngFor="let item of group.items; trackBy: trackByNotification"
+            [class.unread]="!item.isRead" role="button" tabindex="0" (click)="openNotificationDetail(item)"
+            (keyup.enter)="openNotificationDetail(item)" (keyup.space)="openNotificationDetail(item)">
+            <div class="item-avatar" [class.stock]="item.category === 'stock'"
+              [class.supplier]="item.category === 'supplier'" [class.product]="item.category === 'product'">
+              <img *ngIf="item.actor?.avatarUrl" [src]="item.actor?.avatarUrl" [alt]="item.actor?.name" />
+              <span *ngIf="!item.actor?.avatarUrl">{{ getAvatarInitials(item.actor?.name) }}</span>
+            </div>
+            <div class="item-content">
+              <div class="item-head">
+                <div class="actor-details">
+                  <span class="actor-name">{{ item.actor?.name }}</span>
+                  <span class="actor-role" *ngIf="item.actor?.role">• {{ item.actor?.role }}</span>
+                </div>
+                <span class="time">{{ item.timeAgo }}</span>
+              </div>
+              <p class="item-title">{{ item.title }}</p>
+              <p class="item-message">{{ item.message }}</p>
+              <div class="item-meta" *ngIf="item.metadata || item.fileName">
+                <span *ngIf="item.metadata">{{ item.metadata }}</span>
+                <span *ngIf="item.fileName">
+                  {{ item.fileName }}
+                  <span class="muted" *ngIf="item.fileSize">{{ item.fileSize }}</span>
+                </span>
+              </div>
+              <div class="item-chip" *ngIf="item.chip">
+                <span class="chip" [ngClass]="item.chip.tone">{{ item.chip.label }}</span>
+              </div>
+              <div class="item-actions" *ngIf="item.actions?.length">
+                <button type="button" class="action-button" *ngFor="let action of item.actions"
+                  [ngClass]="action.variant || 'secondary'" (click)="handleNotificationAction($event, action, item)">
+                  {{ action.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <button type="button" class="view-all" (click)="viewAllNotifications()">
+      View all notifications
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </aside>
 </div>

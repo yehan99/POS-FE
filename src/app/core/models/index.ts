@@ -16,6 +16,9 @@ export * from './settings.model';
 // Profile models
 export * from './profile.model';
 
+// Notification models
+export * from './notification.model';
+
 // Import types for internal use
 import { User } from './auth.model';
 import { TaxClass } from './product.model';
