@@ -22,6 +22,10 @@
 // GLOBAL LUXURY STYLES
 // ========================================
 
+:root {
+  --app-scale: 0.75;
+}
+
 html,
 body {
   height: 100%;
@@ -36,6 +40,7 @@ body {
 body {
   margin: 0;
   background-color: $background-secondary;
+  zoom: var(--app-scale); // default kiosk scale; match dependent layout math
 }
 
 // ============ CONTAINER & LAYOUT ============
