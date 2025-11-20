@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnInit,
   inject,
 } from '@angular/core';
 import {
@@ -59,7 +60,7 @@ export interface UserEditDialogData {
   styleUrl: './user-edit-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UserEditDialogComponent {
+export class UserEditDialogComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
   private readonly snackBar = inject(MatSnackBar);
@@ -67,14 +68,19 @@ export class UserEditDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<UserEditDialogComponent>);
   readonly data: UserEditDialogData = inject(MAT_DIALOG_DATA);
 
-  readonly roles: RoleOption[] = this.data.roles ?? [];
-  readonly sites: SiteOption[] = this.data.sites ?? [];
+  roles: RoleOption[] = [...(this.data.roles ?? [])];
+  sites: SiteOption[] = [...(this.data.sites ?? [])];
   readonly isSuperAdmin = this.data.isSuperAdmin;
   readonly form: FormGroup = this.buildForm();
 
   isSaving = false;
+  isLoadingOptions = false;
 
   private readonly lockedSiteId: string | null = this.data.lockedSiteId ?? null;
+
+  ngOnInit(): void {
+    this.ensureOptionsLoaded();
+  }
 
   submit(): void {
     if (this.form.invalid) {
@@ -184,5 +190,51 @@ export class UserEditDialogComponent {
     }
 
     return form;
+  }
+
+  private ensureOptionsLoaded(): void {
+    const sitesMissing = !this.sites.length;
+    const rolesMissing = !this.roles.length;
+
+    if (!rolesMissing && !sitesMissing) {
+      return;
+    }
+
+    this.isLoadingOptions = true;
+    this.cdr.markForCheck();
+
+    this.userService
+      .loadUserOptions()
+      .pipe(
+        finalize(() => {
+          this.isLoadingOptions = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: ({ roles, sites }) => {
+          if (roles?.length) {
+            this.roles = roles;
+          }
+
+          if (sites?.length) {
+            this.sites = sites;
+          }
+
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          const message =
+            error?.error?.message ||
+            'Unable to load role and site options. Please try again.';
+
+          this.snackBar.open(message, 'Close', {
+            duration: 4000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top',
+            panelClass: ['error-snackbar'],
+          });
+        },
+      });
   }
 }
