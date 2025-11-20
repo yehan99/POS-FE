@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LocalizationDemoComponent } from './shared/components/localization-demo/localization-demo.component';
+import { SuperAdminGuard } from './core/guards/super-admin.guard';
+import { PermissionGuard } from './core/guards/permission.guard';
 
 const routes: Routes = [
   {
@@ -19,13 +21,15 @@ const routes: Routes = [
   },
   {
     path: 'pos',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['sale.read', 'sale.create'] },
     loadChildren: () =>
       import('./features/pos/pos.module').then((m) => m.PosModule),
   },
   {
     path: 'products',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['product.read'] },
     loadChildren: () =>
       import('./features/products/products.module').then(
         (m) => m.ProductsModule
@@ -33,7 +37,8 @@ const routes: Routes = [
   },
   {
     path: 'customers',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['customer.read', 'customer.loyalty.read'] },
     loadChildren: () =>
       import('./features/customers/customers.module').then(
         (m) => m.CustomersModule
@@ -41,7 +46,8 @@ const routes: Routes = [
   },
   {
     path: 'inventory',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['inventory.read'] },
     loadChildren: () =>
       import('./features/inventory/inventory.module').then(
         (m) => m.InventoryModule
@@ -49,7 +55,15 @@ const routes: Routes = [
   },
   {
     path: 'reports',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: {
+      permissionsAny: [
+        'report.sales',
+        'report.inventory',
+        'report.customers',
+        'report.financial',
+      ],
+    },
     loadChildren: () =>
       import('./features/reports/reports.module').then((m) => m.ReportsModule),
   },
@@ -63,7 +77,8 @@ const routes: Routes = [
   },
   {
     path: 'hardware',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['settings.read', 'settings.update'] },
     loadChildren: () =>
       import('./features/hardware/hardware.module').then(
         (m) => m.HardwareModule
@@ -71,17 +86,25 @@ const routes: Routes = [
   },
   {
     path: 'users',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['user.management'] },
     loadChildren: () =>
       import('./features/users/users.module').then((m) => m.UsersModule),
   },
   {
     path: 'settings',
-    //canActivate: [AuthGuard],
+    canActivate: [PermissionGuard],
+    data: { permissionsAny: ['settings.read', 'settings.update'] },
     loadChildren: () =>
       import('./features/settings/settings.module').then(
         (m) => m.SettingsModule
       ),
+  },
+  {
+    path: 'roles',
+    canActivate: [SuperAdminGuard],
+    loadChildren: () =>
+      import('./features/roles/roles.module').then((m) => m.RolesModule),
   },
   {
     path: 'profile',

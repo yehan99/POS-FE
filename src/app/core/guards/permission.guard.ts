@@ -4,35 +4,50 @@ import {
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
   Router,
+  UrlTree,
 } from '@angular/router';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { RoleService } from '../services/role.service';
+import { map, take } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PermissionGuard implements CanActivate {
-  constructor(private roleService: RoleService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): Observable<boolean> | Promise<boolean> | boolean {
-    const requiredPermissions = route.data['permissions'] as string[];
+  ): Observable<boolean | UrlTree> {
+    const permissionsAll =
+      (route.data['permissionsAll'] as string[] | undefined) ||
+      (route.data['permissions'] as string[] | undefined);
+    const permissionsAny = route.data['permissionsAny'] as string[] | undefined;
 
-    if (!requiredPermissions || requiredPermissions.length === 0) {
-      return true;
-    }
-
-    // Check if user has any of the required permissions
-    return this.roleService.checkAnyPermission(requiredPermissions).pipe(
-      map((hasPermission) => {
-        if (!hasPermission) {
-          console.warn('Access denied: Missing required permissions');
-          this.router.navigate(['/unauthorized']);
-          return false;
+    return this.authService.currentUser$.pipe(
+      take(1),
+      map((user) => {
+        if (!user) {
+          return this.router.createUrlTree(['/auth/login'], {
+            queryParams: { returnUrl: state.url },
+          });
         }
+
+        if (
+          permissionsAll?.length &&
+          !this.authService.hasAllPermissions(permissionsAll)
+        ) {
+          return this.router.createUrlTree(['/dashboard']);
+        }
+
+        if (
+          permissionsAny?.length &&
+          !this.authService.hasAnyPermission(permissionsAny)
+        ) {
+          return this.router.createUrlTree(['/dashboard']);
+        }
+
         return true;
       })
     );

@@ -1,1 +1,204 @@
-<p>permission-matrix works!</p>
+<section class="roles-page">
+  <header class="page-header">
+    <div class="page-header__title">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to dashboard" class="ghost-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <p class="eyebrow">Access Control</p>
+        <h1>Role Permission Matrix</h1>
+        <p class="subtitle">
+          Align the experience with the Settings dashboard while keeping role changes limited to super administrators.
+        </p>
+      </div>
+    </div>
+    <div class="page-header__actions">
+      <button mat-stroked-button type="button" (click)="resetMatrix()"
+        [disabled]="isSaving || isLoading || !selectedRoleId">
+        <mat-icon>restart_alt</mat-icon>
+        Reset view
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="save()" [disabled]="isSaving || !selectedRoleId">
+        <mat-progress-spinner *ngIf="isSaving" diameter="18" mode="indeterminate"></mat-progress-spinner>
+        <span *ngIf="!isSaving">Save changes</span>
+      </button>
+    </div>
+  </header>
+
+  <app-card variant="elevated" padding="large" class="snapshot-card" *ngIf="selectedRole || isLoading">
+    <div class="snapshot-card__header">
+      <div>
+        <h2>{{ selectedRole?.name || 'Loading role profile…' }}</h2>
+        <p>{{ selectedRole?.description || 'Choose a role to review its capabilities.' }}</p>
+      </div>
+      <div class="snapshot-card__meta" *ngIf="selectedRole">
+        <mat-icon color="primary">shield_person</mat-icon>
+        <span>{{ selectedRole.slug }}</span>
+      </div>
+    </div>
+
+    <div class="snapshot-grid">
+      <article class="snapshot-tile" *ngFor="let card of snapshotCards">
+        <div class="snapshot-tile__icon" [ngClass]="'snapshot-tile__icon--' + card.accent">
+          <mat-icon>{{ card.icon }}</mat-icon>
+        </div>
+        <div class="snapshot-tile__content">
+          <span class="snapshot-tile__label">{{ card.label }}</span>
+          <span class="snapshot-tile__value">{{ card.value }}</span>
+          <span class="snapshot-tile__helper">{{ card.helper }}</span>
+        </div>
+      </article>
+    </div>
+  </app-card>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-grid__column dashboard-grid__column--controls">
+      <app-card variant="elevated" padding="large" class="roles-card">
+        <div class="roles-card__header">
+          <div>
+            <h2>Role selection</h2>
+            <p>Switch between roles to audit their module access.</p>
+          </div>
+          <div class="roles-card__meta" *ngIf="isLoading">
+            <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+            <span>Loading roles</span>
+          </div>
+        </div>
+
+        <div class="role-selector">
+          <mat-form-field appearance="outline">
+            <mat-label>Select role</mat-label>
+            <mat-select [value]="selectedRoleId" (selectionChange)="onRoleChange($event.value)"
+              [disabled]="isLoading || !roles.length">
+              <mat-option *ngFor="let role of roles" [value]="role.id">
+                {{ role.name }}
+                <span class="role-tag" *ngIf="role.slug === 'super_admin'">System</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="role-meta" *ngIf="selectedRole">
+            <div class="role-meta__item">
+              <span class="label">Slug</span>
+              <span class="value">{{ selectedRole.slug }}</span>
+            </div>
+            <div class="role-meta__item">
+              <span class="label">Default assignment</span>
+              <span class="value">{{ selectedRole.isDefault ? 'Enabled' : 'Opt-in' }}</span>
+            </div>
+            <p class="role-meta__description">{{ selectedRole.description || 'No description provided.' }}</p>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="!isLoading && !roles.length">
+          <mat-icon>group_off</mat-icon>
+          <p>No roles were found. Create one first to configure permissions.</p>
+        </div>
+      </app-card>
+
+      <app-card variant="outlined" padding="large" class="guardrails-card">
+        <div class="guardrails-card__header">
+          <div>
+            <h3>Guardrails</h3>
+            <p>Keep permissions aligned with operational controls.</p>
+          </div>
+          <mat-icon color="primary">rule</mat-icon>
+        </div>
+        <ul>
+          <li>
+            <mat-icon color="primary">admin_panel_settings</mat-icon>
+            <div>
+              <p class="title">Super admin only</p>
+              <p class="body">Only super admins can update the matrix and publish changes.</p>
+            </div>
+          </li>
+          <li>
+            <mat-icon color="primary">sync_alt</mat-icon>
+            <div>
+              <p class="title">Automatic propagation</p>
+              <p class="body">Updates apply instantly across all modules guarded by the new middleware.</p>
+            </div>
+          </li>
+          <li>
+            <mat-icon color="primary">visibility</mat-icon>
+            <div>
+              <p class="title">View precedes write</p>
+              <p class="body">Write/Delete toggles automatically enable prerequisite capabilities.</p>
+            </div>
+          </li>
+        </ul>
+      </app-card>
+    </div>
+
+    <div class="dashboard-grid__column">
+      <app-card variant="elevated" padding="large" class="matrix-card">
+        <div class="matrix-card__header">
+          <div>
+            <h2>Module access</h2>
+            <p>Toggle access per module, mirroring the Settings dashboard look-and-feel.</p>
+          </div>
+          <div class="matrix-card__legend">
+            <span class="legend-chip" *ngFor="let chip of matrixLegend">
+              <mat-icon>{{ chip.icon }}</mat-icon>
+              <span>{{ chip.label }}</span>
+              <strong>{{ chip.count }}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div class="matrix-wrapper" *ngIf="!isLoading && modules.length; else matrixStateBlock">
+          <table class="matrix-table" aria-label="Role permissions matrix">
+            <thead>
+              <tr>
+                <th>Permission</th>
+                <th>View</th>
+                <th>Write</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let module of modules; trackBy: trackByModule">
+                <td>
+                  <div class="module-info">
+                    <div class="module-icon" *ngIf="module.icon">
+                      <mat-icon>{{ module.icon }}</mat-icon>
+                    </div>
+                    <div>
+                      <div class="module-title">{{ module.label }}</div>
+                      <p class="module-description">{{ module.description }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <mat-checkbox [disabled]="isActionDisabled(module, 'view') || isSaving"
+                    [checked]="matrixState[module.key]?.view"
+                    (change)="togglePermission(module.key, 'view', $event.checked)"></mat-checkbox>
+                </td>
+                <td>
+                  <mat-checkbox [disabled]="isActionDisabled(module, 'write') || isSaving"
+                    [checked]="matrixState[module.key]?.write"
+                    (change)="togglePermission(module.key, 'write', $event.checked)"></mat-checkbox>
+                </td>
+                <td>
+                  <mat-checkbox [disabled]="isActionDisabled(module, 'delete') || isSaving"
+                    [checked]="matrixState[module.key]?.delete"
+                    (change)="togglePermission(module.key, 'delete', $event.checked)"></mat-checkbox>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #matrixStateBlock>
+          <div class="matrix-card__state" *ngIf="isLoading">
+            <mat-progress-spinner diameter="36" mode="indeterminate"></mat-progress-spinner>
+            <p>Loading role permissions…</p>
+          </div>
+          <div class="matrix-card__state" *ngIf="!isLoading && !modules.length">
+            <mat-icon>shield</mat-icon>
+            <p>No permission modules are configured yet.</p>
+          </div>
+        </ng-template>
+      </app-card>
+    </div>
+  </div>
+</section>

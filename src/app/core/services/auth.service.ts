@@ -221,8 +221,37 @@ export class AuthService {
    * Check if user has specific permission
    */
   hasPermission(permission: string): boolean {
+    if (!permission) {
+      return true;
+    }
+
     const user = this.currentUserSubject.value;
-    return user?.permissions?.includes(permission) || false;
+
+    if (!user) {
+      return false;
+    }
+
+    if (user.role?.slug === 'super_admin') {
+      return true;
+    }
+
+    return user.permissions?.includes(permission) || false;
+  }
+
+  hasAllPermissions(permissions: string[]): boolean {
+    if (!permissions?.length) {
+      return true;
+    }
+
+    return permissions.every((permission) => this.hasPermission(permission));
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    if (!permissions?.length) {
+      return true;
+    }
+
+    return permissions.some((permission) => this.hasPermission(permission));
   }
 
   /**

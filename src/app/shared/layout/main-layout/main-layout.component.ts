@@ -63,6 +63,23 @@ interface NotificationGroup {
   items: NotificationItem[];
 }
 
+interface SidebarLinkConfig {
+  label: string;
+  icon: string;
+  route: string;
+  title: string;
+  exact?: boolean;
+  permissionsAny?: string[];
+  permissionsAll?: string[];
+  roles?: string[];
+  excludeRoles?: string[];
+}
+
+interface SidebarSectionConfig {
+  label: string;
+  links: SidebarLinkConfig[];
+}
+
 @Component({
   selector: 'app-main-layout',
   standalone: false,
@@ -96,8 +113,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   // Breadcrumbs
   breadcrumbs: Breadcrumb[] = [];
 
+  visiblePrimaryLinks: SidebarLinkConfig[] = [];
+  visibleSidebarSections: SidebarSectionConfig[] = [];
+
   private readonly siteService = inject(SiteService);
   private readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   // Site context
   siteOptions$: Observable<SiteSummary[]> = this.siteService.sites$;
@@ -106,8 +128,216 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   isLoadingSites$: Observable<boolean> = this.siteService.isLoading$;
 
   private destroy$ = new Subject<void>();
+  private permissionSet = new Set<string>();
+  private currentRoleSlug: string | null = null;
+  private readonly dashboardLinks: SidebarLinkConfig[] = [
+    {
+      label: 'Dashboard Overview',
+      icon: 'dashboard',
+      route: '/dashboard',
+      title: 'Dashboard Overview',
+      exact: true,
+      excludeRoles: ['cashier'],
+    },
+  ];
 
-  constructor(private router: Router, private authService: AuthService) {}
+  private readonly sidebarSections: SidebarSectionConfig[] = [
+    {
+      label: 'Sales & CRM',
+      links: [
+        {
+          label: 'POS Checkout',
+          icon: 'point_of_sale',
+          route: '/pos',
+          title: 'POS Checkout',
+          permissionsAny: ['sale.read', 'sale.create'],
+        },
+        {
+          label: 'Transactions',
+          icon: 'receipt_long',
+          route: '/pos/transactions',
+          title: 'Transactions',
+          permissionsAny: ['sale.read'],
+          excludeRoles: ['cashier'],
+        },
+        {
+          label: 'Customers',
+          icon: 'people',
+          route: '/customers',
+          title: 'Customer Directory',
+          permissionsAny: ['customer.read', 'customer.loyalty.read'],
+        },
+      ],
+    },
+    {
+      label: 'Catalog',
+      links: [
+        {
+          label: 'Products',
+          icon: 'inventory_2',
+          route: '/products',
+          title: 'Products',
+          permissionsAny: ['product.read'],
+        },
+        {
+          label: 'Categories',
+          icon: 'category',
+          route: '/products/categories',
+          title: 'Categories',
+          permissionsAny: ['product.read'],
+        },
+      ],
+    },
+    {
+      label: 'Inventory',
+      links: [
+        {
+          label: 'Inventory Dashboard',
+          icon: 'inventory',
+          route: '/inventory',
+          title: 'Inventory Dashboard',
+          permissionsAny: ['inventory.read'],
+        },
+        {
+          label: 'Stock Adjustments',
+          icon: 'tune',
+          route: '/inventory/adjustments',
+          title: 'Stock Adjustments',
+          permissionsAny: ['inventory.adjust', 'inventory.update'],
+        },
+        {
+          label: 'Stock Transfers',
+          icon: 'compare_arrows',
+          route: '/inventory/transfers',
+          title: 'Stock Transfers',
+          permissionsAny: ['inventory.update'],
+        },
+        {
+          label: 'Suppliers',
+          icon: 'local_shipping',
+          route: '/inventory/suppliers',
+          title: 'Suppliers',
+          permissionsAny: ['inventory.read'],
+        },
+        {
+          label: 'Purchase Orders',
+          icon: 'assignment',
+          route: '/inventory/purchase-orders',
+          title: 'Purchase Orders',
+          permissionsAny: ['inventory.create', 'inventory.update'],
+        },
+        {
+          label: 'Stock Alerts',
+          icon: 'warning_amber',
+          route: '/inventory/alerts',
+          title: 'Stock Alerts',
+          permissionsAny: ['inventory.read'],
+        },
+      ],
+    },
+    {
+      label: 'Hardware',
+      links: [
+        {
+          label: 'Hardware Configuration',
+          icon: 'settings_input_component',
+          route: '/hardware',
+          title: 'Hardware Configuration',
+          permissionsAny: ['settings.read', 'settings.update'],
+        },
+        {
+          label: 'Device Status',
+          icon: 'memory',
+          route: '/hardware/status',
+          title: 'Device Status',
+          permissionsAny: ['settings.read', 'settings.update'],
+        },
+        {
+          label: 'Receipt Designer',
+          icon: 'receipt_long',
+          route: '/hardware/receipt-designer',
+          title: 'Receipt Designer',
+          permissionsAny: ['settings.read', 'settings.update'],
+        },
+      ],
+    },
+    {
+      label: 'Reports & Analytics',
+      links: [
+        {
+          label: 'Reports Hub',
+          icon: 'analytics',
+          route: '/reports',
+          title: 'Reports Hub',
+          permissionsAny: [
+            'report.sales',
+            'report.inventory',
+            'report.customers',
+            'report.financial',
+          ],
+          excludeRoles: ['cashier'],
+        },
+        {
+          label: 'Sales Reports',
+          icon: 'trending_up',
+          route: '/reports/sales',
+          title: 'Sales Reports',
+          permissionsAny: ['report.sales'],
+          excludeRoles: ['cashier'],
+        },
+        {
+          label: 'Inventory Reports',
+          icon: 'fact_check',
+          route: '/reports/inventory',
+          title: 'Inventory Reports',
+          permissionsAny: ['report.inventory'],
+          excludeRoles: ['cashier'],
+        },
+        {
+          label: 'Customer Reports',
+          icon: 'groups',
+          route: '/reports/customers',
+          title: 'Customer Reports',
+          permissionsAny: ['report.customers'],
+          excludeRoles: ['cashier'],
+        },
+        {
+          label: 'Product Performance',
+          icon: 'insights',
+          route: '/reports/products',
+          title: 'Product Performance',
+          permissionsAny: ['report.sales', 'report.inventory'],
+          excludeRoles: ['cashier'],
+        },
+      ],
+    },
+    {
+      label: 'Administration',
+      links: [
+        {
+          label: 'User Management',
+          icon: 'group',
+          route: '/users',
+          title: 'User Management',
+          permissionsAny: ['user.management'],
+        },
+        {
+          label: 'Settings',
+          icon: 'settings',
+          route: '/settings',
+          title: 'Settings',
+          permissionsAny: ['settings.read', 'settings.update'],
+        },
+        {
+          label: 'Roles & Permissions',
+          icon: 'admin_panel_settings',
+          route: '/roles',
+          title: 'Roles & Permissions',
+          roles: ['super_admin'],
+        },
+      ],
+    },
+  ];
 
   ngOnInit(): void {
     this.updateUserDisplay(this.authService.getCurrentUserValue());
@@ -308,6 +538,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       this.userName = 'User';
       this.userRole = '';
       this.userInitials = '?';
+      this.currentRoleSlug = null;
+      this.permissionSet = new Set();
+      this.recomputeNavigation();
       return;
     }
 
@@ -316,6 +549,64 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     this.userName = displayName;
     this.userRole = user.role?.name ?? user.role?.slug ?? '';
     this.userInitials = this.buildInitials(displayName, user.email);
+    this.currentRoleSlug = user.role?.slug ?? null;
+    this.permissionSet = new Set(user.permissions ?? []);
+    this.recomputeNavigation();
+  }
+
+  private recomputeNavigation(): void {
+    const links = this.dashboardLinks.filter((link) =>
+      this.canAccessLink(link)
+    );
+    this.visiblePrimaryLinks = links;
+
+    this.visibleSidebarSections = this.sidebarSections
+      .map((section) => ({
+        ...section,
+        links: section.links.filter((link) => this.canAccessLink(link)),
+      }))
+      .filter((section) => section.links.length > 0);
+  }
+
+  private canAccessLink(link: SidebarLinkConfig): boolean {
+    if (this.currentRoleSlug === 'super_admin') {
+      return true;
+    }
+
+    if (
+      link.excludeRoles?.length &&
+      this.currentRoleSlug &&
+      link.excludeRoles.includes(this.currentRoleSlug)
+    ) {
+      return false;
+    }
+
+    if (
+      link.roles?.length &&
+      (!this.currentRoleSlug || !link.roles.includes(this.currentRoleSlug))
+    ) {
+      return false;
+    }
+
+    if (
+      link.permissionsAll?.length &&
+      !link.permissionsAll.every((permission) =>
+        this.permissionSet.has(permission)
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      link.permissionsAny?.length &&
+      !link.permissionsAny.some((permission) =>
+        this.permissionSet.has(permission)
+      )
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   private resolveUserName(user: User): string {
